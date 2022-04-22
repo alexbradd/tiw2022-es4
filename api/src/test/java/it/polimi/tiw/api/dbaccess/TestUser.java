@@ -1,6 +1,7 @@
 package it.polimi.tiw.api.dbaccess;
 
-import it.polimi.tiw.api.exceptions.UpdateException;
+import it.polimi.tiw.api.ApiError;
+import it.polimi.tiw.api.ApiResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,7 +75,7 @@ public class TestUser {
     void testSavingDuplicate() throws SQLException {
         when(statement.executeUpdate()).thenThrow(SQLException.class);
         User user = new User("Pippo", "pippoTheBest", "pippo@email.com", "Pippo", "Pluto");
-        assertThrows(UpdateException.class, user::save);
+        assertTrue(user.save().match((User u) -> false, (ApiError e) -> true));
     }
 
     @Test
@@ -91,10 +92,10 @@ public class TestUser {
     @Test
     void testFindByUsernameNotInDb() throws SQLException {
         when(results.next()).thenReturn(false);
-        Optional<User> maybe = User.byUsername("pippo");
+        ApiResult<User> maybe = User.byUsername("pippo");
         verify(statement).executeQuery();
         verify(results).next();
-        assertTrue(maybe.isEmpty());
+        assertTrue(maybe.match((User u) -> false, (ApiError e) -> true));
     }
 
     @Test
@@ -112,28 +113,32 @@ public class TestUser {
                 default -> null;
             };
         });
-        Optional<User> maybe = User.byUsername("pippo");
+        ApiResult<User> maybe = User.byUsername("pippo");
         verify(statement).executeQuery();
         verify(results).next();
-        assertTrue(maybe.isPresent());
-        User user = maybe.get();
-        assertTrue(user.getId().isPresent());
-        assertEquals(
-                Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[]{0, 0, 0, 0, 0, 0, 0, 0}),
-                user.getId().get());
-        assertEquals("pippo", user.getUsername());
-        assertEquals("pippo@email.com", user.getEmail());
-        assertEquals("Pippo", user.getName());
-        assertEquals("Pluto", user.getSurname());
+        assertTrue(maybe.match((User u) -> true, (ApiError e) -> false));
+        maybe.consume(
+                (User user) -> {
+                    assertTrue(user.getId().isPresent());
+                    assertEquals(
+                            Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[]{0, 0, 0, 0, 0, 0, 0, 0}),
+                            user.getId().get());
+                    assertEquals("pippo", user.getUsername());
+                    assertEquals("pippo@email.com", user.getEmail());
+                    assertEquals("Pippo", user.getName());
+                    assertEquals("Pluto", user.getSurname());
+                },
+                e -> fail()
+        );
     }
 
     @Test
     void testFindByIdNotInDb() throws SQLException {
         when(results.next()).thenReturn(false);
-        Optional<User> maybe = User.byId("AAAAAAAAAAA");
+        ApiResult<User> maybe = User.byId("AAAAAAAAAAA");
         verify(statement).executeQuery();
         verify(results).next();
-        assertTrue(maybe.isEmpty());
+        assertTrue(maybe.match((User u) -> false, (ApiError e) -> true));
     }
 
     @Test
@@ -151,18 +156,22 @@ public class TestUser {
                 default -> null;
             };
         });
-        Optional<User> maybe = User.byId("AAAAAAAAAAA");
+        ApiResult<User> maybe = User.byId("AAAAAAAAAAA");
         verify(statement).executeQuery();
         verify(results).next();
-        assertTrue(maybe.isPresent());
-        User user = maybe.get();
-        assertTrue(user.getId().isPresent());
-        assertEquals(
-                Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[]{0, 0, 0, 0, 0, 0, 0, 0}),
-                user.getId().get());
-        assertEquals("pippo", user.getUsername());
-        assertEquals("pippo@email.com", user.getEmail());
-        assertEquals("Pippo", user.getName());
-        assertEquals("Pluto", user.getSurname());
+        assertTrue(maybe.match((User u) -> true, (ApiError e) -> false));
+        maybe.consume(
+                (User u) -> {
+                    assertTrue(u.getId().isPresent());
+                    assertEquals(
+                            Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[]{0, 0, 0, 0, 0, 0, 0, 0}),
+                            u.getId().get());
+                    assertEquals("pippo", u.getUsername());
+                    assertEquals("pippo@email.com", u.getEmail());
+                    assertEquals("Pippo", u.getName());
+                    assertEquals("Pluto", u.getSurname());
+                },
+                e -> fail()
+        );
     }
 }

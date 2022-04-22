@@ -1,6 +1,8 @@
 package it.polimi.tiw.api.dbaccess;
 
-import it.polimi.tiw.api.exceptions.UpdateException;
+import it.polimi.tiw.api.ApiError;
+import it.polimi.tiw.api.ApiResult;
+import it.polimi.tiw.api.ApiSubError;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -22,28 +24,29 @@ import java.util.regex.Pattern;
  * Represents a User.
  */
 public class User implements DatabaseAccessObject {
+    /**
+     * The {@link Pattern} used for validating correctness of the usernames passed.
+     */
+    public static final Pattern USERNAME_REGEX = Pattern.compile("^[a-z0-9_-]{3,20}$", Pattern.CASE_INSENSITIVE);
+    /**
+     * The {@link Pattern} used for validating correctness of the emails passed.
+     */
+    public static final Pattern EMAIL_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}",
+            Pattern.CASE_INSENSITIVE);
+    /**
+     * Maximum allowed string length
+     */
+    public static final int STRING_LENGTH = 128;
+    /**
+     * The ConnectionRetriever object used to get new connections to the database
+     */
+    protected static ConnectionRetriever retriever = ProductionConnectionRetriever.getInstance();
     private Long id;
     private String username;
     private String saltedPassword;
     private String email;
     private String name;
     private String surname;
-
-    /**
-     * The ConnectionRetriever object used to get new connections to the database
-     */
-    protected static ConnectionRetriever retriever = ProductionConnectionRetriever.getInstance();
-
-    /**
-     * The {@link Pattern} used for validating correctness of the usernames passed.
-     */
-    public static final Pattern USERNAME_REGEX = Pattern.compile("^[a-z0-9_-]{3,20}$", Pattern.CASE_INSENSITIVE);
-
-    /**
-     * The {@link Pattern} used for validating correctness of the emails passed.
-     */
-    public static final Pattern EMAIL_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}",
-            Pattern.CASE_INSENSITIVE);
 
     /**
      * Creates a new User with the given properties. All strings have a maximum length of 128 characters. The User will
@@ -74,14 +77,6 @@ public class User implements DatabaseAccessObject {
     }
 
     /**
-     * <= 128
-     */
-    private static void checkLength(String s) {
-        if (s.length() > 128)
-            throw new IllegalArgumentException("Maximum string length exceeded for " + s);
-    }
-
-    /**
      * Crates a new user with the given parameters
      */
     private User(long id, String username, String saltedPassword, String email, String name, String surname) {
@@ -91,6 +86,151 @@ public class User implements DatabaseAccessObject {
         this.email = email;
         this.name = name;
         this.surname = surname;
+    }
+
+    /**
+     * Checks that the given string is under the maximum string length
+     *
+     * @param s string to check
+     * @return true if the string is shorter than {@link #STRING_LENGTH} chars
+     */
+    public static boolean checkLength(String s) {
+        return s.length() <= STRING_LENGTH;
+    }
+
+    /**
+     * @see #checkLength(String)
+     */
+    private static void checkLengthAndThrow(String s) {
+        if (s.length() > STRING_LENGTH)
+            throw new IllegalArgumentException("Maximum string length exceeded for " + s);
+    }
+
+    /**
+     * Converts long to byte array
+     */
+    private static byte[] longToByteArray(long l) {
+        try (ByteArrayOutputStream s = new ByteArrayOutputStream()) {
+            try (DataOutputStream d = new DataOutputStream(s)) {
+                d.writeLong(l);
+                d.flush();
+                return s.toByteArray();
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+    }
+
+    /**
+     * Verify that the passed string is a valid username
+     *
+     * @param username the string to check
+     * @return true if the passed username is a valid username
+     */
+    public static boolean verifyUsername(String username) {
+        return USERNAME_REGEX.matcher(username).find();
+    }
+
+    /**
+     * Verify that the passed string is a valid email
+     *
+     * @param email the string to check
+     * @return true if the passed email is a valid email
+     */
+    public static boolean verifyEmail(String email) {
+        return EMAIL_REGEX.matcher(email).find();
+    }
+
+    /**
+     * Injects strings into PreparedStatement
+     */
+    private static void injectStringParameters(PreparedStatement p, String... vars) throws SQLException {
+        for (int i = 0; i < vars.length; i++)
+            p.setString(i + 1, vars[i]);
+    }
+
+    /**
+     * Finds and retrieves the data for the User with the given username. If no such user can be found, an empty
+     * {@link Optional} is returned.
+     *
+     * @param username the username to search
+     * @return an {@link Optional} containing the constructed User
+     * @throws NullPointerException if {@code username} is null
+     */
+    public static ApiResult<User> byUsername(String username) {
+        Objects.requireNonNull(username, "username is required");
+        if (!USERNAME_REGEX.matcher(username).find())
+            throw new IllegalArgumentException(username + " is not a valid username");
+        try (Connection c = retriever.getConnection()) {
+            try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where id = ?")) {
+                injectStringParameters(p, username);
+                return packageApiResult(p, username);
+            }
+        } catch (SQLException e) {
+            ApiError error = new ApiError(500,
+                    "Error while fetching data",
+                    new ApiSubError("SQLException", e.getMessage() == null ? "" : e.getMessage()));
+            return ApiResult.error(error);
+        }
+    }
+
+    /**
+     * Finds and retrieves the data for the User with the given username. If no such user can be found, an empty
+     * {@link Optional} is returned.
+     *
+     * @param id the Base64 encoded user id to search
+     * @return an {@link Optional} containing the constructed User
+     * @throws NullPointerException if {@code username} is null
+     */
+    public static ApiResult<User> byId(String id) {
+        Objects.requireNonNull(id, "id is required");
+        long lId = byteArrayToLong(Base64.getUrlDecoder().decode(id));
+        try (Connection c = retriever.getConnection()) {
+            try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where id = ?")) {
+                p.setLong(1, lId);
+                return packageApiResult(p, id);
+            }
+        } catch (SQLException e) {
+            ApiError error = new ApiError(500,
+                    "Error while fetching data",
+                    new ApiSubError("SQLException", e.getMessage() == null ? "" : e.getMessage()));
+            return ApiResult.error(error);
+        }
+    }
+
+    /**
+     * Executes p and wraps the result in an ApiResult
+     */
+    private static ApiResult<User> packageApiResult(PreparedStatement p, String specifier) throws SQLException {
+        try (ResultSet r = p.executeQuery()) {
+            if (r.next()) {
+                User found = new User(
+                        r.getLong("id"),
+                        r.getString("username"),
+                        r.getString("password"),
+                        r.getString("email"),
+                        r.getString("name"),
+                        r.getString("surname")
+                );
+                return ApiResult.ok(found);
+            } else {
+                ApiError error = new ApiError(404,
+                        "Cannot find this object",
+                        new ApiSubError("NoSuchElementException", "No user with " + specifier));
+                return ApiResult.error(error);
+            }
+        }
+    }
+
+    /**
+     * Converts a byte array into a long
+     */
+    private static long byteArrayToLong(byte[] longBytes) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(Long.BYTES);
+        byteBuffer.put(longBytes);
+        byteBuffer.flip();
+        return byteBuffer.getLong();
     }
 
     /**
@@ -122,22 +262,6 @@ public class User implements DatabaseAccessObject {
     }
 
     /**
-     * Converts long to byte array
-     */
-    private static byte[] longToByteArray(long l) {
-        try (ByteArrayOutputStream s = new ByteArrayOutputStream()) {
-            try (DataOutputStream d = new DataOutputStream(s)) {
-                d.writeLong(l);
-                d.flush();
-                return s.toByteArray();
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-    }
-
-    /**
      * Getter for the User's username
      *
      * @return the User's username
@@ -155,8 +279,8 @@ public class User implements DatabaseAccessObject {
      */
     public void setUsername(String username) {
         Objects.requireNonNull(username, "username is required");
-        checkLength(username);
-        if (!USERNAME_REGEX.matcher(username).find())
+        checkLengthAndThrow(username);
+        if (!verifyUsername(username))
             throw new IllegalArgumentException(username + " is not a valid username");
         this.username = username;
     }
@@ -237,8 +361,8 @@ public class User implements DatabaseAccessObject {
      */
     public void setEmail(String email) {
         Objects.requireNonNull(email, "email is required");
-        checkLength(email);
-        if (!EMAIL_REGEX.matcher(email).find())
+        checkLengthAndThrow(email);
+        if (!verifyEmail(email))
             throw new IllegalArgumentException(email + " is not a valid email");
         this.email = email;
     }
@@ -261,7 +385,7 @@ public class User implements DatabaseAccessObject {
      */
     public void setName(String name) {
         Objects.requireNonNull(name, "name is required");
-        checkLength(name);
+        checkLengthAndThrow(name);
         this.name = name;
     }
 
@@ -283,22 +407,24 @@ public class User implements DatabaseAccessObject {
      */
     public void setSurname(String surname) {
         Objects.requireNonNull(surname, "surname is required");
-        checkLength(surname);
+        checkLengthAndThrow(surname);
         this.surname = surname;
     }
 
     /**
      * Saves the current User to database. If the User already existed, the updates are stored.
      *
-     * @throws UpdateException if any modification is illegal (e.g. duplicated usernames)
+     * @return an {@link ApiResult} containing the User just saved.
      */
-    public void save() {
+    @Override
+    public ApiResult<User> save() {
         try (Connection c = retriever.getConnection()) {
             c.setAutoCommit(false);
             try {
                 if (isPersisted()) updateUser(c);
                 else saveNewUser(c);
                 c.commit();
+                return ApiResult.ok(this);
             } catch (SQLException e) {
                 c.rollback();
                 throw e;
@@ -309,7 +435,10 @@ public class User implements DatabaseAccessObject {
                 }
             }
         } catch (SQLException e) {
-            throw new UpdateException(e);
+            ApiError error = new ApiError(409,
+                    "Cannot save this object",
+                    new ApiSubError("SQLException", e.getMessage() == null ? "" : e.getMessage()));
+            return ApiResult.error(error);
         }
     }
 
@@ -340,87 +469,5 @@ public class User implements DatabaseAccessObject {
             r.next();
             this.id = r.getLong("id");
         }
-    }
-
-    /**
-     * Injects strings into PreparedStatement
-     */
-    private static void injectStringParameters(PreparedStatement p, String... vars) throws SQLException {
-        for (int i = 0; i < vars.length; i++)
-            p.setString(i + 1, vars[i]);
-    }
-
-    /**
-     * Finds and retrieves the data for the User with the given username. If no such user can be found, an empty
-     * {@link Optional} is returned.
-     *
-     * @param username the username to search
-     * @return an {@link Optional} containing the constructed User
-     * @throws NullPointerException if {@code username} is null
-     */
-    public static Optional<User> byUsername(String username) {
-        Objects.requireNonNull(username, "username is required");
-        if (!USERNAME_REGEX.matcher(username).find())
-            throw new IllegalArgumentException(username + " is not a valid username");
-        try (Connection c = retriever.getConnection()) {
-            try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where username = ?")) {
-                injectStringParameters(p, username);
-                return packageUserOptional(p);
-            }
-        } catch (SQLException e) {
-            throw new IllegalStateException("an error occurred while fetching data", e);
-        }
-    }
-
-    /**
-     * Finds and retrieves the data for the User with the given username. If no such user can be found, an empty
-     * {@link Optional} is returned.
-     *
-     * @param id the Base64 encoded user id to search
-     * @return an {@link Optional} containing the constructed User
-     * @throws NullPointerException if {@code username} is null
-     */
-    public static Optional<User> byId(String id) {
-        Objects.requireNonNull(id, "id is required");
-        long lId = byteArrayToLong(Base64.getUrlDecoder().decode(id));
-        try (Connection c = retriever.getConnection()) {
-            try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where id = ?")) {
-                p.setLong(1, lId);
-                return packageUserOptional(p);
-            }
-        } catch (SQLException e) {
-            throw new IllegalStateException("an error occurred while fetching data", e);
-        }
-    }
-
-    /**
-     * Executes p and wraps the result in an Optional
-     */
-    private static Optional<User> packageUserOptional(PreparedStatement p) throws SQLException {
-        try (ResultSet r = p.executeQuery()) {
-            if (r.next()) {
-                User found = new User(
-                        r.getLong("id"),
-                        r.getString("username"),
-                        r.getString("password"),
-                        r.getString("email"),
-                        r.getString("name"),
-                        r.getString("surname")
-                );
-                return Optional.of(found);
-            } else {
-                return Optional.empty();
-            }
-        }
-    }
-
-    /**
-     * Converts a byte array into a long
-     */
-    private static long byteArrayToLong(byte[] longBytes) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(Long.BYTES);
-        byteBuffer.put(longBytes);
-        byteBuffer.flip();
-        return byteBuffer.getLong();
     }
 }
