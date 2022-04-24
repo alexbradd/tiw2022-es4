@@ -16,8 +16,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-
 /**
  * This servlet tries to retrieve an HTML template, process it using Thymeleaf and send it. If it fails to find a
  * template, it falls back to sending simple html pages. If it cannot find anything, it sends a 404.
@@ -81,10 +79,6 @@ public class HtmlPageServlet extends HttpServlet {
     private void templatePage(HttpServletRequest req, HttpServletResponse res) throws IOException {
         ServletContext context = getServletContext();
         WebContext ctx = new WebContext(req, res, context, req.getLocale());
-
-        HashMap<String, Object> map = new HashMap<>();
-        req.getParameterMap().forEach((k, v) -> map.merge(k, v[0], (ok, ov) -> ov));
-        ctx.setVariables(map);
 
         templateEngine.process(req.getServletPath(), ctx, res.getWriter());
     }
