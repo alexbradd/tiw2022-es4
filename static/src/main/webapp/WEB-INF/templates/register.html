@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="/static/img/favicon.ico" rel="icon"/>
+    <link href="/static/common.css" rel="stylesheet" th:href="@{/static/common.css}" type="text/css">
+    <link href="/static/userMgmt.css" rel="stylesheet" th:href="@{/static/userMgmt.css}" type="text/css">
+    <title th:text="#{register.title}">Register</title>
+</head>
+<body>
+<div class="page-container">
+    <div class="big-logo">
+        <img alt="logo" src="/static/img/logo.svg"/>
+        <h1>Price</h1>
+    </div>
+    <div class="page-view">
+        <h3 th:text="#{register.heading}">Register a new account</h3>
+        <form action="/registerUser" class="form" method="post">
+            <div class="form-input required">
+                <label for="username" th:text="#{register.username}">Username:</label>
+                <input id="username" name="username" pattern="^[a-zA-Z0-9_-]{3,20}$" required type="text"/>
+            </div>
+            <div class="form-input required">
+                <label for="email" th:text="#{register.email}">Email:</label>
+                <input id="email" name="email" required type="email"/>
+            </div>
+            <div class="form-input required">
+                <label for="clearPassword" th:text="#{register.password}">Password:</label>
+                <input id=clearPassword name="clearPassword" required type="password"/>
+            </div>
+            <div class="form-input required">
+                <label for="repeatPassword" th:text="#{register.repeat}">Repeat password:</label>
+                <input id=repeatPassword name="repeatPassword" required type="password"/>
+            </div>
+            <div class="form-input required">
+                <label for="name" th:text="#{register.name}">Name:</label>
+                <input id="name" name="name" required type="text"/>
+            </div>
+            <div class="form-input required">
+                <label for="surname" th:text="#{register.surname}">Surname:</label>
+                <input id="surname" name="surname" required type="text"/>
+            </div>
+            <input class="big-button accent" th:value="#{register.submit}" type="submit" value="register"/>
+        </form>
+        <small class="form-error" th:if="${param.e}" th:switch="${param.e[0]}">
+            <span th:case="'conflict'" th:text="#{register.duplicateUser}">A username with the requested username already exists</span>
+            <span th:case="'user'" th:text="#{register.userError}">Please check that the fields contain valid information</span>
+            <span th:case="*" th:text="#{register.error}">We weren't able to process your request, please try again later</span>
+        </small>
+    </div>
+    <small>
+        <span th:text="#{register.toLogin}">Already have an account?</span>
+        <a href="/login.html" th:text="#{register.toLoginLink}">Sign in</a>
+    </small>
+</div>
+</body>
+</html>
