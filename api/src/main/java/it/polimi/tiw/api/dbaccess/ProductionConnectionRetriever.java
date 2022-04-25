@@ -1,7 +1,5 @@
 package it.polimi.tiw.api.dbaccess;
 
-import it.polimi.tiw.api.exceptions.UnavailableDatabaseException;
-
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -30,12 +28,13 @@ class ProductionConnectionRetriever implements ConnectionRetriever {
     }
 
     /**
-     * Returns a new database connection from the pool of connections.
+     * Returns a new {@link Connection} from a pool of connections.
      *
      * @return a new database connection from the pool of connections
-     * @throws UnavailableDatabaseException if the operation times out
+     * @throws SQLException          if a {@link Connection} cannot be established
+     * @throws IllegalStateException if a generic error occurred
      */
-    public Connection getConnection() throws UnavailableDatabaseException {
+    public Connection getConnection() throws SQLException {
         ProductionConnectionRetriever i = getInstance();
         try {
             if (i.ds == null) {
@@ -43,8 +42,8 @@ class ProductionConnectionRetriever implements ConnectionRetriever {
                 i.ds = (DataSource) ctx.lookup("java:/comp/env/jdbc/productionDb");
             }
             return i.ds.getConnection();
-        } catch (NamingException | SQLException e) {
-            throw new UnavailableDatabaseException("An error occurred when retrieving a database connection", e);
+        } catch (NamingException e) {
+            throw new IllegalStateException("jndi i setup improperly", e);
         }
     }
 }

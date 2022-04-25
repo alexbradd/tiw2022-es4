@@ -160,7 +160,7 @@ public class User implements DatabaseAccessObject {
      */
     public static ApiResult<User> byUsername(String username) {
         Objects.requireNonNull(username, "username is required");
-        if (!USERNAME_REGEX.matcher(username).find())
+        if (!verifyUsername(username))
             throw new IllegalArgumentException(username + " is not a valid username");
         try (Connection c = retriever.getConnection()) {
             try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where id = ?")) {
@@ -181,7 +181,8 @@ public class User implements DatabaseAccessObject {
      *
      * @param id the Base64 encoded user id to search
      * @return an {@link Optional} containing the constructed User
-     * @throws NullPointerException if {@code username} is null
+     * @throws IllegalArgumentException if {@code id} is not valid base64
+     * @throws NullPointerException     if {@code id} is null
      */
     public static ApiResult<User> byId(String id) {
         Objects.requireNonNull(id, "id is required");
@@ -429,10 +430,7 @@ public class User implements DatabaseAccessObject {
                 c.rollback();
                 throw e;
             } finally {
-                try {
-                    c.setAutoCommit(true);
-                } catch (SQLException ignored) {
-                }
+                c.setAutoCommit(true);
             }
         } catch (SQLException e) {
             ApiError error = new ApiError(409,

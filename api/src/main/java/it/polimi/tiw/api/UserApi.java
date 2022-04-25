@@ -35,7 +35,7 @@ public class UserApi {
      * contain an {@link ApiError} with the relative information
      */
     public static ApiResult<User> register(HttpServletRequest req) {
-        return ApiRunner.run(() -> new UserBuilder()
+        return new UserBuilder()
                 .addUsername(req.getParameter("username"))
                 .addClearPassword(req.getParameter("clearPassword"))
                 .addRepeatPassword(req.getParameter("repeatPassword"))
@@ -43,6 +43,6 @@ public class UserApi {
                 .addName(req.getParameter("name"))
                 .addSurname(req.getParameter("username"))
                 .build()
-                .flatMap(User::save));
+                .flatMap(User::save);
     }
 }
