@@ -3,19 +3,13 @@ package it.polimi.tiw.api.dbaccess;
 import it.polimi.tiw.api.ApiError;
 import it.polimi.tiw.api.ApiResult;
 import it.polimi.tiw.api.ApiSubError;
+import it.polimi.tiw.api.utils.IdUtils;
+import it.polimi.tiw.api.utils.PasswordUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -107,22 +101,6 @@ public class User implements DatabaseAccessObject {
     }
 
     /**
-     * Converts long to byte array
-     */
-    private static byte[] longToByteArray(long l) {
-        try (ByteArrayOutputStream s = new ByteArrayOutputStream()) {
-            try (DataOutputStream d = new DataOutputStream(s)) {
-                d.writeLong(l);
-                d.flush();
-                return s.toByteArray();
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-    }
-
-    /**
      * Verify that the passed string is a valid username
      *
      * @param username the string to check
@@ -186,7 +164,7 @@ public class User implements DatabaseAccessObject {
      */
     public static ApiResult<User> byId(String id) {
         Objects.requireNonNull(id, "id is required");
-        long lId = byteArrayToLong(Base64.getUrlDecoder().decode(id));
+        long lId = IdUtils.fromBase64(id);
         try (Connection c = retriever.getConnection()) {
             try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where id = ?")) {
                 p.setLong(1, lId);
@@ -225,23 +203,13 @@ public class User implements DatabaseAccessObject {
     }
 
     /**
-     * Converts a byte array into a long
-     */
-    private static long byteArrayToLong(byte[] longBytes) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(Long.BYTES);
-        byteBuffer.put(longBytes);
-        byteBuffer.flip();
-        return byteBuffer.getLong();
-    }
-
-    /**
      * Returns an {@link Optional} containing the Base64 encoded user id.
      *
      * @return an {@link Optional} containing the Base64 encoded user id
      */
     public Optional<String> getId() {
         if (!isPersisted()) return Optional.empty();
-        return Optional.of(Base64.getUrlEncoder().withoutPadding().encodeToString(longToByteArray(id)));
+        return Optional.of(IdUtils.toBase64(id));
     }
 
     /**
@@ -287,6 +255,15 @@ public class User implements DatabaseAccessObject {
     }
 
     /**
+     * Getter for this User's hashed + salted password.
+     *
+     * @return this User's hashed + salted password.
+     */
+    public String getSaltedPassword() {
+        return saltedPassword;
+    }
+
+    /**
      * Calculates salt and hash of the given password and stores it in the database.
      *
      * @param clearPassword the clear text password
@@ -295,53 +272,7 @@ public class User implements DatabaseAccessObject {
     public void setSaltedPassword(String clearPassword) {
         Objects.requireNonNull(clearPassword, "clearPassword is required");
 
-        byte[] salt = genSalt();
-        this.saltedPassword = genDigest(clearPassword) + digestSalt(salt) + ':' + toHex(salt);
-    }
-
-    /**
-     * Generates a random salt
-     */
-    private byte[] genSalt() {
-        SecureRandom r = new SecureRandom();
-        byte[] salt = new byte[64];
-        r.nextBytes(salt);
-        return salt;
-    }
-
-    /**
-     * Hashes with SHA-256 the string
-     */
-    private String genDigest(String s) {
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(s.getBytes());
-            return toHex(digest);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("AAAAA", e);
-        }
-    }
-
-    /**
-     * Converts the byte array into a string of hex numbers
-     */
-    private String toHex(byte[] array) {
-        StringBuilder res = new StringBuilder();
-        for (byte b : array)
-            res.append(String.format("%02X", b));
-        return res.toString();
-    }
-
-    /**
-     * Calculates the hash of the salt
-     */
-    private String digestSalt(byte[] salt) {
-        try {
-            byte[] copy = salt.clone();
-            MessageDigest.getInstance("SHA-256").update(copy);
-            return toHex(copy);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("AAAAA", e);
-        }
+        this.saltedPassword = PasswordUtils.toHash(clearPassword);
     }
 
     /**

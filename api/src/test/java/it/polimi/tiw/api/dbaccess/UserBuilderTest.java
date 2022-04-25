@@ -1,6 +1,7 @@
 package it.polimi.tiw.api.dbaccess;
 
 import it.polimi.tiw.api.ApiError;
+import it.polimi.tiw.api.utils.UserBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

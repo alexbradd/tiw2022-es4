@@ -1,8 +1,9 @@
-package it.polimi.tiw.api.dbaccess;
+package it.polimi.tiw.api.utils;
 
 import it.polimi.tiw.api.ApiError;
 import it.polimi.tiw.api.ApiResult;
 import it.polimi.tiw.api.ApiSubError;
+import it.polimi.tiw.api.dbaccess.User;
 
 import java.util.ArrayList;
 import java.util.List;
