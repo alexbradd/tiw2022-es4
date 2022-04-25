@@ -1,9 +1,14 @@
 package it.polimi.tiw.api;
 
 import it.polimi.tiw.api.dbaccess.User;
-import it.polimi.tiw.api.dbaccess.UserBuilder;
+import it.polimi.tiw.api.functional.Tuple;
+import it.polimi.tiw.api.utils.PasswordUtils;
+import it.polimi.tiw.api.utils.UserBuilder;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Container for all {@link User} related calls
@@ -38,6 +43,7 @@ public class UserApi {
      * @throws NullPointerException if {@code req} is null
      */
     public static ApiResult<User> register(HttpServletRequest req) {
+        Objects.requireNonNull(req);
         return new UserBuilder()
                 .addUsername(req.getParameter("username"))
                 .addClearPassword(req.getParameter("clearPassword"))
@@ -47,5 +53,42 @@ public class UserApi {
                 .addSurname(req.getParameter("username"))
                 .build()
                 .flatMap(User::save);
+    }
+
+    /**
+     * Authenticates a User with the username and password specified in the given request. If the user can be
+     * authenticated, that User is returned. Otherwise, a suitable error is returned. The parameters required are:
+     *
+     * <ol>
+     *     <li>'username': the User's username</li>
+     *     <li>'clearPassword': the User's clear text password</li>
+     * </ol>
+     *
+     * @param req The {@link HttpServletRequest} to analyze
+     * @return An {@link ApiResult} containing the User in case of success
+     * @throws NullPointerException if {@code req} is null
+     */
+    public static ApiResult<User> authorize(HttpServletRequest req) {
+        Objects.requireNonNull(req);
+        Tuple<String, String> username = new Tuple<>(req.getParameter("username"), "username");
+        Tuple<String, String> clearPassword = new Tuple<>(req.getParameter("clearPassword"), "clearPassword");
+
+        List<ApiSubError> e = Stream.of(username, clearPassword)
+                .filter(t -> t.getFirst() == null)
+                .map(t -> new ApiSubError("NoSuchElementException", t.getSecond() + "is a required parameter"))
+                .toList();
+        if (e.size() > 0)
+            return ApiResult.error(new ApiError(400, "Missing required parameter", e.toArray(new ApiSubError[0])));
+        return User.byUsername(username.getFirst())
+                .flatMap(u -> {
+                    if (PasswordUtils.match(u.getSaltedPassword(), clearPassword.getFirst()))
+                        return ApiResult.ok(u);
+                    return ApiResult.error(new ApiError(
+                            409,
+                            "Username doesn't match password",
+                            new ApiSubError("IllegalArgumentException",
+                                    "The given password doesn't match the one saved")
+                    ));
+                });
     }
 }
