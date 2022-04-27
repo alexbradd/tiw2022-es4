@@ -12,18 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.nio.charset.StandardCharsets;
 
 /**
- * This servlet tries to retrieve an HTML template, process it using Thymeleaf and send it. If it fails to find a
- * template, it falls back to sending simple html pages. If it cannot find anything, it sends a 404.
- * <p>
- * If any parameters are passed in, they are piped into the template context (if a parameter is present multiple times,
- * only the first is considered).
+ * This servlet tries to retrieve an HTML template, process it using Thymeleaf and send it.
  */
 @WebServlet("*.html")
 public class HtmlPageServlet extends HttpServlet {
@@ -51,28 +42,7 @@ public class HtmlPageServlet extends HttpServlet {
         res.setHeader("Cache-Control", "no-cache");
         res.setDateHeader("Expires", 0);
 
-        if (isTemplated(req))
-            templatePage(req, res);
-        else if (isStaticPage(req))
-            streamStaticPage(req, res);
-        else
-            res.sendError(404);
-    }
-
-    /**
-     * true <==> req is to a templated page
-     */
-    private boolean isTemplated(HttpServletRequest req) throws MalformedURLException {
-        ServletContext context = getServletContext();
-        return context.getResource("/WEB-INF/templates" + req.getServletPath()) != null;
-    }
-
-    /**
-     * true <==> req is to a non templated page
-     */
-    private boolean isStaticPage(HttpServletRequest req) throws MalformedURLException {
-        ServletContext context = getServletContext();
-        return context.getResource(req.getServletPath()) != null;
+        templatePage(req, res);
     }
 
     /**
@@ -87,21 +57,5 @@ public class HtmlPageServlet extends HttpServlet {
             ctx.setVariable("user", s.getAttribute("user"));
 
         templateEngine.process(req.getServletPath(), ctx, res.getWriter());
-    }
-
-    /**
-     * streams from disk the page the old way
-     */
-    private void streamStaticPage(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        ServletContext context = getServletContext();
-        char[] buf = new char[1024];
-        PrintWriter out = res.getWriter();
-
-        try (InputStream is = context.getResourceAsStream(req.getServletPath())) {
-            try (InputStreamReader i = new InputStreamReader(is, StandardCharsets.UTF_8)) {
-                while (i.read(buf) > 0)
-                    out.write(buf);
-            }
-        }
     }
 }
