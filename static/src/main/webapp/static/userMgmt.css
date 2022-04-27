@@ -2,6 +2,10 @@
     margin-top: 0;
 }
 
+.home-button {
+    align-self: flex-start;
+}
+
 .form {
     width: 100%;
     display: flex;

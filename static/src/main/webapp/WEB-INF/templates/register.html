@@ -9,10 +9,8 @@
 </head>
 <body>
 <div class="page-container">
-    <div class="big-logo">
-        <img alt="logo" src="/static/img/logo.svg"/>
-        <h1>Price</h1>
-    </div>
+    <div th:if="${user}" class="home-button" th:insert="~{fragments :: homeLink}"></div>
+    <div th:replace="~{fragments :: userMgmt-bigLogo}"></div>
     <div class="page-view">
         <h3 th:text="#{register.heading}">Register a new account</h3>
         <form action="/registerUser" class="form" method="post">
