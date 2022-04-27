@@ -34,7 +34,7 @@ public class PasswordUtils {
     public static boolean match(String hashed, String clear) {
         Objects.requireNonNull(hashed);
         Objects.requireNonNull(clear);
-        String salt = hashed.substring(hashed.lastIndexOf(':'));
+        String salt = hashed.substring(hashed.lastIndexOf(':') + 1);
         String hashedClear = genDigest(clear) + digestSalt(fromHex(salt)) + ':' + salt;
         return Objects.equals(hashed, hashedClear);
     }

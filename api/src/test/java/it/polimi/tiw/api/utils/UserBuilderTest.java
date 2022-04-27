@@ -1,7 +1,8 @@
-package it.polimi.tiw.api.dbaccess;
+package it.polimi.tiw.api.utils;
 
 import it.polimi.tiw.api.ApiError;
-import it.polimi.tiw.api.utils.UserBuilder;
+import it.polimi.tiw.api.dbaccess.User;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -10,7 +11,7 @@ class UserBuilderTest {
     @Test
     void testBuild() {
         UserBuilder u = new UserBuilder();
-        assertTrue(u.build().match((User user) -> false, (ApiError err) -> true));
+        Assertions.assertTrue(u.build().match((User user) -> false, (ApiError err) -> true));
         u.build().consume(
                 (User user) -> fail(),
                 (ApiError e) -> assertEquals(6, e.errors().length)
