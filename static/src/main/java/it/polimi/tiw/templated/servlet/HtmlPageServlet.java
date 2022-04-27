@@ -34,8 +34,8 @@ public class HtmlPageServlet extends HttpServlet {
         ServletContext context = getServletContext();
         ServletContextTemplateResolver resolver = new ServletContextTemplateResolver(context);
         resolver.setTemplateMode(TemplateMode.HTML);
-        resolver.setPrefix("/WEB-INF/templates");
-        resolver.setSuffix("*.html");
+        resolver.setPrefix("/WEB-INF/templates/");
+        resolver.setSuffix(".html");
 
         this.templateEngine = new TemplateEngine();
         this.templateEngine.setTemplateResolver(resolver);
