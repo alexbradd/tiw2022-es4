@@ -29,7 +29,7 @@ public class RegistrationServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String redirect = UserApi.register(req)
-                .match((u) -> "/login",
+                .match((u) -> "/login.html",
                         (e) -> "/register.html?e=" + switch (e.statusCode()) {
                             case 400 -> "user";
                             case 409 -> "conflict";

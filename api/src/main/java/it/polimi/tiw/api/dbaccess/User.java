@@ -141,7 +141,7 @@ public class User implements DatabaseAccessObject {
         if (!verifyUsername(username))
             throw new IllegalArgumentException(username + " is not a valid username");
         try (Connection c = retriever.getConnection()) {
-            try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where id = ?")) {
+            try (PreparedStatement p = c.prepareStatement("select * from tiw_app.users where username = ?")) {
                 injectStringParameters(p, username);
                 return packageApiResult(p, username);
             }

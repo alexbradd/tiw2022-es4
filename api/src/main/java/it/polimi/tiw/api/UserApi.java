@@ -33,6 +33,9 @@ public class UserApi {
      * both ways (querystring and form data) only one of the two sources will be used. In case of success, an
      * {@link ApiResult} containing the {@link User} corresponding to the saved user. Otherwise, the returned value will
      * contain an {@link ApiError} with the relative information
+     * @param req the {@link HttpServletRequest} to process
+     * @return An {@link ApiResult} containing the User in case of success
+     * @throws NullPointerException if {@code req} is null
      */
     public static ApiResult<User> register(HttpServletRequest req) {
         return new UserBuilder()
