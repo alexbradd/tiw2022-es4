@@ -10,12 +10,14 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
+
 /**
  * This servlet tries to retrieve an HTML template, process it using Thymeleaf and send it. If it fails to find a
  * template, it falls back to sending simple html pages. If it cannot find anything, it sends a 404.
@@ -79,6 +81,10 @@ public class HtmlPageServlet extends HttpServlet {
     private void templatePage(HttpServletRequest req, HttpServletResponse res) throws IOException {
         ServletContext context = getServletContext();
         WebContext ctx = new WebContext(req, res, context, req.getLocale());
+
+        HttpSession s = req.getSession(false);
+        if (s != null)
+            ctx.setVariable("user", s.getAttribute("user"));
 
         templateEngine.process(req.getServletPath(), ctx, res.getWriter());
     }
