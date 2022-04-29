@@ -1,9 +1,9 @@
 package it.polimi.tiw.api;
 
-import it.polimi.tiw.api.dbaccess.User;
+import it.polimi.tiw.api.beans.User;
+import it.polimi.tiw.api.dbaccess.UserDAO;
 import it.polimi.tiw.api.functional.Tuple;
 import it.polimi.tiw.api.utils.PasswordUtils;
-import it.polimi.tiw.api.utils.UserBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
- * Container for all {@link User} related calls
+ * Container for all {@link UserDAO} related calls
  */
 public class UserApi {
 
@@ -36,7 +36,7 @@ public class UserApi {
      * <p>
      * All fields are mandatory, must be urlencoded and have a maximum length of 128 characters. If data is passed in
      * both ways (querystring and form data) only one of the two sources will be used. In case of success, an
-     * {@link ApiResult} containing the {@link User} corresponding to the saved user. Otherwise, the returned value will
+     * {@link ApiResult} containing the {@link UserDAO} corresponding to the saved user. Otherwise, the returned value will
      * contain an {@link ApiError} with the relative information
      * @param req the {@link HttpServletRequest} to process
      * @return An {@link ApiResult} containing the User in case of success
@@ -44,15 +44,14 @@ public class UserApi {
      */
     public static ApiResult<User> register(HttpServletRequest req) {
         Objects.requireNonNull(req);
-        return new UserBuilder()
+        return new User.Builder()
                 .addUsername(req.getParameter("username"))
-                .addClearPassword(req.getParameter("clearPassword"))
-                .addRepeatPassword(req.getParameter("repeatPassword"))
+                .addPassword(req.getParameter("clearPassword"), req.getParameter("repeatPassword"))
                 .addEmail(req.getParameter("email"))
                 .addName(req.getParameter("name"))
                 .addSurname(req.getParameter("username"))
                 .build()
-                .flatMap(User::save);
+                .flatMap(u -> new UserDAO().save(u));
     }
 
     /**
@@ -79,7 +78,7 @@ public class UserApi {
                 .toList();
         if (e.size() > 0)
             return ApiResult.error(new ApiError(400, "Missing required parameter", e.toArray(new ApiSubError[0])));
-        return User.byUsername(username.getFirst())
+        return new UserDAO().byUsername(username.getFirst())
                 .flatMap(u -> {
                     if (PasswordUtils.match(u.getSaltedPassword(), clearPassword.getFirst()))
                         return ApiResult.ok(u);
