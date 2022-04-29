@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="page-container">
-    <div th:if="${user}" class="home-button" th:insert="~{fragments :: homeLink}"></div>
+    <div th:if="${session.user}" class="home-button" th:insert="~{fragments :: homeLink}"></div>
     <div th:replace="~{fragments :: userMgmt-bigLogo}"></div>
     <div class="page-view">
         <h3 th:text="#{register.heading}">Register a new account</h3>
