@@ -3,6 +3,7 @@ package it.polimi.tiw.api.utils;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Objects;
@@ -56,6 +57,10 @@ public class IdUtils {
         ByteBuffer byteBuffer = ByteBuffer.allocate(Long.BYTES);
         byteBuffer.put(longBytes);
         byteBuffer.flip();
-        return byteBuffer.getLong();
+        try {
+            return byteBuffer.getLong();
+        } catch (BufferUnderflowException e) {
+            throw new IllegalArgumentException("Sequence too short for long", e);
+        }
     }
 }
