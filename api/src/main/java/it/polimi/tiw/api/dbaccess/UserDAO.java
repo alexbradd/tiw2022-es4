@@ -2,7 +2,6 @@ package it.polimi.tiw.api.dbaccess;
 
 import it.polimi.tiw.api.ApiError;
 import it.polimi.tiw.api.ApiResult;
-import it.polimi.tiw.api.ApiSubError;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.utils.IdUtils;
 
@@ -70,10 +69,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
             injectStringParameters(p, username);
             return packageApiResult(p, username);
         } catch (SQLException e) {
-            ApiError error = new ApiError(500,
-                    "Error while fetching data",
-                    new ApiSubError("SQLException", e.getMessage() == null ? "" : e.getMessage()));
-            return ApiResult.error(error);
+            return ApiResult.error(DAOUtils.fromSQLException(e));
         }
     }
 
@@ -92,10 +88,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
                         .addSurname(r.getString("surname"))
                         .build();
             } else {
-                ApiError error = new ApiError(404,
-                        "Cannot find this object",
-                        new ApiSubError("NoSuchElementException", "No user with " + specifier));
-                return ApiResult.error(error);
+                return ApiResult.error(DAOUtils.fromMissingElement(specifier));
             }
         }
     }
@@ -130,10 +123,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            ApiError error = new ApiError(409,
-                    "Cannot save this object",
-                    new ApiSubError("SQLException", e.getMessage() == null ? "" : e.getMessage()));
-            return ApiResult.error(error);
+            return ApiResult.error(DAOUtils.fromSQLException(e));
         }
     }
 
