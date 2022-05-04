@@ -138,9 +138,15 @@ public class UserDAO implements DatabaseAccessObject<User> {
     }
 
     /**
-     * Checks whether a User has already been saved to the database
+     * Checks whether the given User is stored in the database or not
+     *
+     * @param user the User to check
+     * @return true is the given User has a correspondent in the database
+     * @throws NullPointerException if {@code user} is null
      */
-    private boolean isPersisted(User user) {
+    @Override
+    public boolean isPersisted(User user) {
+        Objects.requireNonNull(user);
         return byUsername(user.getUsername()).match((User u) -> true, (ApiError e) -> false);
     }
 

@@ -17,4 +17,12 @@ public interface DatabaseAccessObject<T extends PersistedObject> {
      * a success
      */
     ApiResult<T> save(T o);
+
+    /**
+     * Checks whether the given object is stored in the database or not
+     * @param o the object to check
+     * @return true is the given object has a correspondent in the database
+     * @throws NullPointerException if {@code o} is null
+     */
+    boolean isPersisted(T o);
 }
