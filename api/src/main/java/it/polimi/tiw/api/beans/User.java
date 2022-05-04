@@ -12,6 +12,9 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
+/**
+ * Bean representing a User
+ */
 public class User implements PersistedObject {
     private String username;
     private String saltedPassword;

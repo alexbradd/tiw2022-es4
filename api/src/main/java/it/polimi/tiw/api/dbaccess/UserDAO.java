@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.Objects;
 
 /**
- * Represents a User.
+ * Class for retrieving {@link User} instances from a database.
  */
 public class UserDAO implements DatabaseAccessObject<User> {
     /**
@@ -20,10 +20,19 @@ public class UserDAO implements DatabaseAccessObject<User> {
      */
     private final ConnectionRetriever retriever;
 
+    /**
+     * Instantiates a new UserDAO using the default {@link ConnectionRetriever}.
+     */
     public UserDAO() {
         this.retriever = ProductionConnectionRetriever.getInstance();
     }
 
+    /**
+     * Instantiates a new UserDAO using the given {@link ConnectionRetriever}.
+     *
+     * @param retriever the {@link ConnectionRetriever} to use.
+     * @throws NullPointerException if {@code retriever} is null
+     */
     public UserDAO(ConnectionRetriever retriever) {
         Objects.requireNonNull(retriever);
         this.retriever = retriever;
