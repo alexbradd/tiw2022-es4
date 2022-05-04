@@ -1,6 +1,7 @@
 package it.polimi.tiw.api;
 
 import it.polimi.tiw.api.beans.User;
+import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 import it.polimi.tiw.api.dbaccess.UserDAO;
 import it.polimi.tiw.api.functional.Tuple;
 import it.polimi.tiw.api.utils.PasswordUtils;
@@ -38,6 +39,7 @@ public class UserApi {
      * both ways (querystring and form data) only one of the two sources will be used. In case of success, an
      * {@link ApiResult} containing the {@link UserDAO} corresponding to the saved user. Otherwise, the returned value will
      * contain an {@link ApiError} with the relative information
+     *
      * @param req the {@link HttpServletRequest} to process
      * @return An {@link ApiResult} containing the User in case of success
      * @throws NullPointerException if {@code req} is null
@@ -51,7 +53,9 @@ public class UserApi {
                 .addName(req.getParameter("name"))
                 .addSurname(req.getParameter("username"))
                 .build()
-                .flatMap(u -> new UserDAO().save(u));
+                .flatMap(u -> ProductionConnectionRetriever.getInstance()
+                        .with(c -> new UserDAO(c).save(u)));
+
     }
 
     /**
@@ -78,16 +82,18 @@ public class UserApi {
                 .toList();
         if (e.size() > 0)
             return ApiResult.error(new ApiError(400, "Missing required parameter", e.toArray(new ApiSubError[0])));
-        return new UserDAO().byUsername(username.getFirst())
-                .flatMap(u -> {
-                    if (PasswordUtils.match(u.getSaltedPassword(), clearPassword.getFirst()))
-                        return ApiResult.ok(u);
-                    return ApiResult.error(new ApiError(
-                            409,
-                            "Username doesn't match password",
-                            new ApiSubError("IllegalArgumentException",
-                                    "The given password doesn't match the one saved")
-                    ));
-                });
+        return ProductionConnectionRetriever.getInstance()
+                .with(c -> new UserDAO(c)
+                        .byUsername(username.getFirst())
+                        .flatMap(u -> {
+                            if (PasswordUtils.match(u.getSaltedPassword(), clearPassword.getFirst()))
+                                return ApiResult.ok(u);
+                            return ApiResult.error(new ApiError(
+                                    409,
+                                    "Username doesn't match password",
+                                    new ApiSubError("IllegalArgumentException",
+                                            "The given password doesn't match the one saved")
+                            ));
+                        }));
     }
 }

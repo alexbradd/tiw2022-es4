@@ -22,8 +22,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class TestUserDAO {
     @Mock
-    private ConnectionRetriever mockConnectionRetriever;
-    @Mock
     private Connection mockConnection;
     @Mock
     private PreparedStatement statement;
@@ -35,7 +33,6 @@ public class TestUserDAO {
 
     @BeforeEach
     void setupMocks() throws SQLException {
-        Mockito.lenient().when(mockConnectionRetriever.getConnection()).thenReturn(mockConnection);
         Mockito.lenient().when(mockConnection.prepareStatement(any(String.class))).thenReturn(statement);
         Mockito.lenient().when(statement.executeUpdate()).thenReturn(1);
         Mockito.lenient().when(statement.executeQuery()).thenReturn(results);
@@ -54,7 +51,7 @@ public class TestUserDAO {
     @Test
     void testSavingNewUser() throws SQLException {
         when(results.next()).thenReturn(true);
-        UserDAO user = new UserDAO(mockConnectionRetriever);
+        UserDAO user = new UserDAO(mockConnection);
         ApiResult<User> r = user.save(u);
         verify(statement).executeUpdate();
         assertTrue(r.match((User u) -> true, (ApiError e) -> false));
@@ -63,14 +60,14 @@ public class TestUserDAO {
     @Test
     void testSavingDuplicate() throws SQLException {
         when(statement.executeUpdate()).thenThrow(SQLException.class);
-        UserDAO user = new UserDAO(mockConnectionRetriever);
+        UserDAO user = new UserDAO(mockConnection);
         assertTrue(user.save(u).match((User u) -> false, (ApiError e) -> true));
     }
 
     @Test
     void testUpdatingExistingUser() throws SQLException {
-        UserDAO user = spy(new UserDAO(mockConnectionRetriever));
-        doReturn(ApiResult.ok(u)).when(user).byUsername(any(Connection.class), any(String.class));
+        UserDAO user = spy(new UserDAO(mockConnection));
+        doReturn(ApiResult.ok(u)).when(user).byUsername(any(String.class));
         ApiResult<User> r = user.save(u);
         verify(statement).executeUpdate();
         assertTrue(r.match((User u) -> true, (ApiError e) -> false));
@@ -79,7 +76,7 @@ public class TestUserDAO {
     @Test
     void testFindByUsernameNotInDb() throws SQLException {
         when(results.next()).thenReturn(false);
-        ApiResult<User> maybe = new UserDAO(mockConnectionRetriever).byUsername("pippo");
+        ApiResult<User> maybe = new UserDAO(mockConnection).byUsername("pippo");
         verify(statement).executeQuery();
         verify(results).next();
         assertTrue(maybe.match((User u) -> false, (ApiError e) -> true));
@@ -99,7 +96,7 @@ public class TestUserDAO {
                 default -> null;
             };
         });
-        ApiResult<User> maybe = new UserDAO(mockConnectionRetriever).byUsername("pippo");
+        ApiResult<User> maybe = new UserDAO(mockConnection).byUsername("pippo");
         verify(statement).executeQuery();
         verify(results).next();
         assertTrue(maybe.match((User u) -> true, (ApiError e) -> false));
