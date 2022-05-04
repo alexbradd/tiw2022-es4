@@ -51,7 +51,7 @@ public class UserApi {
                 .addPassword(req.getParameter("clearPassword"), req.getParameter("repeatPassword"))
                 .addEmail(req.getParameter("email"))
                 .addName(req.getParameter("name"))
-                .addSurname(req.getParameter("username"))
+                .addSurname(req.getParameter("surname"))
                 .build()
                 .flatMap(u -> ProductionConnectionRetriever.getInstance()
                         .with(c -> new UserDAO(c).save(u)));
