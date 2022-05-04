@@ -36,6 +36,7 @@ public class TestUserDAO {
         Mockito.lenient().when(mockConnection.prepareStatement(any(String.class))).thenReturn(statement);
         Mockito.lenient().when(statement.executeUpdate()).thenReturn(1);
         Mockito.lenient().when(statement.executeQuery()).thenReturn(results);
+        Mockito.lenient().when(u.getBase64Id()).thenReturn("AAAAAAAAAAA");
         Mockito.lenient().when(u.getUsername()).thenReturn("pippo");
         Mockito.lenient().when(u.getSaltedPassword()).thenReturn("AAAAA:AAAA");
         Mockito.lenient().when(u.getEmail()).thenReturn("pippo@email.com");
@@ -96,12 +97,54 @@ public class TestUserDAO {
                 default -> null;
             };
         });
+        when(results.getLong(any(String.class))).thenReturn(0L);
         ApiResult<User> maybe = new UserDAO(mockConnection).byUsername("pippo");
         verify(statement).executeQuery();
         verify(results).next();
         assertTrue(maybe.match((User u) -> true, (ApiError e) -> false));
         maybe.consume(
                 (User user) -> {
+                    assertEquals("AAAAAAAAAAA", user.getBase64Id());
+                    assertEquals("pippo", user.getUsername());
+                    assertEquals("pippo@email.com", user.getEmail());
+                    assertEquals("Pippo", user.getName());
+                    assertEquals("Pluto", user.getSurname());
+                },
+                e -> fail()
+        );
+    }
+
+    @Test
+    void testFindByIdNotInDb() throws SQLException {
+        when(results.next()).thenReturn(false);
+        ApiResult<User> maybe = new UserDAO(mockConnection).byId(0);
+        verify(statement).executeQuery();
+        verify(results).next();
+        assertTrue(maybe.match((User u) -> false, (ApiError e) -> true));
+    }
+
+    @Test
+    void testFindByIdInDb() throws SQLException {
+        when(results.next()).thenReturn(true);
+        when(results.getString(any(String.class))).then((Answer<String>) invocationCall -> {
+            String key = invocationCall.getArgument(0);
+            return switch (key) {
+                case "username" -> "pippo";
+                case "password" -> "pippoTheBest";
+                case "email" -> "pippo@email.com";
+                case "name" -> "Pippo";
+                case "surname" -> "Pluto";
+                default -> null;
+            };
+        });
+        when(results.getLong(any(String.class))).thenReturn(0L);
+        ApiResult<User> maybe = new UserDAO(mockConnection).byId(0);
+        verify(statement).executeQuery();
+        verify(results).next();
+        assertTrue(maybe.match((User u) -> true, (ApiError e) -> false));
+        maybe.consume(
+                (User user) -> {
+                    assertEquals("AAAAAAAAAAA", user.getBase64Id());
                     assertEquals("pippo", user.getUsername());
                     assertEquals("pippo@email.com", user.getEmail());
                     assertEquals("Pippo", user.getName());

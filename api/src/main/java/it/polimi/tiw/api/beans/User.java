@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
  * Bean representing a User
  */
 public class User implements PersistedObject {
+    private String base64Id;
     private String username;
     private String saltedPassword;
     private String email;
@@ -23,11 +24,30 @@ public class User implements PersistedObject {
     private String surname;
 
     private User(Builder builder) {
+        this.base64Id = builder.base64Id;
         this.username = builder.username;
         this.saltedPassword = builder.saltedPassword;
         this.email = builder.email;
         this.name = builder.name;
         this.surname = builder.surname;
+    }
+
+    /**
+     * Getter for this User's id. The returned id might be null, e.g. when the User's hasn't been saved to database.
+     *
+     * @return this User's id
+     */
+    public String getBase64Id() {
+        return base64Id;
+    }
+
+    /**
+     * Setter for the id of this User
+     *
+     * @param base64Id the new id
+     */
+    public void setBase64Id(String base64Id) {
+        this.base64Id = base64Id;
     }
 
     /**
@@ -136,8 +156,8 @@ public class User implements PersistedObject {
          */
         public static final Pattern EMAIL_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}",
                 Pattern.CASE_INSENSITIVE);
+        private String base64Id = null;
         private String username = null;
-
         private Either<String, Tuple<String, String>> password = null;
         private String saltedPassword = null;
         private String email = null;
@@ -151,6 +171,7 @@ public class User implements PersistedObject {
         }
 
         private Builder(Builder old) {
+            this.base64Id = old.base64Id;
             this.username = old.username;
             this.password = old.password;
             this.saltedPassword = old.saltedPassword;
@@ -224,6 +245,17 @@ public class User implements PersistedObject {
                     }
             );
             l.addAll(err);
+        }
+
+        /**
+         * Returns a new instance with the given base64 id added
+         * @param base64Id the url safe base64 encoded id
+         * @return a new instance with the id added
+         */
+        public Builder addId(String base64Id) {
+            Builder u = new Builder(this);
+            u.base64Id = base64Id;
+            return u;
         }
 
         /**

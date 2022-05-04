@@ -4,6 +4,7 @@ import it.polimi.tiw.api.ApiError;
 import it.polimi.tiw.api.ApiResult;
 import it.polimi.tiw.api.ApiSubError;
 import it.polimi.tiw.api.beans.User;
+import it.polimi.tiw.api.utils.IdUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,6 +39,23 @@ public class UserDAO implements DatabaseAccessObject<User> {
     }
 
     /**
+     * Finds and retrieves the data for the User with the given id. If no such user can be found, an empty
+     * {@link ApiResult} is returned.
+     *
+     * @param id the id to search
+     * @return an {@link ApiResult} containing the constructed User
+     */
+    ApiResult<User> byId(long id) {
+        String sql = "select * from tiw_app.users where id = ?";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setLong(1, id);
+            return packageApiResult(p, String.valueOf(id));
+        } catch (SQLException e) {
+            return ApiResult.error(DAOUtils.fromSQLException(e));
+        }
+    }
+
+    /**
      * Finds and retrieves the data for the User with the given username. If no such user can be found, an empty
      * {@link ApiResult} is returned.
      *
@@ -66,6 +84,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
         try (ResultSet r = p.executeQuery()) {
             if (r.next()) {
                 return new User.Builder()
+                        .addId(IdUtils.toBase64(r.getLong("id")))
                         .addUsername(r.getString("username"))
                         .addPassword(r.getString("password"))
                         .addEmail(r.getString("email"))
@@ -86,7 +105,8 @@ public class UserDAO implements DatabaseAccessObject<User> {
      *
      * @param user the User to save
      * @return an {@link ApiResult} containing the User just saved.
-     * @throws NullPointerException of {@code u} is null or any property of {@code u} is null
+     * @throws NullPointerException     if {@code user} is null or any property of {@code user} is null
+     * @throws IllegalArgumentException if {@code user}'s id is not valid base64 (see {@link IdUtils})
      */
     @Override
     public ApiResult<User> save(User user) {
@@ -129,8 +149,9 @@ public class UserDAO implements DatabaseAccessObject<User> {
      */
     private void updateUser(User u) throws SQLException {
         try (PreparedStatement p = connection.prepareStatement(
-                "update tiw_app.users set password = ?, email = ?, name = ?, surname = ? where username = ?")) {
-            injectStringParameters(p, u.getSaltedPassword(), u.getEmail(), u.getName(), u.getSurname(), u.getUsername());
+                "update tiw_app.users set username = ?, password = ?, email = ?, name = ?, surname = ? where id = ?")) {
+            injectStringParameters(p, u.getUsername(), u.getSaltedPassword(), u.getEmail(), u.getName(), u.getSurname());
+            p.setLong(6, IdUtils.fromBase64(u.getBase64Id()));
             p.executeUpdate();
         }
     }
@@ -139,10 +160,13 @@ public class UserDAO implements DatabaseAccessObject<User> {
      * Save a new user with his object's properties into the database
      */
     private void saveNewUser(User u) throws SQLException {
+        long id = DAOUtils.genNewId(connection, "tiw_app.users", "id");
         try (PreparedStatement p = connection.prepareStatement(
-                "insert into tiw_app.users(username, password, email, name, surname) values (?, ?, ?, ?, ?)")) {
+                "insert into tiw_app.users(username, password, email, name, surname, id) values (?, ?, ?, ?, ?, ?)")) {
             injectStringParameters(p, u.getUsername(), u.getSaltedPassword(), u.getEmail(), u.getName(), u.getSurname());
+            p.setLong(6, id);
             p.executeUpdate();
+            u.setBase64Id(IdUtils.toBase64(id));
         }
     }
 }
