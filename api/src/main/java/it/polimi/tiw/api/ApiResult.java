@@ -3,6 +3,7 @@ package it.polimi.tiw.api;
 import it.polimi.tiw.api.functional.Either;
 import it.polimi.tiw.api.functional.Result;
 
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -76,6 +77,34 @@ public class ApiResult<T> {
     public <U> ApiResult<U> flatMap(Function<? super T, ? extends ApiResult<? extends U>> mapper) {
         Objects.requireNonNull(mapper);
         return value.match(ApiResult::error, (T t) -> cast(mapper.apply(t)));
+    }
+
+    /**
+     * If an element is present returns it, otherwise throw NoSuchElementException
+     *
+     * @return the element stored inside
+     * @throws NoSuchElementException if the ApiResult contains an error
+     */
+    public T get() {
+        return match(
+                t -> t,
+                e -> {
+                    throw new NoSuchElementException("An error was stored");
+                });
+    }
+
+    /**
+     * Opposite of {@link #get()}.
+     *
+     * @return the error stored inside
+     * @throws NoSuchElementException if the ApiResult contains a value.
+     */
+    public ApiError getError() {
+        return match(
+                t -> {
+                    throw new NoSuchElementException("A value was stored");
+                },
+                e -> e);
     }
 
     /**
