@@ -2,10 +2,42 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale}">
 <head>
     <meta charset="UTF-8">
-    <title th:text="#{index.title}">TIW Pure HTML application</title>
+    <link href="/static/img/favicon.ico" rel="icon"/>
+    <link href="/static/common.css" rel="stylesheet" th:href="@{/static/common.css}" type="text/css">
+    <link href="/static/index.css" rel="stylesheet" th:href="@{/static/index.css}" type="text/css">
+    <title th:text="#{index.title}">Price - Home</title>
 </head>
 <body>
-<h1 th:text="#{index.welcome}">Hello</h1>
-<p th:if="${#session}">You have been authenticated to <span th:text="${#session.getAttribute('user')}"></span></p>
+<div class="page-container">
+    <div class="header">
+        <img src="/static/img/logo.svg" alt="logo"/>
+        <div class="user-popup">
+            <p th:text="${session.user.getUsername()}"></p>
+            <div class="popup">
+                <a href="/login.html" th:text="#{index.login}">Log into a new account</a>
+                <a href="/logout" th:text="#{index.logout}">Logout</a>
+            </div>
+        </div>
+    </div>
+    <div class="page-view account-view">
+        <h3 th:text="#{index.accounts}">Accounts</h3>
+        <div th:if="${accountList} != null" class="account-list">
+            <div th:each="a : ${accountList}" class="account">
+                <p th:text="${a.getBase64Id()}"></p>
+                <p th:text="${a.getBalance()} + '€'"></p>
+                <a th:href="@{/details.html(id = ${a.getBase64Id()})}" th:text="#{index.details}">Details</a>
+            </div>
+            <form action="/createAccount" method="post" class="new-account">
+                <input type="hidden" name="userId" th:value="${session.user.getBase64Id()}"/>
+                <input type="submit" th:value="#{index.newAccount}" class="big-button ok center"/>
+            </form>
+        </div>
+        <div th:if="${accountList != null || param.e}">
+            <p th:text="#{index.serverError}">
+                Server encountered a problem and was not able to fulfill the request
+            </p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
