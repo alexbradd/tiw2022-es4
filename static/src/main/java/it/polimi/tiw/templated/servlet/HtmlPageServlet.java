@@ -15,7 +15,11 @@ import java.io.IOException;
 /**
  * This servlet tries to retrieve an HTML template, process it using Thymeleaf and send it.
  */
-@WebServlet("*.html")
+@WebServlet(value = {
+        "/index.html",
+        "/register.html",
+        "/login.html"
+})
 public class HtmlPageServlet extends HttpServlet {
     private TemplateEngine templateEngine;
 
