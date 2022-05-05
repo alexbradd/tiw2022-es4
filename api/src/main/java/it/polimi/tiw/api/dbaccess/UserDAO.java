@@ -55,6 +55,20 @@ public class UserDAO implements DatabaseAccessObject<User> {
     }
 
     /**
+     * Finds and retrieves the data for the User with the given id. If no such user can be found, an empty
+     * {@link ApiResult} is returned.
+     *
+     * @param base64Id the id to search
+     * @return an {@link ApiResult} containing the constructed User
+     * @throws NullPointerException     if {@code base64Id} is null
+     * @throws IllegalArgumentException if {@code base64Id} is not valid base64 (see {@link IdUtils})
+     */
+    public ApiResult<User> byId(String base64Id) {
+        Objects.requireNonNull(base64Id);
+        return byId(IdUtils.fromBase64(base64Id));
+    }
+
+    /**
      * Finds and retrieves the data for the User with the given username. If no such user can be found, an empty
      * {@link ApiResult} is returned.
      *
