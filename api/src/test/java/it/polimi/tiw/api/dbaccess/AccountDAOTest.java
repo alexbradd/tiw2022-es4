@@ -58,15 +58,18 @@ class AccountDAOTest {
     @Test
     void nullCheck() {
         assertThrows(NullPointerException.class, () -> new AccountDAO(null));
-        assertThrows(NullPointerException.class, () -> new AccountDAO(mockConnection).save(null));
-        assertThrows(NullPointerException.class, () -> new AccountDAO(mockConnection).isPersisted(null));
-        assertThrows(NullPointerException.class, () -> new AccountDAO(mockConnection).byId(null));
-        assertThrows(NullPointerException.class, () -> new AccountDAO(mockConnection).ofUser(null));
+        new AccountDAO(mockConnection).save(null).consume(a -> fail(), e -> {
+        });
+        new AccountDAO(mockConnection).byId(null).consume(a -> fail(), e -> {
+        });
+        new AccountDAO(mockConnection).ofUser(null).consume(a -> fail(), e -> {
+        });
     }
 
     @Test
     void byId_invalidId() {
-        assertThrows(IllegalArgumentException.class, () -> new AccountDAO(mockConnection).byId("asdfa"));
+        new AccountDAO(mockConnection).byId("asdfa").consume(a -> fail(), e -> {
+        });
     }
 
     @Test
@@ -145,14 +148,16 @@ class AccountDAOTest {
     void ofUser_unsavedUser() {
         User u = mock(User.class);
         when(u.getBase64Id()).thenReturn(null);
-        assertThrows(NullPointerException.class, () -> new AccountDAO(mockConnection).ofUser(u));
+        new AccountDAO(mockConnection).ofUser(u).consume(a -> fail(), e -> {
+        });
     }
 
     @Test
     void ofUser_invalidUser() {
         User u = mock(User.class);
         when(u.getBase64Id()).thenReturn("asdf");
-        assertThrows(IllegalArgumentException.class, () -> new AccountDAO(mockConnection).ofUser(u));
+        new AccountDAO(mockConnection).ofUser(u).consume(a -> fail(), e -> {
+        });
     }
 
     @Test

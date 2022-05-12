@@ -9,7 +9,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
+
+import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Class for retrieving {@link User} instances from a database.
@@ -25,7 +27,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
      * @throws NullPointerException if {@code connection} is null
      */
     public UserDAO(Connection connection) {
-        Objects.requireNonNull(connection);
+        requireNonNull(connection);
         this.connection = connection;
     }
 
@@ -60,11 +62,10 @@ public class UserDAO implements DatabaseAccessObject<User> {
      *
      * @param base64Id the id to search
      * @return an {@link ApiResult} containing the constructed User
-     * @throws NullPointerException     if {@code base64Id} is null
-     * @throws IllegalArgumentException if {@code base64Id} is not valid base64 (see {@link IdUtils})
      */
     public ApiResult<User> byId(String base64Id) {
-        Objects.requireNonNull(base64Id);
+        if (isNull(base64Id)) return ApiResult.error(DAOUtils.fromNullParameter("base64Id"));
+        if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(DAOUtils.fromMalformedParameter("base64Id"));
         return byId(IdUtils.fromBase64(base64Id));
     }
 
@@ -74,10 +75,9 @@ public class UserDAO implements DatabaseAccessObject<User> {
      *
      * @param username the username to search
      * @return an {@link ApiResult} containing the constructed User
-     * @throws NullPointerException if {@code username} is null
      */
     public ApiResult<User> byUsername(String username) {
-        Objects.requireNonNull(username, "username is required");
+        if (isNull(username)) return ApiResult.error(DAOUtils.fromNullParameter("username"));
         String sql = "select * from tiw_app.users where username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             injectStringParameters(p, username);
@@ -112,17 +112,12 @@ public class UserDAO implements DatabaseAccessObject<User> {
      *
      * @param user the User to save
      * @return an {@link ApiResult} containing the User just saved.
-     * @throws NullPointerException     if {@code user} is null or any property of {@code user} is null
-     * @throws IllegalArgumentException if {@code user}'s id is not valid base64 (see {@link IdUtils})
      */
     @Override
     public ApiResult<User> save(User user) {
-        Objects.requireNonNull(user);
-        Objects.requireNonNull(user.getUsername());
-        Objects.requireNonNull(user.getSaltedPassword());
-        Objects.requireNonNull(user.getEmail());
-        Objects.requireNonNull(user.getName());
-        Objects.requireNonNull(user.getSurname());
+        if (isNull(user)) return ApiResult.error(DAOUtils.fromNullParameter("user"));
+        if (user.hasNullProperties()) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+
         try {
             connection.setAutoCommit(false);
             try {
@@ -146,11 +141,10 @@ public class UserDAO implements DatabaseAccessObject<User> {
      *
      * @param user the User to check
      * @return true is the given User has a correspondent in the database
-     * @throws NullPointerException if {@code user} is null
      */
     @Override
     public boolean isPersisted(User user) {
-        Objects.requireNonNull(user);
+        if (isNull(user)) return false;
         return byUsername(user.getUsername()).match((User u) -> true, (ApiError e) -> false);
     }
 

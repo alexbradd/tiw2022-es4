@@ -42,6 +42,7 @@ public class AccountApi {
      *
      * @param u the owner of the {@link Account} in the list
      * @return an {@link ApiResult} containing a {@link List} of {@link Account} if everything went ok
+     * @throws NullPointerException if {@code u} is null
      * @see AccountDAO#ofUser(User)
      */
     public static ApiResult<List<Account>> ofUser(User u) {

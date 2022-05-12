@@ -35,4 +35,16 @@ class DAOUtils {
                 "Cannot find this object",
                 new ApiSubError("NoSuchElementException", "No such with " + specifics));
     }
+
+    public static ApiError fromNullParameter(String param) {
+        return new ApiError(400,
+                "Required parameter is missing",
+                new ApiSubError("NullPointerException", "Required parameter " + param + " is null"));
+    }
+
+    public static ApiError fromMalformedParameter(String param) {
+        return new ApiError(400,
+                "Parameter is malformed",
+                new ApiSubError("IllegalArgumentException", "Parameter " + param + " is of invalid format"));
+    }
 }

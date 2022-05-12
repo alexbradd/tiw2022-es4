@@ -22,6 +22,21 @@ public class IdUtils {
     }
 
     /**
+     * Returns true if the given string can be parsed into a valid base64 string without errors
+     *
+     * @param id the string to parse
+     * @return true if the given string is valid base64
+     */
+    public static boolean isValidBase64(String id) {
+        try {
+            fromBase64(id);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
      * Converts the given url-safe base64 string and convert it to a long.
      *
      * @param id the base64 string

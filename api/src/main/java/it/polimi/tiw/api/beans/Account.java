@@ -95,4 +95,12 @@ public class Account implements PersistedObject {
             throw new IllegalArgumentException("balance should be positive");
         this.balance = balance;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasNullProperties(boolean includeId) {
+        return (base64Id == null && includeId) || owner == null;
+    }
 }

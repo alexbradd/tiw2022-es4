@@ -12,6 +12,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import static java.util.Objects.isNull;
+
 /**
  * Bean representing a User
  */
@@ -142,6 +144,19 @@ public class User implements PersistedObject {
         this.surname = surname;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasNullProperties(boolean includeId) {
+        return (isNull(base64Id) && includeId) ||
+                isNull(username) ||
+                isNull(saltedPassword) ||
+                isNull(email) ||
+                isNull(name) ||
+                isNull(surname);
+    }
+
     public static class Builder {
         /**
          * Maximum allowed string length
@@ -249,6 +264,7 @@ public class User implements PersistedObject {
 
         /**
          * Returns a new instance with the given base64 id added
+         *
          * @param base64Id the url safe base64 encoded id
          * @return a new instance with the id added
          */
