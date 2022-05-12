@@ -32,7 +32,7 @@
                 <input type="submit" th:value="#{index.newAccount}" class="big-button ok center"/>
             </form>
         </div>
-        <div th:if="${accountList != null || param.e}">
+        <div th:if="${accountList == null || param.e}">
             <p th:text="#{index.serverError}">
                 Server encountered a problem and was not able to fulfill the request
             </p>
