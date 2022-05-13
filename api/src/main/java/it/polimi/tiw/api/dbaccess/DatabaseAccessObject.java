@@ -10,13 +10,22 @@ import it.polimi.tiw.api.beans.PersistedObject;
  */
 public interface DatabaseAccessObject<T extends PersistedObject> {
     /**
-     * Saves this object to the database. If the object is already present, it updates the existing one.
+     * Inserts this object into the database. If the object is already present, it returns an error, otherwise the object
+     * inserted.
      *
-     * @param o the object to save
-     * @return an {@link ApiResult} containing an error is something went wrong or the saved object is the operation was
-     * a success
+     * @param o the object to insert
+     * @return an {@link ApiResult} containing an error or the saved object
      */
-    ApiResult<T> save(T o);
+    ApiResult<T> insert(T o);
+
+    /**
+     * Updates the entity corresponding to this object in the database. If the object is not present in the database,
+     * an error is returned. Otherwise, the object passed is returned.
+     *
+     * @param o the object to update
+     * @return an {@link ApiResult} containing an error or the updated object
+     */
+    ApiResult<T> update(T o);
 
     /**
      * Checks whether the given object is stored in the database or not

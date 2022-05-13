@@ -54,7 +54,7 @@ public class UserApi {
                 .addSurname(req.getParameter("surname"))
                 .build()
                 .flatMap(u -> ProductionConnectionRetriever.getInstance()
-                        .with(c -> new UserDAO(c).save(u)));
+                        .with(c -> new UserDAO(c).insert(u)));
 
     }
 

@@ -25,7 +25,7 @@ public class AccountApi {
      * @param id the id of owner of the new {@link Account}
      * @return an {@link ApiResult} containing the created {@link Account} if everything went ok
      * @throws NullPointerException if {@code id} is null
-     * @see AccountDAO#save(Account)
+     * @see AccountDAO#insert(Account)
      */
     public static ApiResult<Account> createFor(String id) {
         Objects.requireNonNull(id);
@@ -33,7 +33,7 @@ public class AccountApi {
                 new UserDAO(c).byId(id)
                         .flatMap(u -> {
                             Account a = new Account(u, 0);
-                            return new AccountDAO(c).save(a);
+                            return new AccountDAO(c).insert(a);
                         }));
     }
 

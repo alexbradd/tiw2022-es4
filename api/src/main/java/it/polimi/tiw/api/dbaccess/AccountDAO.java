@@ -96,23 +96,44 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     }
 
     /**
-     * Saves this Account to the database. If the object is already present, it updates the existing one.
+     * Checks whether the given Account is stored in the database or not
      *
-     * @param account the Account to save
-     * @return an {@link ApiResult} containing an error is something went wrong or the saved object is the operation was
-     * a success
+     * @param account the Account to check
+     * @return true is the given Account has a correspondent in the database
      */
     @Override
-    public ApiResult<Account> save(Account account) {
+    public boolean isPersisted(Account account) {
+        if (isNull(account)) return false;
+        return account.getBase64Id() != null && byId(account.getBase64Id()).match(__ -> true, __ -> false);
+    }
+
+    /**
+     * Updates the entity corresponding to this Account in the database. If the Account is not present in the database,
+     * an error is returned. Otherwise, the object passed is returned.
+     *
+     * @param account the Account to update
+     * @return an {@link ApiResult} containing an error or the updated object
+     */
+    @Override
+    public ApiResult<Account> update(Account account) {
         if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
-        if (account.hasNullProperties()) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (account.hasNullProperties(true)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (!isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
         if (account.getBalance() < 0)
             return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (!IdUtils.isValidBase64(account.getBase64Id()))
+            return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+
         try {
+            String sql = "update tiw_app.accounts set ownerId = ?, balance = ? where id = ?";
             connection.setAutoCommit(false);
             try {
-                if (isPersisted(account)) updateAccount(account);
-                else addNewAccount(account);
+                try (PreparedStatement p = connection.prepareStatement(sql)) {
+                    p.setLong(1, IdUtils.fromBase64(account.getOwner().getBase64Id()));
+                    p.setInt(2, account.getBalance());
+                    p.setLong(3, IdUtils.fromBase64(account.getBase64Id()));
+                    p.executeUpdate();
+                }
                 connection.commit();
                 return ApiResult.ok(account);
             } catch (SQLException e) {
@@ -127,42 +148,42 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     }
 
     /**
-     * Checks whether the given Account is stored in the database or not
+     * Inserts this object into the database. If the object is already present, it returns an error, otherwise the object
+     * inserted.
      *
-     * @param account the Account to check
-     * @return true is the given Account has a correspondent in the database
+     * @param account the object to insert
+     * @return an {@link ApiResult} containing an error or the saved object
      */
     @Override
-    public boolean isPersisted(Account account) {
-        if (isNull(account)) return false;
-        return account.getBase64Id() != null && byId(account.getBase64Id()).match(__ -> true, __ -> false);
-    }
+    public ApiResult<Account> insert(Account account) {
+        if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
+        if (account.hasNullProperties(false)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (account.getBalance() < 0)
+            return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
 
-    /**
-     * Updates the account with the given id to the owner and balance
-     */
-    private void updateAccount(Account account) throws SQLException {
-        String sql = "update tiw_app.accounts set ownerId = ?, balance = ? where id = ?";
-        try (PreparedStatement p = connection.prepareStatement(sql)) {
-            p.setLong(1, IdUtils.fromBase64(account.getOwner().getBase64Id()));
-            p.setInt(2, account.getBalance());
-            p.setLong(3, IdUtils.fromBase64(account.getBase64Id()));
-            p.executeUpdate();
-        }
-    }
-
-    /**
-     * Saves a new account to db and sets the new id
-     */
-    private void addNewAccount(Account account) throws SQLException {
-        String sql = "insert into tiw_app.accounts(id, ownerId, balance) values(?, ?, ?);";
-        long id = DAOUtils.genNewId(connection, "tiw_app.accounts", "id");
-        try (PreparedStatement p = connection.prepareStatement(sql)) {
-            p.setLong(1, id);
-            p.setLong(2, IdUtils.fromBase64(account.getOwner().getBase64Id()));
-            p.setInt(3, account.getBalance());
-            p.executeUpdate();
-            account.setBase64Id(IdUtils.toBase64(id));
+        try {
+            String sql = "insert into tiw_app.accounts(id, ownerId, balance) values(?, ?, ?);";
+            connection.setAutoCommit(false);
+            try {
+                long id = DAOUtils.genNewId(connection, "tiw_app.accounts", "id");
+                try (PreparedStatement p = connection.prepareStatement(sql)) {
+                    p.setLong(1, id);
+                    p.setLong(2, IdUtils.fromBase64(account.getOwner().getBase64Id()));
+                    p.setInt(3, account.getBalance());
+                    p.executeUpdate();
+                }
+                connection.commit();
+                account.setBase64Id(IdUtils.toBase64(id));
+                return ApiResult.ok(account);
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 }
