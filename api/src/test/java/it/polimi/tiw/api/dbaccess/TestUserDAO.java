@@ -53,7 +53,7 @@ public class TestUserDAO {
     void testSavingNewUser() throws SQLException {
         when(results.next()).thenReturn(true);
         UserDAO user = new UserDAO(mockConnection);
-        ApiResult<User> r = user.save(u);
+        ApiResult<User> r = user.insert(u);
         verify(statement).executeUpdate();
         assertTrue(r.match((User u) -> true, (ApiError e) -> false));
     }
@@ -62,14 +62,14 @@ public class TestUserDAO {
     void testSavingDuplicate() throws SQLException {
         when(statement.executeUpdate()).thenThrow(SQLException.class);
         UserDAO user = new UserDAO(mockConnection);
-        assertTrue(user.save(u).match((User u) -> false, (ApiError e) -> true));
+        assertTrue(user.insert(u).match((User u) -> false, (ApiError e) -> true));
     }
 
     @Test
     void testUpdatingExistingUser() throws SQLException {
         UserDAO user = spy(new UserDAO(mockConnection));
         doReturn(ApiResult.ok(u)).when(user).byUsername(any(String.class));
-        ApiResult<User> r = user.save(u);
+        ApiResult<User> r = user.update(u);
         verify(statement).executeUpdate();
         assertTrue(r.match((User u) -> true, (ApiError e) -> false));
     }

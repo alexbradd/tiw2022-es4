@@ -58,7 +58,7 @@ class AccountDAOTest {
     @Test
     void nullCheck() {
         assertThrows(NullPointerException.class, () -> new AccountDAO(null));
-        new AccountDAO(mockConnection).save(null).consume(a -> fail(), e -> {
+        new AccountDAO(mockConnection).insert(null).consume(a -> fail(), e -> {
         });
         new AccountDAO(mockConnection).byId(null).consume(a -> fail(), e -> {
         });
@@ -119,7 +119,7 @@ class AccountDAOTest {
     void save_newAccount() throws SQLException {
         AccountDAO dao = spy(new AccountDAO(mockConnection));
         doReturn(false).when(dao).isPersisted(any(Account.class));
-        ApiResult<Account> res = dao.save(a);
+        ApiResult<Account> res = dao.insert(a);
         assertTrue(res.match((Account a) -> true, (ApiError e) -> false));
         res.consume(a -> assertEquals("AAAAAAAAAAA", a.getBase64Id()), e -> fail());
         verify(statement).executeUpdate();
@@ -130,16 +130,17 @@ class AccountDAOTest {
         Account account = mock(Account.class);
         AccountDAO dao = spy(new AccountDAO(mockConnection));
         doReturn(true).when(dao).isPersisted(any(Account.class));
-        when(account.getOwner()).thenReturn(u);
+        when(account.hasNullProperties(any(Boolean.class))).thenReturn(false);
         when(account.getBase64Id()).thenReturn("asdfad");
-        assertThrows(IllegalArgumentException.class, () -> dao.save(account));
+        dao.update(account).consume(__ -> fail(), __ -> {
+        });
     }
 
     @Test
     void save_existingAccount() throws SQLException {
         AccountDAO dao = spy(new AccountDAO(mockConnection));
         doReturn(true).when(dao).isPersisted(any(Account.class));
-        ApiResult<Account> res = dao.save(a);
+        ApiResult<Account> res = dao.update(a);
         assertTrue(res.match((Account a) -> true, (ApiError e) -> false));
         verify(statement).executeUpdate();
     }

@@ -47,4 +47,10 @@ class DAOUtils {
                 "Parameter is malformed",
                 new ApiSubError("IllegalArgumentException", "Parameter " + param + " is of invalid format"));
     }
+
+    public static ApiError fromConflict(String param) {
+        return new ApiError(409,
+                "Parameter conflicts with the current state",
+                new ApiSubError("IllegalArgumentException", "Parameter" + param + " conflicts with the data stored in the database"));
+    }
 }

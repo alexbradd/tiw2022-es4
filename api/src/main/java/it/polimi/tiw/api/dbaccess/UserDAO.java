@@ -108,21 +108,41 @@ public class UserDAO implements DatabaseAccessObject<User> {
     }
 
     /**
-     * Saves the current User to database. If the User already existed, the updates are stored.
+     * Checks whether the given User is stored in the database or not
      *
-     * @param user the User to save
-     * @return an {@link ApiResult} containing the User just saved.
+     * @param user the User to check
+     * @return true is the given User has a correspondent in the database
      */
     @Override
-    public ApiResult<User> save(User user) {
+    public boolean isPersisted(User user) {
+        if (isNull(user)) return false;
+        return byId(user.getBase64Id()).match((User u) -> true, (ApiError e) -> false);
+    }
+
+    /**
+     * Updates the entity corresponding to this User in the database. If the User is not present in the database,
+     * an error is returned. Otherwise, the User passed is returned.
+     *
+     * @param user the User to update
+     * @return an {@link ApiResult} containing an error or the updated object
+     */
+    @Override
+    public ApiResult<User> update(User user) {
         if (isNull(user)) return ApiResult.error(DAOUtils.fromNullParameter("user"));
-        if (user.hasNullProperties()) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (user.hasNullProperties(true)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (!isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (!IdUtils.isValidBase64(user.getBase64Id()))
+            return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
 
         try {
             connection.setAutoCommit(false);
             try {
-                if (isPersisted(user)) updateUser(user);
-                else saveNewUser(user);
+                try (PreparedStatement p = connection.prepareStatement(
+                        "update tiw_app.users set username = ?, password = ?, email = ?, name = ?, surname = ? where id = ?")) {
+                    injectStringParameters(p, user.getUsername(), user.getSaltedPassword(), user.getEmail(), user.getName(), user.getSurname());
+                    p.setLong(6, IdUtils.fromBase64(user.getBase64Id()));
+                    p.executeUpdate();
+                }
                 connection.commit();
                 return ApiResult.ok(user);
             } catch (SQLException e) {
@@ -137,40 +157,41 @@ public class UserDAO implements DatabaseAccessObject<User> {
     }
 
     /**
-     * Checks whether the given User is stored in the database or not
+     * Inserts this User into the database. If the User is already present or another user with the same username exists,
+     * an error is returned. Otherwise, the passed User with the assigned id is returned.
      *
-     * @param user the User to check
-     * @return true is the given User has a correspondent in the database
+     * @param user the object to insert
+     * @return an {@link ApiResult} containing an error or the inserted User
      */
     @Override
-    public boolean isPersisted(User user) {
-        if (isNull(user)) return false;
-        return byUsername(user.getUsername()).match((User u) -> true, (ApiError e) -> false);
-    }
+    public ApiResult<User> insert(User user) {
+        if (isNull(user)) return ApiResult.error(DAOUtils.fromNullParameter("user"));
+        if (user.hasNullProperties(false)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (byUsername(user.getUsername()).match(__ -> true, __ -> false))
+            return ApiResult.error(DAOUtils.fromConflict("user"));
 
-    /**
-     * Updates the already existing user represented by this object
-     */
-    private void updateUser(User u) throws SQLException {
-        try (PreparedStatement p = connection.prepareStatement(
-                "update tiw_app.users set username = ?, password = ?, email = ?, name = ?, surname = ? where id = ?")) {
-            injectStringParameters(p, u.getUsername(), u.getSaltedPassword(), u.getEmail(), u.getName(), u.getSurname());
-            p.setLong(6, IdUtils.fromBase64(u.getBase64Id()));
-            p.executeUpdate();
-        }
-    }
-
-    /**
-     * Save a new user with his object's properties into the database
-     */
-    private void saveNewUser(User u) throws SQLException {
-        long id = DAOUtils.genNewId(connection, "tiw_app.users", "id");
-        try (PreparedStatement p = connection.prepareStatement(
-                "insert into tiw_app.users(username, password, email, name, surname, id) values (?, ?, ?, ?, ?, ?)")) {
-            injectStringParameters(p, u.getUsername(), u.getSaltedPassword(), u.getEmail(), u.getName(), u.getSurname());
-            p.setLong(6, id);
-            p.executeUpdate();
-            u.setBase64Id(IdUtils.toBase64(id));
+        try {
+            connection.setAutoCommit(false);
+            try {
+                long id = DAOUtils.genNewId(connection, "tiw_app.users", "id");
+                try (PreparedStatement p = connection.prepareStatement(
+                        "insert into tiw_app.users(username, password, email, name, surname, id) values (?, ?, ?, ?, ?, ?)")) {
+                    injectStringParameters(p, user.getUsername(), user.getSaltedPassword(), user.getEmail(), user.getName(), user.getSurname());
+                    p.setLong(6, id);
+                    p.executeUpdate();
+                }
+                connection.commit();
+                user.setBase64Id(IdUtils.toBase64(id));
+                return ApiResult.ok(user);
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            return ApiResult.error(DAOUtils.fromSQLException(e));
         }
     }
 }
