@@ -116,7 +116,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
     @Override
     public boolean isPersisted(User user) {
         if (isNull(user)) return false;
-        return byId(user.getBase64Id()).match((User u) -> true, (ApiError e) -> false);
+        return byId(user.getBase64Id()).match(u -> true, (ApiError e) -> false);
     }
 
     /**
@@ -130,9 +130,9 @@ public class UserDAO implements DatabaseAccessObject<User> {
     public ApiResult<User> update(User user) {
         if (isNull(user)) return ApiResult.error(DAOUtils.fromNullParameter("user"));
         if (user.hasNullProperties(true)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
-        if (!isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
         if (!IdUtils.isValidBase64(user.getBase64Id()))
             return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (!isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
 
         try {
             connection.setAutoCommit(false);
