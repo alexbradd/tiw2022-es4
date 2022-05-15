@@ -1,9 +1,8 @@
 package it.polimi.tiw.api;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import java.util.Objects;
 
 /**
@@ -30,15 +29,18 @@ public record ApiError(int statusCode, String errorMessage, ApiSubError... error
      * @return a JsonObject corresponding to this object
      */
     public JsonObject toJson() {
-        JsonObjectBuilder builder = Json.createObjectBuilder()
-                .add("error", Json.createObjectBuilder()
-                        .add("code", statusCode)
-                        .add("message", errorMessage));
-        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        JsonObject obj = new JsonObject();
+        JsonObject error = new JsonObject();
+        JsonArray errorArr = new JsonArray();
+
+        error.addProperty("code", statusCode);
+        error.addProperty("message", errorMessage);
         for (ApiSubError e : errors)
-            arrayBuilder.add(e.toJson());
-        builder.add("errors", arrayBuilder);
-        return builder.build();
+            errorArr.add(e.toJson());
+
+        obj.add("error", error);
+        obj.add("errors", errorArr);
+        return obj;
     }
 }
 

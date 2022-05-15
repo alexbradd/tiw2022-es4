@@ -1,7 +1,7 @@
 package it.polimi.tiw.api;
 
-import javax.json.Json;
-import javax.json.JsonObject;
+import com.google.gson.JsonObject;
+
 import java.util.Objects;
 
 /**
@@ -26,9 +26,9 @@ public record ApiSubError(String reason, String message) {
      * @return a JsonObject corresponding to this object
      */
     public JsonObject toJson() {
-        return Json.createObjectBuilder()
-                .add("reason", reason)
-                .add("message", message)
-                .build();
+        JsonObject obj = new JsonObject();
+        obj.addProperty("reason", reason);
+        obj.addProperty("message", message);
+        return obj;
     }
 }
