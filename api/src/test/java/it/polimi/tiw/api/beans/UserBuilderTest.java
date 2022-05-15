@@ -15,13 +15,6 @@ class UserBuilderTest {
                 (ApiError e) -> assertEquals(5, e.errors().length)
         );
 
-        u = u.addUsername("@@@@");
-        assertTrue(u.build().match((User user) -> false, (ApiError err) -> true));
-        u.build().consume(
-                (User user) -> fail(),
-                (ApiError e) -> assertEquals(5, e.errors().length)
-        );
-
         u = u.addUsername("pippo");
         assertTrue(u.build().match((User user) -> false, (ApiError err) -> true));
         u.build().consume(
