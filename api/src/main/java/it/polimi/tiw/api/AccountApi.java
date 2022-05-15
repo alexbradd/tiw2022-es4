@@ -33,7 +33,7 @@ public class AccountApi {
                 new UserDAO(c).byId(id)
                         .flatMap(u -> {
                             Account a = new Account(u, 0);
-                            return new AccountDAO(c).insert(a);
+                            return AccountDAO.withNewObjects(c).insert(a);
                         }));
     }
 
@@ -47,6 +47,7 @@ public class AccountApi {
      */
     public static ApiResult<List<Account>> ofUser(User u) {
         Objects.requireNonNull(u);
-        return ProductionConnectionRetriever.getInstance().with(c -> new AccountDAO(c).ofUser(u));
+        return ProductionConnectionRetriever.getInstance().with(c ->
+                AccountDAO.withNewObjects(c).ofUser(u));
     }
 }
