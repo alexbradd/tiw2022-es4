@@ -129,6 +129,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
 
         try {
             String sql = "update tiw_app.accounts set ownerId = ?, balance = ? where id = ?";
+            boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -143,7 +144,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(true);
+                connection.setAutoCommit(autoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
@@ -167,6 +168,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
 
         try {
             String sql = "insert into tiw_app.accounts(id, ownerId, balance) values(?, ?, ?);";
+            boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 long id = DAOUtils.genNewId(connection, "tiw_app.accounts", "id");
@@ -183,7 +185,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(true);
+                connection.setAutoCommit(autoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));

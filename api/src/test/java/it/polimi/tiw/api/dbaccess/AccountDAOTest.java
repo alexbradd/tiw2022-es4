@@ -152,10 +152,12 @@ class AccountDAOTest {
 
     @Test
     void update_atomic() throws SQLException {
+        Boolean prevAutoCommit = true;
         User mockUser = mock(User.class);
         Account mock = mock(Account.class);
         AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
 
+        when(mockConnection.getAutoCommit()).thenReturn(prevAutoCommit);
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
         when(mock.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getOwner()).thenReturn(mockUser);
@@ -165,7 +167,7 @@ class AccountDAOTest {
 
         ApiResult<Account> res = dao.update(mock);
         res.consume(__ -> fail(), e -> assertEquals(500, e.statusCode()));
-        verify(mockConnection).setAutoCommit(true);
+        verify(mockConnection).setAutoCommit(prevAutoCommit);
         verify(mockConnection).setAutoCommit(false);
         verify(mockConnection).rollback();
     }
@@ -183,10 +185,12 @@ class AccountDAOTest {
 
     @Test
     void insert_atomic() throws SQLException {
+        Boolean prevAutoCommit = true;
         User mockUser = mock(User.class);
         Account mock = mock(Account.class);
         AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
 
+        when(mockConnection.getAutoCommit()).thenReturn(prevAutoCommit);
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
         when(mock.getOwner()).thenReturn(mockUser);
         when(mockUser.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
@@ -195,7 +199,7 @@ class AccountDAOTest {
 
         ApiResult<Account> res = dao.insert(mock);
         res.consume(__ -> fail(), e -> assertEquals(500, e.statusCode()));
-        verify(mockConnection).setAutoCommit(true);
+        verify(mockConnection).setAutoCommit(prevAutoCommit);
         verify(mockConnection).setAutoCommit(false);
         verify(mockConnection).rollback();
     }

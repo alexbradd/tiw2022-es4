@@ -135,6 +135,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
         if (!isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
 
         try {
+            boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement p = connection.prepareStatement(
@@ -149,7 +150,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(true);
+                connection.setAutoCommit(autoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
@@ -172,6 +173,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
             return ApiResult.error(DAOUtils.fromConflict("user"));
 
         try {
+            boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 long id = DAOUtils.genNewId(connection, "tiw_app.users", "id");
@@ -188,7 +190,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(true);
+                connection.setAutoCommit(autoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
