@@ -163,10 +163,6 @@ public class User implements PersistedObject {
          */
         public static final int STRING_LENGTH = 128;
         /**
-         * The {@link Pattern} used for validating correctness of the usernames passed.
-         */
-        public static final Pattern USERNAME_REGEX = Pattern.compile("^[a-z0-9_-]{3,20}$", Pattern.CASE_INSENSITIVE);
-        /**
          * The {@link Pattern} used for validating correctness of the emails passed.
          */
         public static final Pattern EMAIL_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}",
@@ -216,16 +212,6 @@ public class User implements PersistedObject {
          */
         private static boolean checkLength(String s) {
             return s.length() <= STRING_LENGTH;
-        }
-
-        /**
-         * Verify that the passed string is a valid username
-         *
-         * @param username the string to check
-         * @return true if the passed username is a valid username
-         */
-        private static boolean verifyUsername(String username) {
-            return username != null && USERNAME_REGEX.matcher(username).find();
         }
 
         /**
@@ -358,7 +344,7 @@ public class User implements PersistedObject {
          */
         public ApiResult<User> build() {
             ArrayList<ApiSubError> missing = new ArrayList<>();
-            checkRequiredParameter(username, "username", Builder::verifyUsername, missing);
+            checkRequiredParameter(username, "username", missing);
             checkPassword(password, missing);
             checkRequiredParameter(email, "email", Builder::verifyEmail, missing);
             checkRequiredParameter(name, "name", missing);

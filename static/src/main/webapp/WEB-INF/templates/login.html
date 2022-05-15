@@ -16,7 +16,7 @@
         <form action="/loginUser" class="form" method="post">
             <div class="form-input required">
                 <label for="username" th:text="#{login.username}">Username:</label>
-                <input id="username" name="username" pattern="^[a-zA-Z0-9_-]{3,20}$" required type="text"/>
+                <input id="username" name="username" required type="text"/>
             </div>
             <div class="form-input required">
                 <label for="clearPassword" th:text="#{login.password}">Password:</label>
