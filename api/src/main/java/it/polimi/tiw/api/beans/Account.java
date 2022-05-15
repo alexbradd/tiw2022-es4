@@ -3,7 +3,7 @@ package it.polimi.tiw.api.beans;
 import java.util.Objects;
 
 /**
- * Bea representing an Account.
+ * Bean representing an Account.
  */
 public class Account implements PersistedObject {
     private String base64Id;
