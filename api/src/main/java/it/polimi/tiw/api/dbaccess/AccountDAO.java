@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class AccountDAO implements DatabaseAccessObject<Account> {
     private final Connection connection;
+    private final UserDAO userDAO;
 
     /**
      * Instantiates a new AccountDAO using the given {@link Connection}.
@@ -27,9 +28,11 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
      * @param connection the {@link Connection} to use.
      * @throws NullPointerException if {@code connection} is null
      */
-    public AccountDAO(Connection connection) {
+    public AccountDAO(Connection connection, UserDAO userDAO) {
         requireNonNull(connection);
+        requireNonNull(userDAO);
         this.connection = connection;
+        this.userDAO = userDAO;
     }
 
     /**
@@ -49,7 +52,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 if (r.next()) {
                     long ownerId = r.getLong("ownerId");
                     int balance = r.getInt("balance");
-                    return new UserDAO(connection)
+                    return userDAO
                             .byId(ownerId)
                             .map(u -> {
                                 Account a = new Account(u, balance);
@@ -104,7 +107,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     @Override
     public boolean isPersisted(Account account) {
         if (isNull(account)) return false;
-        return account.getBase64Id() != null && byId(account.getBase64Id()).match(__ -> true, __ -> false);
+        return byId(account.getBase64Id()).match(__ -> true, __ -> false);
     }
 
     /**
@@ -118,11 +121,11 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     public ApiResult<Account> update(Account account) {
         if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
         if (account.hasNullProperties(true)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
-        if (!isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
         if (account.getBalance() < 0)
             return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
         if (!IdUtils.isValidBase64(account.getBase64Id()))
             return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (!isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
 
         try {
             String sql = "update tiw_app.accounts set ownerId = ?, balance = ? where id = ?";
@@ -158,9 +161,9 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     public ApiResult<Account> insert(Account account) {
         if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
         if (account.hasNullProperties(false)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
-        if (isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
         if (account.getBalance() < 0)
             return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
 
         try {
             String sql = "insert into tiw_app.accounts(id, ownerId, balance) values(?, ?, ?);";
@@ -183,7 +186,20 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            return ApiResult.error(DAOUtils.fromSQLException(e));
         }
+    }
+
+    /**
+     * Returns a new AccountDAO object that will create all the DAO objects it
+     * needs from scratch sharing the given {@link Connection}.
+     *
+     * @param connection a {@link Connection}
+     * @return a new AccountDAO object
+     * @throws NullPointerException if {@code connection} is null
+     */
+    public static AccountDAO withNewObjects(Connection connection) {
+        requireNonNull(connection);
+        return new AccountDAO(connection, new UserDAO(connection));
     }
 }
