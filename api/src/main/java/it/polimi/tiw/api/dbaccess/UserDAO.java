@@ -122,6 +122,10 @@ public class UserDAO implements DatabaseAccessObject<User> {
     /**
      * Updates the entity corresponding to this User in the database. If the User is not present in the database,
      * an error is returned. Otherwise, the User passed is returned.
+     * <p>
+     * The operation will be done atomically using transactions. If automatic transaction management has been turned
+     * off, e.g. with {@link java.sql.Connection#setAutoCommit(boolean)}, it is the caller's responsibility to commit
+     * or rollback the changes.
      *
      * @param user the User to update
      * @return an {@link ApiResult} containing an error or the updated object
@@ -135,7 +139,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
         if (!isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
 
         try {
-            boolean autoCommit = connection.getAutoCommit();
+            boolean prevAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement p = connection.prepareStatement(
@@ -144,13 +148,13 @@ public class UserDAO implements DatabaseAccessObject<User> {
                     p.setLong(6, IdUtils.fromBase64(user.getBase64Id()));
                     p.executeUpdate();
                 }
-                connection.commit();
+                if (prevAutoCommit) connection.commit();
                 return ApiResult.ok(user);
             } catch (SQLException e) {
-                connection.rollback();
+                if (prevAutoCommit) connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
@@ -160,6 +164,10 @@ public class UserDAO implements DatabaseAccessObject<User> {
     /**
      * Inserts this User into the database. If the User is already present or another user with the same username exists,
      * an error is returned. Otherwise, the passed User with the assigned id is returned.
+     * <p>
+     * The operation will be done atomically using transactions. If automatic transaction management has been turned
+     * off, e.g. with {@link java.sql.Connection#setAutoCommit(boolean)}, it is the caller's responsibility to commit
+     * or rollback the changes.
      *
      * @param user the object to insert
      * @return an {@link ApiResult} containing an error or the inserted User
@@ -173,7 +181,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
             return ApiResult.error(DAOUtils.fromConflict("user"));
 
         try {
-            boolean autoCommit = connection.getAutoCommit();
+            boolean prevAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 long id = DAOUtils.genNewId(connection, "tiw_app.users", "id");
@@ -183,14 +191,14 @@ public class UserDAO implements DatabaseAccessObject<User> {
                     p.setLong(6, id);
                     p.executeUpdate();
                 }
-                connection.commit();
+                if (prevAutoCommit) connection.commit();
                 user.setBase64Id(IdUtils.toBase64(id));
                 return ApiResult.ok(user);
             } catch (SQLException e) {
-                connection.rollback();
+                if (prevAutoCommit) connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));

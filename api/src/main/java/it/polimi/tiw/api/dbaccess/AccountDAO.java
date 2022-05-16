@@ -113,6 +113,10 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     /**
      * Updates the entity corresponding to this Account in the database. If the Account is not present in the database,
      * an error is returned. Otherwise, the object passed is returned.
+     * <p>
+     * The operation will be done atomically using transactions. If automatic transaction management has been turned
+     * off, e.g. with {@link java.sql.Connection#setAutoCommit(boolean)}, it is the caller's responsibility to commit
+     * or rollback the changes.
      *
      * @param account the Account to update
      * @return an {@link ApiResult} containing an error or the updated object
@@ -129,7 +133,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
 
         try {
             String sql = "update tiw_app.accounts set ownerId = ?, balance = ? where id = ?";
-            boolean autoCommit = connection.getAutoCommit();
+            boolean prevAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -138,13 +142,13 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                     p.setLong(3, IdUtils.fromBase64(account.getBase64Id()));
                     p.executeUpdate();
                 }
-                connection.commit();
+                if (prevAutoCommit) connection.commit();
                 return ApiResult.ok(account);
             } catch (SQLException e) {
-                connection.rollback();
+                if (prevAutoCommit) connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
@@ -154,6 +158,10 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     /**
      * Inserts this object into the database. If the object is already present, it returns an error, otherwise the object
      * inserted.
+     * <p>
+     * The operation will be done atomically using transactions. If automatic transaction management has been turned
+     * off, e.g. with {@link java.sql.Connection#setAutoCommit(boolean)}, it is the caller's responsibility to commit
+     * or rollback the changes.
      *
      * @param account the object to insert
      * @return an {@link ApiResult} containing an error or the saved object
@@ -168,7 +176,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
 
         try {
             String sql = "insert into tiw_app.accounts(id, ownerId, balance) values(?, ?, ?);";
-            boolean autoCommit = connection.getAutoCommit();
+            boolean prevAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 long id = DAOUtils.genNewId(connection, "tiw_app.accounts", "id");
@@ -178,14 +186,14 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                     p.setInt(3, account.getBalance());
                     p.executeUpdate();
                 }
-                connection.commit();
+                if (prevAutoCommit) connection.commit();
                 account.setBase64Id(IdUtils.toBase64(id));
                 return ApiResult.ok(account);
             } catch (SQLException e) {
-                connection.rollback();
+                if (prevAutoCommit) connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
