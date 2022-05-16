@@ -23,10 +23,11 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     private final UserDAO userDAO;
 
     /**
-     * Instantiates a new AccountDAO using the given {@link Connection}.
+     * Instantiates a new AccountDAO using the given {@link Connection} and {@link UserDAO}.
      *
      * @param connection the {@link Connection} to use.
-     * @throws NullPointerException if {@code connection} is null
+     * @param userDAO    the {@link UserDAO} to user.
+     * @throws NullPointerException if any parameter is null
      */
     public AccountDAO(Connection connection, UserDAO userDAO) {
         requireNonNull(connection);
