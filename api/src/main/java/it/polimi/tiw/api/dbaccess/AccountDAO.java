@@ -42,6 +42,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
      * @param base64Id the id to search
      * @return an {@link ApiResult} containing the constructed User
      */
+    @Override
     public ApiResult<Account> byId(String base64Id) {
         if (isNull(base64Id)) return ApiResult.error(DAOUtils.fromNullParameter("base64Id"));
         if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(DAOUtils.fromMalformedParameter("base64Id"));

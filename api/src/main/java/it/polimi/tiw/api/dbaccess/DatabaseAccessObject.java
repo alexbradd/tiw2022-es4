@@ -10,6 +10,15 @@ import it.polimi.tiw.api.beans.PersistedObject;
  */
 public interface DatabaseAccessObject<T extends PersistedObject> {
     /**
+     * Finds and retrieves the data for the object with the given id. If no such object can be found, an empty
+     * {@link ApiResult} is returned.
+     *
+     * @param base64Id the id to search
+     * @return an {@link ApiResult} containing the constructed object
+     */
+    ApiResult<T> byId(String base64Id);
+
+    /**
      * Inserts this object into the database. If the object is already present, it returns an error, otherwise the object
      * inserted.
      * <p>
