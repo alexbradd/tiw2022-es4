@@ -126,11 +126,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     @Override
     public ApiResult<Account> update(Account account) {
         if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
-        if (account.hasNullProperties(true)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
-        if (account.getBalance() < 0)
-            return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
-        if (!IdUtils.isValidBase64(account.getBase64Id()))
-            return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (isNotValidAccount(account, true)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
         if (!isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
 
         try {
@@ -171,9 +167,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     @Override
     public ApiResult<Account> insert(Account account) {
         if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
-        if (account.hasNullProperties(false)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
-        if (account.getBalance() < 0)
-            return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (isNotValidAccount(account, false)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
         if (isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
 
         try {
@@ -200,5 +194,18 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
         }
+    }
+
+    /**
+     * Helper for checks for an Account object
+     */
+    private boolean isNotValidAccount(Account account, boolean includeId) {
+        if (account.hasNullProperties(includeId)) return true;
+        if (account.getBalance() < 0) return true;
+        if (!IdUtils.isValidBase64(account.getOwnerId()))
+            return true;
+        if (includeId && !IdUtils.isValidBase64(account.getBase64Id()))
+            return true;
+        return false;
     }
 }

@@ -134,8 +134,8 @@ class AccountDAOTest {
         Account mock = mock(Account.class);
         AccountDAO dao = spy(new AccountDAO(mockConnection));
 
-        when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
-        when(mock.getBase64Id()).thenReturn("asdf");
+        Mockito.lenient().when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
+        Mockito.lenient().when(mock.getBase64Id()).thenReturn("asdf");
 
         dao.update(mock).consume(__ -> fail(), __ -> {
         });
@@ -166,8 +166,8 @@ class AccountDAOTest {
         Account mock = mock(Account.class);
         AccountDAO dao = spy(new AccountDAO(mockConnection));
 
-        when(mock.hasNullProperties(false)).thenReturn(false);
-        doReturn(true).when(dao).isPersisted(mock);
+        Mockito.lenient().when(mock.hasNullProperties(false)).thenReturn(false);
+        Mockito.lenient().doReturn(true).when(dao).isPersisted(mock);
 
         dao.insert(mock).consume(__ -> fail(), e -> assertEquals(400, e.statusCode()));
     }
