@@ -1,6 +1,6 @@
 package it.polimi.tiw.templated.servlet;
 
-import it.polimi.tiw.api.UserApi;
+import it.polimi.tiw.api.UserFacade;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,7 +11,7 @@ import java.io.IOException;
 
 /**
  * Endpoint for user login. It accepts POST requests and forwards them to
- * {@link UserApi#authorize(HttpServletRequest)}. In case of success, the servlet will redirect to the templated
+ * {@link UserFacade#authorize(HttpServletRequest)}. In case of success, the servlet will redirect to the templated
  * home page. Otherwise, it will redirect to the login page with an error flag in the query string: "e". The various
  * values for "e" are:
  *
@@ -27,7 +27,7 @@ import java.io.IOException;
 public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String redirect = UserApi.authorize(req).match(u -> {
+        String redirect = UserFacade.authorize(req).match(u -> {
             HttpSession session = req.getSession(true);
             session.setAttribute("user", u);
             return "/index.html";

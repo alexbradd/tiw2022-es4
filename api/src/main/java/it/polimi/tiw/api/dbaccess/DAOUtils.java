@@ -1,7 +1,7 @@
 package it.polimi.tiw.api.dbaccess;
 
-import it.polimi.tiw.api.ApiError;
-import it.polimi.tiw.api.ApiSubError;
+import it.polimi.tiw.api.error.ApiError;
+import it.polimi.tiw.api.error.ApiSubError;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

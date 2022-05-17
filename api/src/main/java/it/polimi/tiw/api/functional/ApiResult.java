@@ -1,7 +1,6 @@
-package it.polimi.tiw.api;
+package it.polimi.tiw.api.functional;
 
-import it.polimi.tiw.api.functional.Either;
-import it.polimi.tiw.api.functional.Result;
+import it.polimi.tiw.api.error.ApiError;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;

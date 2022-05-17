@@ -1,6 +1,6 @@
 package it.polimi.tiw.api.beans;
 
-import it.polimi.tiw.api.ApiError;
+import it.polimi.tiw.api.error.ApiError;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

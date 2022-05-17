@@ -1,6 +1,6 @@
 package it.polimi.tiw.templated.servlet;
 
-import it.polimi.tiw.api.AccountApi;
+import it.polimi.tiw.api.AccountFacade;
 import it.polimi.tiw.api.beans.Account;
 import it.polimi.tiw.api.beans.User;
 
@@ -29,7 +29,7 @@ public class NewAccountServlet extends HttpServlet {
         if (id == null)
             red = "/index.html?e=user";
         else {
-            red = AccountApi.createFor(id).match(
+            red = AccountFacade.createFor(id).match(
                     a -> "/index.html",
                     e -> "/index.html?e=" + switch (e.statusCode()) {
                         case 400, 404 -> "user";

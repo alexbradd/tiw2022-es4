@@ -1,8 +1,8 @@
 package it.polimi.tiw.api.dbaccess;
 
-import it.polimi.tiw.api.ApiError;
-import it.polimi.tiw.api.ApiResult;
 import it.polimi.tiw.api.beans.User;
+import it.polimi.tiw.api.error.ApiError;
+import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.utils.IdUtils;
 
 import java.sql.Connection;

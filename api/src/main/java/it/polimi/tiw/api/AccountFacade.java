@@ -5,6 +5,7 @@ import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.AccountDAO;
 import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 import it.polimi.tiw.api.dbaccess.UserDAO;
+import it.polimi.tiw.api.functional.ApiResult;
 
 import java.util.List;
 import java.util.Objects;
@@ -12,11 +13,11 @@ import java.util.Objects;
 /**
  * Container for all {@link AccountDAO} related calls
  */
-public class AccountApi {
+public class AccountFacade {
     /**
      * Class is static
      */
-    private AccountApi() {
+    private AccountFacade() {
     }
 
     /**

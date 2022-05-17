@@ -1,7 +1,7 @@
 package it.polimi.tiw.api.dbaccess;
 
-import it.polimi.tiw.api.ApiResult;
 import it.polimi.tiw.api.beans.PersistedObject;
+import it.polimi.tiw.api.functional.ApiResult;
 
 /**
  * Represents a generic object that retrieves

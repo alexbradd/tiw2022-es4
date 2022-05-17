@@ -3,6 +3,9 @@ package it.polimi.tiw.api;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 import it.polimi.tiw.api.dbaccess.UserDAO;
+import it.polimi.tiw.api.error.ApiError;
+import it.polimi.tiw.api.error.ApiSubError;
+import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.functional.Tuple;
 import it.polimi.tiw.api.utils.PasswordUtils;
 
@@ -14,12 +17,12 @@ import java.util.stream.Stream;
 /**
  * Container for all {@link UserDAO} related calls
  */
-public class UserApi {
+public class UserFacade {
 
     /**
      * Class is static
      */
-    private UserApi() {
+    private UserFacade() {
     }
 
     /**

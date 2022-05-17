@@ -1,7 +1,7 @@
 package it.polimi.tiw.templated.servlet;
 
 
-import it.polimi.tiw.api.UserApi;
+import it.polimi.tiw.api.UserFacade;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,7 +11,7 @@ import java.io.IOException;
 
 /**
  * Endpoint for user registration. It accepts POST requests and forwards them to
- * {@link UserApi#register(HttpServletRequest)}. In case of success, the servlet will redirect to the templated login
+ * {@link UserFacade#register(HttpServletRequest)}. In case of success, the servlet will redirect to the templated login
  * page. Otherwise, it will redirect to the register page with an error flag in the query string: "e". The various
  * values for "e" are:
  *
@@ -28,7 +28,7 @@ public class RegistrationServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String redirect = UserApi.register(req)
+        String redirect = UserFacade.register(req)
                 .match((u) -> "/login.html",
                         (e) -> "/register.html?e=" + switch (e.statusCode()) {
                             case 400 -> "user";

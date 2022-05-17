@@ -1,8 +1,8 @@
 package it.polimi.tiw.api.beans;
 
-import it.polimi.tiw.api.ApiError;
-import it.polimi.tiw.api.ApiResult;
-import it.polimi.tiw.api.ApiSubError;
+import it.polimi.tiw.api.error.ApiError;
+import it.polimi.tiw.api.error.ApiSubError;
+import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.functional.Either;
 import it.polimi.tiw.api.functional.Tuple;
 import it.polimi.tiw.api.utils.PasswordUtils;

@@ -1,4 +1,4 @@
-package it.polimi.tiw.api;
+package it.polimi.tiw.api.error;
 
 import com.google.gson.JsonObject;
 

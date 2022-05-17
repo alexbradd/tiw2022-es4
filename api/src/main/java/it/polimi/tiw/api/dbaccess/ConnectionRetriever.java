@@ -1,6 +1,6 @@
 package it.polimi.tiw.api.dbaccess;
 
-import it.polimi.tiw.api.ApiResult;
+import it.polimi.tiw.api.functional.ApiResult;
 
 import java.sql.Connection;
 import java.util.function.Function;
