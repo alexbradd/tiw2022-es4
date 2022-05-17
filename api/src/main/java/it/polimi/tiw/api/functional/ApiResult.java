@@ -94,6 +94,20 @@ public class ApiResult<T> {
     }
 
     /**
+     * Execute the given action and discard its Result in favour of the current one. If an error is * stored, it will be
+     * propagated. Models Haskell's <*.
+     *
+     * @param peek the action to execute and discard
+     * @param <U>  the type of the discarded value
+     * @return a new Result
+     * @throws NullPointerException if {@code peek} is null
+     */
+    public <U> ApiResult<T> peek(Function<? super T, ApiResult<? extends U>> peek) {
+        Objects.requireNonNull(peek);
+        return flatMap(t -> peek.apply(t).then(() -> ok(t)));
+    }
+
+    /**
      * If an element is present returns it, otherwise throw NoSuchElementException
      *
      * @return the element stored inside
