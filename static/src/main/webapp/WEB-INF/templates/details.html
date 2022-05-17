@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale}">
+<head>
+    <meta charset="UTF-8">
+    <link href="/static/img/favicon.ico" rel="icon"/>
+    <link href="/static/common.css" rel="stylesheet" th:href="@{/static/common.css}" type="text/css">
+    <link href="/static/details.css" rel="stylesheet" th:href="@{/static/details.css}" type="text/css">
+    <title th:text="#{details.title}">Price - Account details</title>
+</head>
+<body>
+<div class="page-container rowed">
+    <div th:replace="fragments :: app-header"></div>
+    <p th:if="${error} != null" class="error">You cannot access this resource.</p>
+    <div th:if="${account} != null" class="page-view details-view">
+        <h3><span th:text="#{details.heading}">details</span></h3>
+        <div class="account-details">
+            <small th:text="#{details.id}">Id</small>
+            <small th:text="#{details.balance}">Balance</small>
+            <p th:text="${account.base64Id}"></p>
+            <p th:text="${#numbers.formatDecimal(account.balance, 1, 2)} + '€'"></p>
+        </div>
+        <hr class="separator">
+        <div class="transaction-list">
+            <h4><span th:text="#{details.incoming}"></span></h4>
+            <p th:if="${incoming.size()} == 0" th:text="#{details.empty}"></p>
+            <table th:if="${incoming.size()} != 0">
+                <thead>
+                <tr>
+                    <th th:text="#{details.transactionId}">Transaction id</th>
+                    <th th:text="#{details.from}">From</th>
+                    <th th:text="#{details.date}">Date</th>
+                    <th th:text="#{details.amount}">Amount</th>
+                    <th th:text="#{details.causal}">Causal</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${incoming}" class="transaction">
+                    <td th:text="${i.base64Id}"></td>
+                    <td th:text="${i.fromId}"></td>
+                    <td th:text="${#temporals.format(i.date, 'SHORT')}"></td>
+                    <td th:text="${#numbers.formatDecimal(i.amount, 1, 2)} + '€'"></td>
+                    <td class="causal">
+                        ...
+                        <div class="causal-message"><span th:text="${i.causal}"></span></div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <hr class="separator">
+        <div class="transaction-list">
+            <h4><span th:text="#{details.outgoing}"></span></h4>
+            <p th:if="${outgoing.size()} == 0" th:text="#{details.empty}"></p>
+            <table th:if="${outgoing.size()} != 0">
+                <thead>
+                <tr>
+                    <th th:text="#{details.transactionId}">Transaction id</th>
+                    <th th:text="#{details.to}">To</th>
+                    <th th:text="#{details.date}">Date</th>
+                    <th th:text="#{details.amount}">Amount</th>
+                    <th th:text="#{details.causal}">Causal</th>
+                </tr>
+                </thead>
+                <tr th:each="o : ${outgoing}" class="transaction">
+                    <td th:text="${o.base64Id}"></td>
+                    <td th:text="${o.toId}"></td>
+                    <td th:text="${#temporals.format(o.date, 'SHORT')}"></td>
+                    <td th:text="${#numbers.formatDecimal(o.amount, 1, 2)} + '€'"></td>
+                    <td class="causal">
+                        ...
+                        <div class="causal-message" th:text="${o.causal}"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div th:if="${error} == null" class="page-view">
+        <h3 th:text="#{details.newTransfer}"></h3>
+        <form class="form" method="post">
+            <input type="hidden" name="fromUserId" th:value="${session.user.base64Id}"/>
+            <input type="hidden" name="fromAccountId" th:value="${param.id}"/>
+            <div class="form-input required">
+                <label for="toUserId" th:text="#{details.toUserId}"></label>
+                <input type="text" required id="toUserId" name="toUserId"/>
+            </div>
+            <div class="form-input required">
+                <label for="toAccountId" th:text="#{details.toAccountId}"></label>
+                <input type="text" required id="toAccountId" name="toAccountId"/>
+            </div>
+            <div class="form-input required">
+                <label for="amount" th:text="#{details.amount}"></label>
+                <input type="number" min="0" step="0.01" required name="amount" id="amount"/>
+            </div>
+            <div class="form-input required">
+                <label for="causal" th:text="#{details.causal}"></label>
+                <textarea name="causal" required id="causal" maxlength="1024"></textarea>
+            </div>
+            <input class="big-button ok" type="submit" value="Transfer">
+        </form>
+    </div>
+</div>
+</body>
+</html>

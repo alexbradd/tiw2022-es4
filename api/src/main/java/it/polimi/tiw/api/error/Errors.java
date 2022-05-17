@@ -69,4 +69,16 @@ public class Errors {
                 "Parameter conflicts with the current state",
                 new ApiSubError("IllegalArgumentException", "Parameter" + param + " conflicts with the data on the server"));
     }
+
+    /**
+     * Creates a new {@link ApiError} for when a resource is not accessible to the requester. Status code is 403.
+     *
+     * @param res the name of the resource that was requested
+     * @return a new {@link ApiError}
+     */
+    public static ApiError fromPermissionDenied(String res) {
+        return new ApiError(403,
+                "User cannot access this resource",
+                new ApiSubError("IllegalAccessException", "Cannot view resource " + res));
+    }
 }

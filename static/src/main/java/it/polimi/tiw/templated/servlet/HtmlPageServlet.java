@@ -2,6 +2,7 @@ package it.polimi.tiw.templated.servlet;
 
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
+import org.thymeleaf.extras.java8time.dialect.Java8TimeDialect;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
 
@@ -17,6 +18,7 @@ import java.io.IOException;
  */
 @WebServlet(value = {
         "/index.html",
+        "/details.html",
         "/register.html",
         "/login.html"
 })
@@ -34,6 +36,7 @@ public class HtmlPageServlet extends HttpServlet {
         resolver.setSuffix(".html");
 
         this.templateEngine = new TemplateEngine();
+        this.templateEngine.addDialect(new Java8TimeDialect());
         this.templateEngine.setTemplateResolver(resolver);
     }
 
