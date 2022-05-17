@@ -9,7 +9,9 @@
     <img src="/static/img/home.svg" alt="Back home"/>
 </a>
 <div th:fragment="app-header" class="header">
-    <img src="/static/img/logo.svg" alt="logo"/>
+    <a class="imaged-link" href="/index.html">
+        <img src="/static/img/logo.svg" alt="logo"/>
+    </a>
     <div class="user-popup">
         <p th:text="${session.user.getUsername()}"></p>
         <div class="popup">

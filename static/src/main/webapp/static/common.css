@@ -121,7 +121,7 @@ small, .text_small {
     background-color: var(--view-color);
 }
 
-.header img {
+.header .imaged-link {
     width: 40px;
     height: 40px;
 }
