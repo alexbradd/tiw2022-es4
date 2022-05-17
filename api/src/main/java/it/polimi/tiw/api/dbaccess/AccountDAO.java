@@ -41,13 +41,24 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
      * {@link ApiResult} is returned.
      *
      * @param base64Id the id to search
-     * @return an {@link ApiResult} containing the constructed User
+     * @return an {@link ApiResult} containing the constructed Account
      */
     @Override
     public ApiResult<Account> byId(String base64Id) {
         if (isNull(base64Id)) return ApiResult.error(DAOUtils.fromNullParameter("base64Id"));
         if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(DAOUtils.fromMalformedParameter("base64Id"));
         long id = IdUtils.fromBase64(base64Id);
+        return byId(id);
+    }
+
+    /**
+     * Finds and retrieves the data for the Account with the given id. If no such account can be found, an empty
+     * {@link ApiResult} is returned.
+     *
+     * @param id the id to search
+     * @return an {@link ApiResult} containing the constructed Account
+     */
+    ApiResult<Account> byId(long id) {
         try (PreparedStatement p = connection.prepareStatement("select * from tiw_app.accounts where id = ?")) {
             p.setLong(1, id);
             try (ResultSet r = p.executeQuery()) {
@@ -58,11 +69,11 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                             .byId(ownerId)
                             .map(u -> {
                                 Account a = new Account(u, balance);
-                                a.setBase64Id(base64Id);
+                                a.setBase64Id(IdUtils.toBase64(id));
                                 return a;
                             });
                 } else
-                    return ApiResult.error(DAOUtils.fromMissingElement("id " + base64Id));
+                    return ApiResult.error(DAOUtils.fromMissingElement("id " + IdUtils.toBase64(id)));
             }
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
