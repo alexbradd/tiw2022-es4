@@ -7,6 +7,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Similar to {@link Result}, however it is less general and more domain specific. It represents the status of a
@@ -77,6 +78,20 @@ public class ApiResult<T> {
     public <U> ApiResult<U> flatMap(Function<? super T, ? extends ApiResult<? extends U>> mapper) {
         Objects.requireNonNull(mapper);
         return value.match(ApiResult::error, (T t) -> cast(mapper.apply(t)));
+    }
+
+    /**
+     * Discard the value stored in this ApiResult in favour of the one supplied by te given Supplier. If an error is
+     * stored, it will be propagated. Models Haskell's >> and *>.
+     *
+     * @param then the {@link Supplier} that will provide the new ApiResult
+     * @param <U>  the type of the new value
+     * @return a new ApiResult
+     * @throws NullPointerException if {@code then} is null
+     */
+    public <U> ApiResult<U> then(Supplier<ApiResult<? extends U>> then) {
+        Objects.requireNonNull(then);
+        return flatMap((__) -> then.get());
     }
 
     /**
