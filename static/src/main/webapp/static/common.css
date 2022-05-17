@@ -109,6 +109,47 @@ small, .text_small {
     margin-bottom: 30px;
 }
 
+.header {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: var(--border-radius-xl);
+    box-shadow: 0 0 10px var(--shadow-color);
+    padding: 2px;
+    width: 100%;
+    background-color: var(--view-color);
+}
+
+.header img {
+    width: 40px;
+    height: 40px;
+}
+
+.user-popup {
+    position: relative;
+    margin: 0 10px 0 0;
+}
+
+.user-popup p {
+    margin: 0;
+}
+
+.user-popup .popup {
+    display: none;
+    position: absolute;
+    border-radius: var(--border-radius-m);
+    background-color: var(--view-color);
+    padding: 5px;
+    box-shadow: 0 0 5px var(--shadow-color);
+}
+
+.user-popup:hover .popup {
+    display: block;
+    right: 0;
+    width: max-content;
+}
+
 .form-input label {
     display: inline;
     font-size: 0.9em;

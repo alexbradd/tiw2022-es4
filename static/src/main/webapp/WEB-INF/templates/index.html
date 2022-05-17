@@ -9,16 +9,7 @@
 </head>
 <body>
 <div class="page-container">
-    <div class="header">
-        <img src="/static/img/logo.svg" alt="logo"/>
-        <div class="user-popup">
-            <p th:text="${session.user.getUsername()}"></p>
-            <div class="popup">
-                <a href="/login.html" th:text="#{index.login}">Log into a new account</a>
-                <a href="/logout" th:text="#{index.logout}">Logout</a>
-            </div>
-        </div>
-    </div>
+    <div th:replace="fragments :: app-header"></div>
     <div class="page-view account-view">
         <h3 th:text="#{index.accounts}">Accounts</h3>
         <div th:if="${accountList} != null" class="account-list">

@@ -8,5 +8,15 @@
 <a th:fragment="homeLink" href="/index.html" class="imaged-link">
     <img src="/static/img/home.svg" alt="Back home"/>
 </a>
+<div th:fragment="app-header" class="header">
+    <img src="/static/img/logo.svg" alt="logo"/>
+    <div class="user-popup">
+        <p th:text="${session.user.getUsername()}"></p>
+        <div class="popup">
+            <a href="/login.html" th:text="#{fragments.login}">Log into a new account</a>
+            <a href="/logout" th:text="#{fragments.logout}">Logout</a>
+        </div>
+    </div>
+</div>
 </body>
 </html>
