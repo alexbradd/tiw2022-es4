@@ -3,7 +3,6 @@ package it.polimi.tiw.api.dbaccess;
 import it.polimi.tiw.api.ApiError;
 import it.polimi.tiw.api.ApiResult;
 import it.polimi.tiw.api.beans.Account;
-import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.utils.IdUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,30 +41,28 @@ class AccountDAOTest {
 
     @Test
     void all_withNull() {
-        assertThrows(NullPointerException.class, () -> new AccountDAO(null, null));
-        assertThrows(NullPointerException.class, () -> AccountDAO.withNewObjects(null));
-        AccountDAO.withNewObjects(mockConnection).insert(null).consume(a -> fail(), e -> {
+        assertThrows(NullPointerException.class, () -> new AccountDAO(null));
+        new AccountDAO(mockConnection).insert(null).consume(a -> fail(), e -> {
         });
-        AccountDAO.withNewObjects(mockConnection).update(null).consume(a -> fail(), e -> {
+        new AccountDAO(mockConnection).update(null).consume(a -> fail(), e -> {
         });
-        AccountDAO.withNewObjects(mockConnection).byId(null).consume(a -> fail(), e -> {
+        new AccountDAO(mockConnection).byId(null).consume(a -> fail(), e -> {
         });
-        AccountDAO.withNewObjects(mockConnection).ofUser(null).consume(a -> fail(), e -> {
+        new AccountDAO(mockConnection).ofUser(null).consume(a -> fail(), e -> {
         });
-        assertFalse(AccountDAO.withNewObjects(mockConnection).isPersisted(null));
-
+        assertFalse(new AccountDAO(mockConnection).isPersisted(null));
     }
 
     @Test
     void byId_invalidBase64() {
-        AccountDAO.withNewObjects(mockConnection).byId("asdfa").consume(a -> fail(), e -> {
+        new AccountDAO(mockConnection).byId("asdfa").consume(a -> fail(), e -> {
         });
     }
 
     @Test
     void byId_notInDb() throws SQLException {
         when(results.next()).thenReturn(false);
-        ApiResult<Account> res = AccountDAO.withNewObjects(mockConnection).byId("AAAAAAAAAAA");
+        ApiResult<Account> res = new AccountDAO(mockConnection).byId("AAAAAAAAAAA");
         verify(statement).executeQuery();
         verify(results).next();
         assertTrue(res.match((Account a) -> false, (ApiError e) -> true));
@@ -73,13 +70,10 @@ class AccountDAOTest {
 
     @Test
     void byId_inDb() throws SQLException {
-        UserDAO mock = mock(UserDAO.class);
-        User mockUser = mock(User.class);
         when(results.next()).thenReturn(true);
         when(results.getLong("ownerId")).thenReturn(0L);
         when(results.getInt("balance")).thenReturn(100);
-        when(mock.byId(anyLong())).thenReturn(ApiResult.ok(mockUser));
-        ApiResult<Account> res = new AccountDAO(mockConnection, mock).byId("AAAAAAAAAAA");
+        ApiResult<Account> res = new AccountDAO(mockConnection).byId("AAAAAAAAAAA");
         assertTrue(res.match((Account a) -> true, (ApiError e) -> false));
     }
 
@@ -88,7 +82,7 @@ class AccountDAOTest {
         Account a = mock(Account.class);
         Mockito.lenient().when(a.getBase64Id()).thenReturn(null);
         Mockito.lenient().when(results.next()).thenReturn(false);
-        assertFalse(AccountDAO.withNewObjects(mockConnection).isPersisted(a));
+        assertFalse(new AccountDAO(mockConnection).isPersisted(a));
     }
 
     @Test
@@ -96,27 +90,24 @@ class AccountDAOTest {
         Account a = mock(Account.class);
         when(a.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(results.next()).thenReturn(false);
-        assertFalse(AccountDAO.withNewObjects(mockConnection).isPersisted(a));
+        assertFalse(new AccountDAO(mockConnection).isPersisted(a));
     }
 
     @Test
     void isPersisted_inDb() throws SQLException {
-        UserDAO mock = mock(UserDAO.class);
-        User mockUser = mock(User.class);
         Account a = mock(Account.class);
-        AccountDAO dao = spy(new AccountDAO(mockConnection, mock));
+        AccountDAO dao = spy(new AccountDAO(mockConnection));
         when(a.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(results.next()).thenReturn(true);
         when(results.getLong("ownerId")).thenReturn(0L);
         when(results.getInt("balance")).thenReturn(100);
-        when(mock.byId(anyLong())).thenReturn(ApiResult.ok(mockUser));
         assertTrue(dao.isPersisted(a));
     }
 
     @Test
     void update_withNotPersistedAccount() {
         Account mock = mock(Account.class);
-        AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
+        AccountDAO dao = spy(new AccountDAO(mockConnection));
 
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
         Mockito.lenient().doReturn(false).when(dao).isPersisted(any(Account.class));
@@ -128,7 +119,7 @@ class AccountDAOTest {
     @Test
     void update_insert_withAccountWithNullProperties() {
         Account mock = mock(Account.class);
-        AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
+        AccountDAO dao = spy(new AccountDAO(mockConnection));
 
         when(mock.hasNullProperties(anyBoolean())).thenReturn(true);
 
@@ -141,7 +132,7 @@ class AccountDAOTest {
     @Test
     void update_withInvalidBase64() {
         Account mock = mock(Account.class);
-        AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
+        AccountDAO dao = spy(new AccountDAO(mockConnection));
 
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
         when(mock.getBase64Id()).thenReturn("asdf");
@@ -153,15 +144,13 @@ class AccountDAOTest {
     @Test
     void update_atomic() throws SQLException {
         Boolean prevAutoCommit = true;
-        User mockUser = mock(User.class);
         Account mock = mock(Account.class);
-        AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
+        AccountDAO dao = spy(new AccountDAO(mockConnection));
 
         when(mockConnection.getAutoCommit()).thenReturn(prevAutoCommit);
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
         when(mock.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
-        when(mock.getOwner()).thenReturn(mockUser);
-        when(mockUser.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
+        when(mock.getOwnerId()).thenReturn(IdUtils.toBase64(0L));
         doReturn(true).when(dao).isPersisted(mock);
         when(statement.executeUpdate()).thenThrow(SQLException.class);
 
@@ -175,7 +164,7 @@ class AccountDAOTest {
     @Test
     void insert_withAlreadyPersistedAccount() {
         Account mock = mock(Account.class);
-        AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
+        AccountDAO dao = spy(new AccountDAO(mockConnection));
 
         when(mock.hasNullProperties(false)).thenReturn(false);
         doReturn(true).when(dao).isPersisted(mock);
@@ -186,14 +175,12 @@ class AccountDAOTest {
     @Test
     void insert_atomic() throws SQLException {
         Boolean prevAutoCommit = true;
-        User mockUser = mock(User.class);
         Account mock = mock(Account.class);
-        AccountDAO dao = spy(AccountDAO.withNewObjects(mockConnection));
+        AccountDAO dao = spy(new AccountDAO(mockConnection));
 
         when(mockConnection.getAutoCommit()).thenReturn(prevAutoCommit);
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
-        when(mock.getOwner()).thenReturn(mockUser);
-        when(mockUser.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
+        when(mock.getOwnerId()).thenReturn(IdUtils.toBase64(0L));
         doReturn(false).when(dao).isPersisted(mock);
         when(statement.executeUpdate()).thenThrow(SQLException.class);
 
@@ -206,26 +193,20 @@ class AccountDAOTest {
 
     @Test
     void ofUser_unsavedUser() {
-        User u = mock(User.class);
-        when(u.getBase64Id()).thenReturn(null);
-        AccountDAO.withNewObjects(mockConnection).ofUser(u).consume(a -> fail(), e -> {
+        new AccountDAO(mockConnection).ofUser(null).consume(a -> fail(), e -> {
         });
     }
 
     @Test
     void ofUser_invalidUser() {
-        User u = mock(User.class);
-        when(u.getBase64Id()).thenReturn("asdf");
-        AccountDAO.withNewObjects(mockConnection).ofUser(u).consume(a -> fail(), e -> {
+        new AccountDAO(mockConnection).ofUser("sium").consume(a -> fail(), e -> {
         });
     }
 
     @Test
     void ofUser_noAccounts() throws SQLException {
-        User u = mock(User.class);
-        when(u.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(results.next()).thenReturn(false);
-        ApiResult<List<Account>> res = AccountDAO.withNewObjects(mockConnection).ofUser(u);
+        ApiResult<List<Account>> res = new AccountDAO(mockConnection).ofUser(IdUtils.toBase64(0L));
         assertTrue(res.match((List<Account> a) -> true, (ApiError e) -> false));
         res.consume(l -> assertTrue(l.isEmpty()), e -> fail());
         verify(statement).executeQuery();
@@ -234,8 +215,6 @@ class AccountDAOTest {
 
     @Test
     void ofUser_accounts() throws SQLException {
-        User u = mock(User.class);
-        when(u.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(results.next()).thenAnswer(new Answer<>() {
             private boolean returned = false;
 
@@ -246,7 +225,7 @@ class AccountDAOTest {
                 return toRet;
             }
         });
-        ApiResult<List<Account>> res = AccountDAO.withNewObjects(mockConnection).ofUser(u);
+        ApiResult<List<Account>> res = new AccountDAO(mockConnection).ofUser(IdUtils.toBase64(0L));
         assertTrue(res.match((List<Account> a) -> true, (ApiError e) -> false));
         res.consume(l -> assertEquals(1, l.size()), e -> fail());
         verify(statement).executeQuery();

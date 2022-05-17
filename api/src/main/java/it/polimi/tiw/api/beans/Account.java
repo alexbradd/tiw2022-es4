@@ -7,19 +7,19 @@ import java.util.Objects;
  */
 public class Account implements PersistedObject {
     private String base64Id;
-    private User owner;
+    private String ownerId;
     private int balance;
 
     /**
      * Creates a new Account without an id, belonging to the given {@link User} and with the specified balance
      *
-     * @param owner   the {@link User} that own this account
+     * @param ownerId the {@link User} that own this account
      * @param balance the balance of the account
      * @throws NullPointerException     if {@code user} is null
      * @throws IllegalArgumentException if {@code balance} is less than zero
      */
-    public Account(User owner, int balance) {
-        setOwner(owner);
+    public Account(String ownerId, int balance) {
+        setOwnerId(ownerId);
         setBalance(balance);
     }
 
@@ -27,13 +27,13 @@ public class Account implements PersistedObject {
      * Creates a new Account the specified id, belonging to the given {@link User} and with the specified balance
      *
      * @param base64Id the id of this account encoded in url safe Base64
-     * @param owner    the {@link User} that own this account
+     * @param ownerId  the {@link User} that own this account
      * @param balance  the balance of the account
      * @throws NullPointerException     if {@code user} is null
      * @throws IllegalArgumentException if {@code balance} is less than zero
      */
-    public Account(String base64Id, User owner, int balance) {
-        this(owner, balance);
+    public Account(String base64Id, String ownerId, int balance) {
+        this(ownerId, balance);
         setBase64Id(base64Id);
     }
 
@@ -57,22 +57,22 @@ public class Account implements PersistedObject {
     }
 
     /**
-     * Returns the {@link User} that owns this Account
+     * Returns the id of the {@link User} that owns this Account
      *
-     * @return the {@link User} that owns this Account
+     * @return the id of the {@link User} that owns this Account
      */
-    public User getOwner() {
-        return owner;
+    public String getOwnerId() {
+        return ownerId;
     }
 
     /**
-     * Sets a new {@link User} as owner of this Account
+     * Sets the id of the new  {@link User} that owns this Account
      *
-     * @param owner the new Account owner
-     * @throws NullPointerException if {@code owner} is null
+     * @param ownerId the new Account owner
+     * @throws NullPointerException if {@code ownerId} is null
      */
-    public void setOwner(User owner) {
-        this.owner = Objects.requireNonNull(owner);
+    public void setOwnerId(String ownerId) {
+        this.ownerId = Objects.requireNonNull(ownerId);
     }
 
     /**
@@ -101,6 +101,6 @@ public class Account implements PersistedObject {
      */
     @Override
     public boolean hasNullProperties(boolean includeId) {
-        return (base64Id == null && includeId) || owner == null;
+        return (base64Id == null && includeId) || ownerId == null;
     }
 }

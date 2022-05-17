@@ -20,20 +20,16 @@ import static java.util.Objects.requireNonNull;
  */
 public class AccountDAO implements DatabaseAccessObject<Account> {
     private final Connection connection;
-    private final UserDAO userDAO;
 
     /**
-     * Instantiates a new AccountDAO using the given {@link Connection} and {@link UserDAO}.
+     * Instantiates a new AccountDAO using the given {@link Connection}
      *
      * @param connection the {@link Connection} to use.
-     * @param userDAO    the {@link UserDAO} to user.
      * @throws NullPointerException if any parameter is null
      */
-    public AccountDAO(Connection connection, UserDAO userDAO) {
+    public AccountDAO(Connection connection) {
         requireNonNull(connection);
-        requireNonNull(userDAO);
         this.connection = connection;
-        this.userDAO = userDAO;
     }
 
     /**
@@ -65,13 +61,8 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 if (r.next()) {
                     long ownerId = r.getLong("ownerId");
                     int balance = r.getInt("balance");
-                    return userDAO
-                            .byId(ownerId)
-                            .map(u -> {
-                                Account a = new Account(u, balance);
-                                a.setBase64Id(IdUtils.toBase64(id));
-                                return a;
-                            });
+                    Account a = new Account(IdUtils.toBase64(id), IdUtils.toBase64(ownerId), balance);
+                    return ApiResult.ok(a);
                 } else
                     return ApiResult.error(DAOUtils.fromMissingElement("id " + IdUtils.toBase64(id)));
             }
@@ -81,17 +72,16 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     }
 
     /**
-     * Returns an ApiResult containing all the Accounts associated with the given {@link User}
+     * Returns an ApiResult containing all the Accounts associated with the {@link User} with the given id
      *
-     * @param owner the User that is the owner of the accounts
+     * @param ownerId the User that is the owner of the accounts
      * @return an ApiResult containing all the Accounts associated with the given {@link User}
      */
-    public ApiResult<List<Account>> ofUser(User owner) {
-        if (isNull(owner)) return ApiResult.error(DAOUtils.fromNullParameter("owner"));
-        if (isNull(owner.getBase64Id())) return ApiResult.error(DAOUtils.fromMalformedParameter("owner"));
-        if (!IdUtils.isValidBase64(owner.getBase64Id()))
+    public ApiResult<List<Account>> ofUser(String ownerId) {
+        if (isNull(ownerId)) return ApiResult.error(DAOUtils.fromNullParameter("owner"));
+        if (!IdUtils.isValidBase64(ownerId))
             return ApiResult.error(DAOUtils.fromMalformedParameter("owner"));
-        long userId = IdUtils.fromBase64(owner.getBase64Id());
+        long userId = IdUtils.fromBase64(ownerId);
         String sql = "select * from tiw_app.accounts where ownerId = ?";
         ArrayList<Account> accs = new ArrayList<>();
         try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -100,8 +90,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 while (r.next()) {
                     String id = IdUtils.toBase64(r.getLong("id"));
                     int balance = r.getInt("balance");
-                    Account a = new Account(owner, balance);
-                    a.setBase64Id(id);
+                    Account a = new Account(id, ownerId, balance);
                     accs.add(a);
                 }
                 return ApiResult.ok(accs);
@@ -150,7 +139,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement p = connection.prepareStatement(sql)) {
-                    p.setLong(1, IdUtils.fromBase64(account.getOwner().getBase64Id()));
+                    p.setLong(1, IdUtils.fromBase64(account.getOwnerId()));
                     p.setInt(2, account.getBalance());
                     p.setLong(3, IdUtils.fromBase64(account.getBase64Id()));
                     p.executeUpdate();
@@ -195,7 +184,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 long id = DAOUtils.genNewId(connection, "tiw_app.accounts", "id");
                 try (PreparedStatement p = connection.prepareStatement(sql)) {
                     p.setLong(1, id);
-                    p.setLong(2, IdUtils.fromBase64(account.getOwner().getBase64Id()));
+                    p.setLong(2, IdUtils.fromBase64(account.getOwnerId()));
                     p.setInt(3, account.getBalance());
                     p.executeUpdate();
                 }
@@ -211,18 +200,5 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
         } catch (SQLException e) {
             return ApiResult.error(DAOUtils.fromSQLException(e));
         }
-    }
-
-    /**
-     * Returns a new AccountDAO object that will create all the DAO objects it
-     * needs from scratch sharing the given {@link Connection}.
-     *
-     * @param connection a {@link Connection}
-     * @return a new AccountDAO object
-     * @throws NullPointerException if {@code connection} is null
-     */
-    public static AccountDAO withNewObjects(Connection connection) {
-        requireNonNull(connection);
-        return new AccountDAO(connection, new UserDAO(connection));
     }
 }

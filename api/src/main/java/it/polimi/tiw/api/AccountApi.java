@@ -32,8 +32,8 @@ public class AccountApi {
         return ProductionConnectionRetriever.getInstance().with(c ->
                 new UserDAO(c).byId(id)
                         .flatMap(u -> {
-                            Account a = new Account(u, 0);
-                            return AccountDAO.withNewObjects(c).insert(a);
+                            Account a = new Account(u.getBase64Id(), 0);
+                            return new AccountDAO(c).insert(a);
                         }));
     }
 
@@ -43,11 +43,11 @@ public class AccountApi {
      * @param u the owner of the {@link Account} in the list
      * @return an {@link ApiResult} containing a {@link List} of {@link Account} if everything went ok
      * @throws NullPointerException if {@code u} is null
-     * @see AccountDAO#ofUser(User)
+     * @see AccountDAO#ofUser(String)
      */
     public static ApiResult<List<Account>> ofUser(User u) {
         Objects.requireNonNull(u);
         return ProductionConnectionRetriever.getInstance().with(c ->
-                AccountDAO.withNewObjects(c).ofUser(u));
+                new AccountDAO(c).ofUser(u.getBase64Id()));
     }
 }
