@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 public class UserFacade {
     private final Connection connection;
     private final Function<Connection, UserDAO> userDAOGenerator;
+    private final AccountFacade accountFacade;
 
     /**
      * Creates a new UserFacade with the specified objects.
@@ -31,9 +32,10 @@ public class UserFacade {
      * @param userDAOGenerator a {@link Supplier} of {@link UserDAO}
      * @throws NullPointerException if any parameter is null
      */
-    public UserFacade(Connection connection, Function<Connection, UserDAO> userDAOGenerator) {
+    public UserFacade(Connection connection, Function<Connection, UserDAO> userDAOGenerator, AccountFacade accountFacade) {
         this.connection = Objects.requireNonNull(connection);
         this.userDAOGenerator = Objects.requireNonNull(userDAOGenerator);
+        this.accountFacade = Objects.requireNonNull(accountFacade);
     }
 
     /**
@@ -52,7 +54,9 @@ public class UserFacade {
      * All fields are mandatory, must be urlencoded and have a maximum length of 128 characters. If data is passed in
      * both ways (querystring and form data) only one of the two sources will be used. In case of success, an
      * {@link ApiResult} containing the {@link UserDAO} corresponding to the saved user. Otherwise, the returned value will
-     * contain an {@link ApiError} with the relative information
+     * contain an {@link ApiError} with the relative information.
+     *
+     * A new empty Account will be created for the newly registered user.
      *
      * @param req the {@link HttpServletRequest} to process
      * @return An {@link ApiResult} containing the User in case of success
@@ -67,8 +71,10 @@ public class UserFacade {
                 .addName(req.getParameter("name"))
                 .addSurname(req.getParameter("surname"))
                 .build()
-                .flatMap(u -> userDAOGenerator.apply(connection).insert(u));
-
+                .flatMap(u -> userDAOGenerator.apply(connection)
+                        .insert(u)
+                        .then(() -> accountFacade.createFor(u.getBase64Id()))
+                        .then(() -> ApiResult.ok(u)));
     }
 
     /**
@@ -116,6 +122,6 @@ public class UserFacade {
      * @return a new UserFacade
      */
     public static UserFacade withDefaultObjects(Connection connection) {
-        return new UserFacade(connection, UserDAO::new);
+        return new UserFacade(connection, UserDAO::new, AccountFacade.withDefaultObjects(connection));
     }
 }
