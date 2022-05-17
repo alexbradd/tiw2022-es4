@@ -67,6 +67,18 @@ public class AccountFacade {
     }
 
     /**
+     * Returns the {@link Account} with the given id.
+     *
+     * @param id the base64 encoded id of the account
+     * @return an {@link ApiResult} containing the retrieved account or an error
+     * @throws NullPointerException if {@code id} is null
+     */
+    public ApiResult<Account> byId(String id) {
+        Objects.requireNonNull(id);
+        return accountDAOGenerator.apply(connection).byId(id);
+    }
+
+    /**
      * Creates a new AccountFacade using the default objects
      *
      * @param connection The {@link Connection} to use
