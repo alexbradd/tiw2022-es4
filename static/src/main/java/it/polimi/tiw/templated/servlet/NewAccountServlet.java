@@ -3,6 +3,7 @@ package it.polimi.tiw.templated.servlet;
 import it.polimi.tiw.api.AccountFacade;
 import it.polimi.tiw.api.beans.Account;
 import it.polimi.tiw.api.beans.User;
+import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -29,8 +30,9 @@ public class NewAccountServlet extends HttpServlet {
         if (id == null)
             red = "/index.html?e=user";
         else {
-            red = AccountFacade.withDefaultObjects()
-                    .createFor(id).match(
+            red = ProductionConnectionRetriever.getInstance()
+                    .with(c -> AccountFacade.withDefaultObjects(c).createFor(id))
+                    .match(
                             a -> "/index.html",
                             e -> "/index.html?e=" + switch (e.statusCode()) {
                                 case 400, 404 -> "user";

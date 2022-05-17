@@ -2,7 +2,6 @@ package it.polimi.tiw.api;
 
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.ConnectionRetriever;
-import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 import it.polimi.tiw.api.dbaccess.UserDAO;
 import it.polimi.tiw.api.error.ApiError;
 import it.polimi.tiw.api.error.ApiSubError;
@@ -22,18 +21,18 @@ import java.util.stream.Stream;
  * Class exposing a simple interface for manipulating users.
  */
 public class UserFacade {
-    private final ConnectionRetriever retriever;
+    private final Connection connection;
     private final Function<Connection, UserDAO> userDAOGenerator;
 
     /**
      * Creates a new UserFacade with the specified objects.
      *
-     * @param retriever        the {@link ConnectionRetriever} to use
+     * @param connection       the {@link ConnectionRetriever} to use
      * @param userDAOGenerator a {@link Supplier} of {@link UserDAO}
      * @throws NullPointerException if any parameter is null
      */
-    public UserFacade(ConnectionRetriever retriever, Function<Connection, UserDAO> userDAOGenerator) {
-        this.retriever = Objects.requireNonNull(retriever);
+    public UserFacade(Connection connection, Function<Connection, UserDAO> userDAOGenerator) {
+        this.connection = Objects.requireNonNull(connection);
         this.userDAOGenerator = Objects.requireNonNull(userDAOGenerator);
     }
 
@@ -68,7 +67,7 @@ public class UserFacade {
                 .addName(req.getParameter("name"))
                 .addSurname(req.getParameter("surname"))
                 .build()
-                .flatMap(u -> retriever.with(c -> userDAOGenerator.apply(c).insert(u)));
+                .flatMap(u -> userDAOGenerator.apply(connection).insert(u));
 
     }
 
@@ -96,7 +95,7 @@ public class UserFacade {
                 .toList();
         if (e.size() > 0)
             return ApiResult.error(new ApiError(400, "Missing required parameter", e.toArray(new ApiSubError[0])));
-        return retriever.with(c -> userDAOGenerator.apply(c)
+        return userDAOGenerator.apply(connection)
                 .byUsername(username.getFirst())
                 .flatMap(u -> {
                     if (PasswordUtils.match(u.getSaltedPassword(), clearPassword.getFirst()))
@@ -107,15 +106,16 @@ public class UserFacade {
                             new ApiSubError("IllegalArgumentException",
                                     "The given password doesn't match the one saved")
                     ));
-                }));
+                });
     }
 
     /**
      * Creates a new UserFacade using the default objects
      *
+     * @param connection the {@link Connection} to use
      * @return a new UserFacade
      */
-    public static UserFacade withDefaultObjects() {
-        return new UserFacade(ProductionConnectionRetriever.getInstance(), UserDAO::new);
+    public static UserFacade withDefaultObjects(Connection connection) {
+        return new UserFacade(connection, UserDAO::new);
     }
 }

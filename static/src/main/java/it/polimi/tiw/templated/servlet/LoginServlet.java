@@ -1,6 +1,7 @@
 package it.polimi.tiw.templated.servlet;
 
 import it.polimi.tiw.api.UserFacade;
+import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -27,8 +28,9 @@ import java.io.IOException;
 public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String redirect = UserFacade.withDefaultObjects()
-                .authorize(req).match(u -> {
+        String redirect = ProductionConnectionRetriever.getInstance()
+                .with(c -> UserFacade.withDefaultObjects(c).authorize(req))
+                .match(u -> {
                     HttpSession session = req.getSession(true);
                     session.setAttribute("user", u);
                     return "/index.html";
