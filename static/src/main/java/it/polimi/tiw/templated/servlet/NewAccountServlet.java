@@ -29,13 +29,14 @@ public class NewAccountServlet extends HttpServlet {
         if (id == null)
             red = "/index.html?e=user";
         else {
-            red = AccountFacade.createFor(id).match(
-                    a -> "/index.html",
-                    e -> "/index.html?e=" + switch (e.statusCode()) {
-                        case 400, 404 -> "user";
-                        default -> "server";
-                    }
-            );
+            red = AccountFacade.withDefaultObjects()
+                    .createFor(id).match(
+                            a -> "/index.html",
+                            e -> "/index.html?e=" + switch (e.statusCode()) {
+                                case 400, 404 -> "user";
+                                default -> "server";
+                            }
+                    );
         }
         resp.sendRedirect(red);
     }

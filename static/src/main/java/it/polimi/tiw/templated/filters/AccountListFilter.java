@@ -26,7 +26,7 @@ public class AccountListFilter extends HttpFilter {
     public void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpSession session = req.getSession(false);
         User user = (User) session.getAttribute("user");
-        ApiResult<List<Account>> result = AccountFacade.ofUser(user);
+        ApiResult<List<Account>> result = AccountFacade.withDefaultObjects().ofUser(user);
         if (result.match(__ -> true, __ -> false)) {
             List<Account> l = result.get();
             req.setAttribute("accountList", l);

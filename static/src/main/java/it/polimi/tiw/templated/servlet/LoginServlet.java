@@ -27,15 +27,16 @@ import java.io.IOException;
 public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String redirect = UserFacade.authorize(req).match(u -> {
-            HttpSession session = req.getSession(true);
-            session.setAttribute("user", u);
-            return "/index.html";
-        }, e -> switch (e.statusCode()) {
-            case 400 -> "/login.html?e=user";
-            case 404, 409 -> "/login.html?e=conflict";
-            default -> "/login.html?e=server";
-        });
+        String redirect = UserFacade.withDefaultObjects()
+                .authorize(req).match(u -> {
+                    HttpSession session = req.getSession(true);
+                    session.setAttribute("user", u);
+                    return "/index.html";
+                }, e -> switch (e.statusCode()) {
+                    case 400 -> "/login.html?e=user";
+                    case 404, 409 -> "/login.html?e=conflict";
+                    default -> "/login.html?e=server";
+                });
         resp.sendRedirect(redirect);
     }
 }

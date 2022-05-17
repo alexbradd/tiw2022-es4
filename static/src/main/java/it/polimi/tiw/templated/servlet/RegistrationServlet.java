@@ -28,7 +28,8 @@ public class RegistrationServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String redirect = UserFacade.register(req)
+        String redirect = UserFacade.withDefaultObjects()
+                .register(req)
                 .match((u) -> "/login.html",
                         (e) -> "/register.html?e=" + switch (e.statusCode()) {
                             case 400 -> "user";

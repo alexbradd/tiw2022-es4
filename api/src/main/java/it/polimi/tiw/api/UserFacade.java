@@ -1,6 +1,7 @@
 package it.polimi.tiw.api;
 
 import it.polimi.tiw.api.beans.User;
+import it.polimi.tiw.api.dbaccess.ConnectionRetriever;
 import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 import it.polimi.tiw.api.dbaccess.UserDAO;
 import it.polimi.tiw.api.error.ApiError;
@@ -10,19 +11,30 @@ import it.polimi.tiw.api.functional.Tuple;
 import it.polimi.tiw.api.utils.PasswordUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * Container for all {@link UserDAO} related calls
+ * Class exposing a simple interface for manipulating users.
  */
 public class UserFacade {
+    private final ConnectionRetriever retriever;
+    private final Function<Connection, UserDAO> userDAOGenerator;
 
     /**
-     * Class is static
+     * Creates a new UserFacade with the specified objects.
+     *
+     * @param retriever        the {@link ConnectionRetriever} to use
+     * @param userDAOGenerator a {@link Supplier} of {@link UserDAO}
+     * @throws NullPointerException if any parameter is null
      */
-    private UserFacade() {
+    public UserFacade(ConnectionRetriever retriever, Function<Connection, UserDAO> userDAOGenerator) {
+        this.retriever = Objects.requireNonNull(retriever);
+        this.userDAOGenerator = Objects.requireNonNull(userDAOGenerator);
     }
 
     /**
@@ -47,7 +59,7 @@ public class UserFacade {
      * @return An {@link ApiResult} containing the User in case of success
      * @throws NullPointerException if {@code req} is null
      */
-    public static ApiResult<User> register(HttpServletRequest req) {
+    public ApiResult<User> register(HttpServletRequest req) {
         Objects.requireNonNull(req);
         return new User.Builder()
                 .addUsername(req.getParameter("username"))
@@ -56,8 +68,7 @@ public class UserFacade {
                 .addName(req.getParameter("name"))
                 .addSurname(req.getParameter("surname"))
                 .build()
-                .flatMap(u -> ProductionConnectionRetriever.getInstance()
-                        .with(c -> new UserDAO(c).insert(u)));
+                .flatMap(u -> retriever.with(c -> userDAOGenerator.apply(c).insert(u)));
 
     }
 
@@ -74,7 +85,7 @@ public class UserFacade {
      * @return An {@link ApiResult} containing the User in case of success
      * @throws NullPointerException if {@code req} is null
      */
-    public static ApiResult<User> authorize(HttpServletRequest req) {
+    public ApiResult<User> authorize(HttpServletRequest req) {
         Objects.requireNonNull(req);
         Tuple<String, String> username = new Tuple<>(req.getParameter("username"), "username");
         Tuple<String, String> clearPassword = new Tuple<>(req.getParameter("clearPassword"), "clearPassword");
@@ -85,18 +96,26 @@ public class UserFacade {
                 .toList();
         if (e.size() > 0)
             return ApiResult.error(new ApiError(400, "Missing required parameter", e.toArray(new ApiSubError[0])));
-        return ProductionConnectionRetriever.getInstance()
-                .with(c -> new UserDAO(c)
-                        .byUsername(username.getFirst())
-                        .flatMap(u -> {
-                            if (PasswordUtils.match(u.getSaltedPassword(), clearPassword.getFirst()))
-                                return ApiResult.ok(u);
-                            return ApiResult.error(new ApiError(
-                                    409,
-                                    "Username doesn't match password",
-                                    new ApiSubError("IllegalArgumentException",
-                                            "The given password doesn't match the one saved")
-                            ));
-                        }));
+        return retriever.with(c -> userDAOGenerator.apply(c)
+                .byUsername(username.getFirst())
+                .flatMap(u -> {
+                    if (PasswordUtils.match(u.getSaltedPassword(), clearPassword.getFirst()))
+                        return ApiResult.ok(u);
+                    return ApiResult.error(new ApiError(
+                            409,
+                            "Username doesn't match password",
+                            new ApiSubError("IllegalArgumentException",
+                                    "The given password doesn't match the one saved")
+                    ));
+                }));
+    }
+
+    /**
+     * Creates a new UserFacade using the default objects
+     *
+     * @return a new UserFacade
+     */
+    public static UserFacade withDefaultObjects() {
+        return new UserFacade(ProductionConnectionRetriever.getInstance(), UserDAO::new);
     }
 }
