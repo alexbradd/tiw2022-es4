@@ -1,5 +1,7 @@
 package it.polimi.tiw.api;
 
+import it.polimi.tiw.api.beans.LoginRequest;
+import it.polimi.tiw.api.beans.RegistrationRequest;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.ConnectionRetriever;
 import it.polimi.tiw.api.dbaccess.UserDAO;
@@ -9,7 +11,6 @@ import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.functional.Tuple;
 import it.polimi.tiw.api.utils.PasswordUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Objects;
@@ -39,37 +40,25 @@ public class UserFacade {
     }
 
     /**
-     * Handles user registration. The request must provide the following fields (as either query parameters or form
-     * data):
-     *
-     * <ul>
-     *     <li>Field 'username': the username of the new user</li>
-     *     <li>Field 'clearPassword': the cleartext password of the new user</li>
-     *     <li>Field 'repeatPassword': a repetition of the cleartext password of the new user</li>
-     *     <li>Field 'email':  the email of the new user</li>
-     *     <li>Field 'name':  the name of the new user</li>
-     *     <li>Field 'surname':  the surname of the new user</li>
-     * </ul>
+     * Handles a user registration request encoded by a {@link RegistrationRequest}. All fields are required to be
+     * non-null and have a valid value. In case of success, an {@link ApiResult} containing the {@link User}
+     * corresponding to the saved user. Otherwise, the returned value will contain an {@link ApiError} with the relative
+     * information.
      * <p>
-     * All fields are mandatory, must be urlencoded and have a maximum length of 128 characters. If data is passed in
-     * both ways (querystring and form data) only one of the two sources will be used. In case of success, an
-     * {@link ApiResult} containing the {@link UserDAO} corresponding to the saved user. Otherwise, the returned value will
-     * contain an {@link ApiError} with the relative information.
+     * A new empty Account will be created for each newly registered user.
      *
-     * A new empty Account will be created for the newly registered user.
-     *
-     * @param req the {@link HttpServletRequest} to process
+     * @param req the {@link RegistrationRequest} to process
      * @return An {@link ApiResult} containing the User in case of success
      * @throws NullPointerException if {@code req} is null
      */
-    public ApiResult<User> register(HttpServletRequest req) {
+    public ApiResult<User> register(RegistrationRequest req) {
         Objects.requireNonNull(req);
         return new User.Builder()
-                .addUsername(req.getParameter("username"))
-                .addPassword(req.getParameter("clearPassword"), req.getParameter("repeatPassword"))
-                .addEmail(req.getParameter("email"))
-                .addName(req.getParameter("name"))
-                .addSurname(req.getParameter("surname"))
+                .addUsername(req.getUsername())
+                .addPassword(req.getClearPassword(), req.getRepeatPassword())
+                .addEmail(req.getEmail())
+                .addName(req.getName())
+                .addSurname(req.getSurname())
                 .build()
                 .flatMap(u -> userDAOGenerator.apply(connection)
                         .insert(u)
@@ -78,22 +67,17 @@ public class UserFacade {
     }
 
     /**
-     * Authenticates a User with the username and password specified in the given request. If the user can be
-     * authenticated, that User is returned. Otherwise, a suitable error is returned. The parameters required are:
+     * Handles a login request encoded by a {@link LoginRequest}. If the user can be authenticated, that {@link User} is
+     * returned. Otherwise, a suitable error is returned.
      *
-     * <ol>
-     *     <li>'username': the User's username</li>
-     *     <li>'clearPassword': the User's clear text password</li>
-     * </ol>
-     *
-     * @param req The {@link HttpServletRequest} to analyze
+     * @param req The {@link LoginRequest} to analyze
      * @return An {@link ApiResult} containing the User in case of success
      * @throws NullPointerException if {@code req} is null
      */
-    public ApiResult<User> authorize(HttpServletRequest req) {
+    public ApiResult<User> authorize(LoginRequest req) {
         Objects.requireNonNull(req);
-        Tuple<String, String> username = new Tuple<>(req.getParameter("username"), "username");
-        Tuple<String, String> clearPassword = new Tuple<>(req.getParameter("clearPassword"), "clearPassword");
+        Tuple<String, String> username = new Tuple<>(req.getUsername(), "username");
+        Tuple<String, String> clearPassword = new Tuple<>(req.getClearPassword(), "clearPassword");
 
         List<ApiSubError> e = Stream.of(username, clearPassword)
                 .filter(t -> t.getFirst() == null)
