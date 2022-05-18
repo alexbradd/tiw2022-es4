@@ -163,6 +163,10 @@ public class User implements PersistedObject {
          */
         public static final int STRING_LENGTH = 128;
         /**
+         * Maximum allowed salted password length
+         */
+        public static final int SALTED_PASSWORD_LENGTH = 512;
+        /**
          * The {@link Pattern} used for validating correctness of the emails passed.
          */
         public static final Pattern EMAIL_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}",
@@ -196,7 +200,7 @@ public class User implements PersistedObject {
                 l.add(new ApiSubError("NoSuchElementException", paramName));
                 return false;
             } else if (!checkLength(param)) {
-                l.add(new ApiSubError("IllegalArgumentException", paramName + " exceeded maximum length"));
+                l.add(new ApiSubError("IllegalArgumentException", paramName + " has invalid length"));
                 return false;
             }
             return true;
@@ -208,10 +212,17 @@ public class User implements PersistedObject {
         }
 
         /**
-         * Checks that the given string is under the maximum string length
+         * Checks that the given string is greater than 0 and under the maximum string length
          */
         private static boolean checkLength(String s) {
-            return s.length() <= STRING_LENGTH;
+            return checkLength(s, STRING_LENGTH);
+        }
+
+        /**
+         * Checks that the given string is greater than 0 and under the given length
+         */
+        private static boolean checkLength(String s, int length) {
+            return s.length() > 0 && s.length() <= length;
         }
 
         /**
@@ -234,6 +245,8 @@ public class User implements PersistedObject {
                         ArrayList<ApiSubError> e = new ArrayList<>();
                         if (s == null)
                             e.add(new ApiSubError("NoSuchElementException", "saltedPassword"));
+                        else if (!checkLength(s, SALTED_PASSWORD_LENGTH))
+                            e.add(new ApiSubError("IllegalArgumentException", "saltedPassword is of invalid length"));
                         return e;
                     },
                     (Tuple<String, String> t) -> {
