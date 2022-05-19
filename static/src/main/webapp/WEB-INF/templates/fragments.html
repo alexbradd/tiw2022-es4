@@ -5,10 +5,13 @@
     <img alt="logo" src="/static/img/logo.svg"/>
     <h1>Price</h1>
 </div>
-<a th:fragment="homeLink" href="/index.html" class="imaged-link">
-    <img src="/static/img/home.svg" alt="Back home"/>
+<a class="imaged-link" th:fragment="back"
+   th:if="${session.history.hasLast()}"
+   th:href="@{${session.history.last()}(ret)}">
+    <img alt="back" src="/static/img/back.svg"/>
 </a>
 <div th:fragment="app-header" class="header">
+    <div th:replace="fragments :: back"></div>
     <a class="imaged-link" href="/index.html">
         <img src="/static/img/logo.svg" alt="logo"/>
     </a>
@@ -28,9 +31,9 @@
                 <small><span th:text="#{fragments.userId}">User id</span>: <span th:text="*{base64Id}">id</span></small>
                 <br>
             </div>
-            <a class="anchor-button error center" href="/logout" th:text="#{fragments.logout}">
-                Logout
-            </a>
+            <form action="/logout" method="post">
+                <input type="submit" class="big-button error center" th:value="#{fragments.logout}"/>
+            </form>
         </div>
     </div>
 </div>

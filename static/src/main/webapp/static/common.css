@@ -110,13 +110,12 @@ small, .text_small {
 }
 
 .header {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template: "a b s c" auto / 40px 40px 1fr;
     align-items: center;
     border-radius: var(--border-radius-xl);
     box-shadow: 0 0 10px var(--shadow-color);
-    padding: 2px;
+    padding: 5px 10px;
     width: 100%;
     background-color: var(--view-color);
     margin-bottom: 30px;
@@ -129,7 +128,10 @@ small, .text_small {
 
 .user-popup {
     position: relative;
-    margin: 0 10px 0 0;
+}
+
+.header .user-popup {
+    grid-area: c;
 }
 
 .user-popup h5 {

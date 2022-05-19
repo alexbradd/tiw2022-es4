@@ -8,7 +8,11 @@
         <filter-class>it.polimi.tiw.templated.filters.LoginFilter</filter-class>
     </filter>
     <filter>
-        <filter-name>01-accountListFilter</filter-name>
+        <filter-name>01-historyFilter</filter-name>
+        <filter-class>it.polimi.tiw.templated.filters.HistoryFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>02-accountListFilter</filter-name>
         <filter-class>it.polimi.tiw.templated.filters.AccountListFilter</filter-class>
     </filter>
 
@@ -18,7 +22,11 @@
         <url-pattern>/createAccount</url-pattern>
     </filter-mapping>
     <filter-mapping>
-        <filter-name>01-accountListFilter</filter-name>
+        <filter-name>01-historyFilter</filter-name>
+        <url-pattern>*.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>02-accountListFilter</filter-name>
         <url-pattern>/index.html</url-pattern>
     </filter-mapping>
 </web-app>
