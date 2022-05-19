@@ -11,7 +11,7 @@ import java.sql.SQLException;
 /**
  * Some internal utilities
  */
-class DAOUtils {
+public class DAOUtils {
     /**
      * Mocks mysql's AutoIncrement
      */

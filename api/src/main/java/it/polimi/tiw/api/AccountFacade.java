@@ -4,6 +4,7 @@ import it.polimi.tiw.api.beans.Account;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.AccountDAO;
 import it.polimi.tiw.api.dbaccess.ConnectionRetriever;
+import it.polimi.tiw.api.dbaccess.DAOUtils;
 import it.polimi.tiw.api.dbaccess.UserDAO;
 import it.polimi.tiw.api.functional.ApiResult;
 
@@ -40,11 +41,8 @@ public class AccountFacade {
      *
      * @param id the id of owner of the new {@link Account}
      * @return an {@link ApiResult} containing the created {@link Account} if everything went ok
-     * @throws NullPointerException if {@code id} is null
-     * @see AccountDAO#insert(Account)
      */
     public ApiResult<Account> createFor(String id) {
-        Objects.requireNonNull(id);
         return userDAOGenerator.apply(connection)
                 .byId(id)
                 .flatMap(u -> {
@@ -58,11 +56,10 @@ public class AccountFacade {
      *
      * @param u the owner of the {@link Account} in the list
      * @return an {@link ApiResult} containing a {@link List} of {@link Account} if everything went ok
-     * @throws NullPointerException if {@code u} is null
      * @see AccountDAO#ofUser(String)
      */
     public ApiResult<List<Account>> ofUser(User u) {
-        Objects.requireNonNull(u);
+        if (u == null) return ApiResult.error(DAOUtils.fromNullParameter("u"));
         return accountDAOGenerator.apply(connection).ofUser(u.getBase64Id());
     }
 
@@ -71,10 +68,8 @@ public class AccountFacade {
      *
      * @param id the base64 encoded id of the account
      * @return an {@link ApiResult} containing the retrieved account or an error
-     * @throws NullPointerException if {@code id} is null
      */
     public ApiResult<Account> byId(String id) {
-        Objects.requireNonNull(id);
         return accountDAOGenerator.apply(connection).byId(id);
     }
 

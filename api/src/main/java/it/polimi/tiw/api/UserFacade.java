@@ -4,6 +4,7 @@ import it.polimi.tiw.api.beans.LoginRequest;
 import it.polimi.tiw.api.beans.RegistrationRequest;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.ConnectionRetriever;
+import it.polimi.tiw.api.dbaccess.DAOUtils;
 import it.polimi.tiw.api.dbaccess.UserDAO;
 import it.polimi.tiw.api.error.ApiError;
 import it.polimi.tiw.api.error.ApiSubError;
@@ -49,10 +50,9 @@ public class UserFacade {
      *
      * @param req the {@link RegistrationRequest} to process
      * @return An {@link ApiResult} containing the User in case of success
-     * @throws NullPointerException if {@code req} is null
      */
     public ApiResult<User> register(RegistrationRequest req) {
-        Objects.requireNonNull(req);
+        if (req == null) return ApiResult.error(DAOUtils.fromNullParameter("req"));
         return new User.Builder()
                 .addUsername(req.getUsername())
                 .addPassword(req.getClearPassword(), req.getRepeatPassword())
@@ -72,10 +72,9 @@ public class UserFacade {
      *
      * @param req The {@link LoginRequest} to analyze
      * @return An {@link ApiResult} containing the User in case of success
-     * @throws NullPointerException if {@code req} is null
      */
     public ApiResult<User> authorize(LoginRequest req) {
-        Objects.requireNonNull(req);
+        if (req == null) return ApiResult.error(DAOUtils.fromNullParameter("req"));
         Tuple<String, String> username = new Tuple<>(req.getUsername(), "username");
         Tuple<String, String> clearPassword = new Tuple<>(req.getClearPassword(), "clearPassword");
 
