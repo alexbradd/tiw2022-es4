@@ -13,10 +13,24 @@
         <img src="/static/img/logo.svg" alt="logo"/>
     </a>
     <div class="user-popup">
-        <p th:text="${session.user.getUsername()}"></p>
-        <div class="popup">
-            <a href="/login.html" th:text="#{fragments.login}">Log into a new account</a>
-            <a href="/logout" th:text="#{fragments.logout}">Logout</a>
+        <p th:text="${session.user.username}"></p>
+        <div class="popup" th:object="${session.user}">
+            <h5 th:text="#{fragments.userInfo}">User info</h5>
+            <div class="user-info">
+                <div class="user-info-cell">
+                    <small th:text="#{fragments.name}">Name:</small>
+                    <p th:text="*{#strings.concat(name, ' ', surname)}">Name and surname</p>
+                </div>
+                <div class="user-info-cell">
+                    <small th:text="#{fragments.email}">Email:</small>
+                    <p class="text-right" th:text="*{email}">Email</p>
+                </div>
+                <small><span th:text="#{fragments.userId}">User id</span>: <span th:text="*{base64Id}">id</span></small>
+                <br>
+            </div>
+            <a class="anchor-button error center" href="/logout" th:text="#{fragments.logout}">
+                Logout
+            </a>
         </div>
     </div>
 </div>

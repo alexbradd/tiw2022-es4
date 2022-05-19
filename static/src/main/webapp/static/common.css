@@ -132,6 +132,11 @@ small, .text_small {
     margin: 0 10px 0 0;
 }
 
+.user-popup h5 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 .user-popup p {
     margin: 0;
 }
@@ -149,6 +154,22 @@ small, .text_small {
     display: block;
     right: 0;
     width: max-content;
+}
+
+.popup .big-button {
+    margin-top: 10px;
+}
+
+.user-info {
+    display: grid;
+    grid-template: "a b"
+                   "c c";
+    grid-column-gap: 5px;
+    grid-row-gap: 5px;
+}
+
+.user-info .user-info-cell p {
+    line-height: 0.5;
 }
 
 .form-input label {
@@ -194,6 +215,22 @@ small, .text_small {
     font-size: var(--text-l);
     padding: 7px 10px;
     cursor: pointer;
+}
+
+.anchor-button {
+    color: var(--text-color-inverse);
+    background-color: var(--color-accent);
+    border-radius: var(--border-radius-l);
+    padding: 7px 10px;
+    text-decoration: none;
+    text-align: center;
+    width: fit-content;
+    height: fit-content;
+    line-height: normal;
+}
+
+.text-right {
+    text-align: right;
 }
 
 .ok {
