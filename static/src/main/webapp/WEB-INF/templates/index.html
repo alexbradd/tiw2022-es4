@@ -19,7 +19,6 @@
                 <a th:href="@{/details.html(id = ${a.base64Id})}" th:text="#{index.details}">Details</a>
             </div>
             <form action="/createAccount" method="post" class="new-account">
-                <input type="hidden" name="userId" th:value="${session.user.base64Id}"/>
                 <input type="submit" th:value="#{index.newAccount}" class="big-button ok center"/>
             </form>
         </div>
