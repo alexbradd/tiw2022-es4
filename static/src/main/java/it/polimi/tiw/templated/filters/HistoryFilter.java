@@ -43,7 +43,6 @@ public class HistoryFilter extends HttpFilter {
                 String newReqUrl = reconstructUrl(req, queryStringWithoutRet(req));
                 res.sendRedirect(newReqUrl);
             }
-            System.out.println(history);
             return;
         }
         chain.doFilter(req, res);
