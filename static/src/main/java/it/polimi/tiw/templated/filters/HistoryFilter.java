@@ -11,6 +11,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * Tracks user movement through the website. It uses a {@link History} saved into the current session as {@code history}.
@@ -39,9 +40,10 @@ public class HistoryFilter extends HttpFilter {
                 history.pop();
                 session.setAttribute("history", history);
 
-                String newReqUrl = reconstructUrl(req, queryStringWihtoutRet(req));
+                String newReqUrl = reconstructUrl(req, queryStringWithoutRet(req));
                 res.sendRedirect(newReqUrl);
             }
+            System.out.println(history);
             return;
         }
         chain.doFilter(req, res);
@@ -66,19 +68,16 @@ public class HistoryFilter extends HttpFilter {
     /**
      * Removes {@code ret} parameter from the querystring
      */
-    private String queryStringWihtoutRet(HttpServletRequest req) {
+    private String queryStringWithoutRet(HttpServletRequest req) {
         Map<String, String[]> params = req.getParameterMap();
         return params.entrySet().stream()
                 .filter(e -> !e.getKey().equals("ret"))
-                .collect(StringBuilder::new,
+                .collect(() -> new StringJoiner("&"),
                         (acc, e) -> {
                             for (String v : e.getValue())
-                                acc.append(e.getKey())
-                                        .append("=")
-                                        .append(v)
-                                        .append("&");
+                                acc.add(e.getKey() + "=" + v);
                         },
-                        StringBuilder::append)
+                        StringJoiner::merge)
                 .toString();
     }
 }
