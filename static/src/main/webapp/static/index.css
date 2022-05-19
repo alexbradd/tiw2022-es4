@@ -3,13 +3,13 @@
 }
 
 .account-view {
-    margin-top: 30px;
+    width: 100%;
 }
 
 .account-list {
     display: flex;
     flex-flow: column nowrap;
-    width: 100%;
+    width: 90%;
 }
 
 .account {
@@ -31,9 +31,4 @@
 .new-account {
     margin-top: 20px;
     width: 100%;
-}
-
-.center {
-    display: block;
-    margin: auto;
 }

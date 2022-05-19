@@ -119,6 +119,7 @@ small, .text_small {
     padding: 2px;
     width: 100%;
     background-color: var(--view-color);
+    margin-bottom: 30px;
 }
 
 .header .imaged-link {
@@ -138,9 +139,9 @@ small, .text_small {
 .user-popup .popup {
     display: none;
     position: absolute;
-    border-radius: var(--border-radius-m);
+    border-radius: var(--border-radius-l);
     background-color: var(--view-color);
-    padding: 5px;
+    padding: 10px;
     box-shadow: 0 0 5px var(--shadow-color);
 }
 
@@ -189,9 +190,10 @@ small, .text_small {
 
 .big-button {
     border: none;
-    border-radius: 7px;
-    font-size: 1.25em;
+    border-radius: var(--border-radius-l);
+    font-size: var(--text-l);
     padding: 7px 10px;
+    cursor: pointer;
 }
 
 .ok {
@@ -207,6 +209,11 @@ small, .text_small {
 .accent {
     background-color: var(--color-accent);
     color: var(--text-color-inverse);
+}
+
+.center {
+    display: block;
+    margin: auto;
 }
 
 .imaged-link {
