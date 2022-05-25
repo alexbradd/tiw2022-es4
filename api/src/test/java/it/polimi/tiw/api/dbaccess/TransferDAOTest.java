@@ -52,9 +52,11 @@ class TransferDAOTest {
         });
         TransferDAO.withNewObjects(connection).inAndOutOf(null).consume(a -> fail(), e -> {
         });
-        TransferDAO.withNewObjects(connection).newTransfer(null, null, 0).consume(a -> fail(), e -> {
+        TransferDAO.withNewObjects(connection).newTransfer(null, null, 0, "a").consume(a -> fail(), e -> {
         });
-        TransferDAO.withNewObjects(connection).newTransfer(IdUtils.toBase64(0L), null, 0).consume(a -> fail(), e -> {
+        TransferDAO.withNewObjects(connection).newTransfer(IdUtils.toBase64(0L), null, 0, "a").consume(a -> fail(), e -> {
+        });
+        TransferDAO.withNewObjects(connection).newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 0, null).consume(a -> fail(), e -> {
         });
         assertFalse(TransferDAO.withNewObjects(connection).isPersisted(null));
     }
@@ -276,18 +278,19 @@ class TransferDAOTest {
     @MethodSource("newTransfer_invalidParameterSource")
     void newTransfer_withInvalidParameters(NewTransferParameters params) {
         TransferDAO.withNewObjects(connection)
-                .newTransfer(params.fromId, params.toId, params.amount)
+                .newTransfer(params.fromId, params.toId, params.amount, params.causal)
                 .consume(__ -> fail(), __ -> {
                 });
     }
 
     static Stream<NewTransferParameters> newTransfer_invalidParameterSource() {
         return Stream.of(
-                new NewTransferParameters("asdf", IdUtils.toBase64(0L), 1),
-                new NewTransferParameters(IdUtils.toBase64(0L), "asdf", 1),
-                new NewTransferParameters(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 0),
-                new NewTransferParameters(IdUtils.toBase64(0L), IdUtils.toBase64(1L), -1),
-                new NewTransferParameters(IdUtils.toBase64(0L), IdUtils.toBase64(0L), 1)
+                new NewTransferParameters("asdf", IdUtils.toBase64(0L), 1, "a"),
+                new NewTransferParameters(IdUtils.toBase64(0L), "asdf", 1, "a"),
+                new NewTransferParameters(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 0, "a"),
+                new NewTransferParameters(IdUtils.toBase64(0L), IdUtils.toBase64(1L), -1, "a"),
+                new NewTransferParameters(IdUtils.toBase64(0L), IdUtils.toBase64(0L), 1, "a"),
+                new NewTransferParameters(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "")
         );
     }
 
@@ -295,11 +298,13 @@ class TransferDAOTest {
         public String fromId;
         public String toId;
         public int amount;
+        public String causal;
 
-        public NewTransferParameters(String fromId, String toId, int amount) {
+        public NewTransferParameters(String fromId, String toId, int amount, String causal) {
             this.fromId = fromId;
             this.toId = toId;
             this.amount = amount;
+            this.causal = causal;
         }
     }
 
@@ -311,7 +316,7 @@ class TransferDAOTest {
         when(connection.getAutoCommit()).thenReturn(true);
         when(mock.byId(anyString())).thenReturn(ApiResult.error(new ApiError(404, "")));
 
-        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1)
+        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
                 });
         verify(connection).rollback();
@@ -327,7 +332,7 @@ class TransferDAOTest {
         when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
         when(mockAccount.getBalance()).thenReturn(0);
 
-        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1)
+        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
                 });
         verify(connection).rollback();
@@ -344,7 +349,7 @@ class TransferDAOTest {
         when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
         when(mockAccount.getBalance()).thenReturn(10);
 
-        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1)
+        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
                 });
         verify(connection).rollback();
@@ -362,7 +367,7 @@ class TransferDAOTest {
         when(mockAccount.getBalance()).thenReturn(10);
         doReturn(ApiResult.error(new ApiError(500, ""))).when(dao).insert(any(Transfer.class));
 
-        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1)
+        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
                 });
         verify(connection).rollback();
@@ -380,7 +385,7 @@ class TransferDAOTest {
         when(mockAccount.getBalance()).thenReturn(10);
         doReturn(ApiResult.error(new ApiError(500, ""))).when(dao).insert(any(Transfer.class));
 
-        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1)
+        dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
                 });
         verify(connection, never()).rollback();

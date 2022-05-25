@@ -128,15 +128,19 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      * @param fromId the base64 encoded id of the {@link Account} from which the money will be taken
      * @param toId   the base64 encoded id of the {@link Account} on which the money will be deposited
      * @param amount the amount of money transferred
+     * @param causal the causal message
      * @return an {@link ApiResult} containing the created {@link Transfer} or an error.
      */
-    public ApiResult<Transfer> newTransfer(String fromId, String toId, int amount) {
+    public ApiResult<Transfer> newTransfer(String fromId, String toId, int amount, String causal) {
         if (isNull(fromId)) return ApiResult.error(DAOUtils.fromNullParameter("fromId"));
         if (isNull(toId)) return ApiResult.error(DAOUtils.fromNullParameter("toId"));
+        if (isNull(causal)) return ApiResult.error(DAOUtils.fromNullParameter("causal"));
         if (!IdUtils.isValidBase64(fromId)) return ApiResult.error(DAOUtils.fromMalformedParameter("fromId"));
         if (!IdUtils.isValidBase64(toId)) return ApiResult.error(DAOUtils.fromMalformedParameter("toId"));
         if (fromId.equals(toId)) return ApiResult.error(DAOUtils.fromMalformedParameter("toId"));
         if (amount <= 0) return ApiResult.error(DAOUtils.fromMalformedParameter("amount"));
+        if (causal.length() < 1 || causal.length() > Transfer.CAUSAL_LENGTH)
+            return ApiResult.error(DAOUtils.fromMalformedParameter("causal"));
 
         try {
             boolean prevAutoCommit = connection.getAutoCommit();
@@ -144,7 +148,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
             try {
                 ApiResult<Tuple<Transfer, Tuple<Account, Account>>> objs = getToAndFrom(toId, fromId)
                         .flatMap(t -> checkToBalance(t, amount))
-                        .flatMap(t -> createTransfer(t, amount));
+                        .flatMap(t -> createTransfer(t, amount, causal));
                 if (objs.match(__ -> true, __ -> false)) {
                     return commitChanges(objs.get(), prevAutoCommit);
                 } else {
@@ -187,7 +191,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
     /**
      * Creates the new transfer bean and updates the accounts
      */
-    private ApiResult<Tuple<Transfer, Tuple<Account, Account>>> createTransfer(Tuple<Account, Account> toAndFrom, int amount) {
+    private ApiResult<Tuple<Transfer, Tuple<Account, Account>>> createTransfer(Tuple<Account, Account> toAndFrom, int amount, String causal) {
         Account to = toAndFrom.getFirst();
         Account from = toAndFrom.getSecond();
         Transfer transfer = new Transfer();
@@ -196,6 +200,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
         transfer.setFromBalance(from.getBalance());
         transfer.setToBalance(to.getBalance());
         transfer.setAmount(amount);
+        transfer.setCausal(causal);
         to.setBalance(to.getBalance() + amount);
         from.setBalance(from.getBalance() - amount);
         return ApiResult.ok(new Tuple<>(transfer, new Tuple<>(to, from)));
@@ -232,7 +237,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      * <p>
      * Note: inserting {@link Transfer} objects directly is highly discouraged and could break data consistency since
      * nor the receiving nor the transmitting {@link Account}s will be updated. If you intend to create a new
-     * {@link Transfer}, use {@link #newTransfer(String, String, int)}.
+     * {@link Transfer}, use {@link #newTransfer(String, String, int, String)}.
      *
      * @param transfer the {@link Transfer} to insert
      * @return an {@link ApiResult} containing an error or the saved object
@@ -251,7 +256,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
         if (isPersisted(transfer)) return ApiResult.error(DAOUtils.fromConflict("transfer"));
 
         try {
-            String sql = "insert into tiw_app.transfers(id, date, amount, toId, toBalance, fromId, fromBalance) values(?, ?, ?, ?, ?, ?, ?)";
+            String sql = "insert into tiw_app.transfers(id, date, amount, toId, toBalance, fromId, fromBalance, causal) values(?, ?, ?, ?, ?, ?, ?, ?)";
             boolean prevAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
@@ -264,6 +269,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                     statement.setInt(5, transfer.getToBalance());
                     statement.setLong(6, IdUtils.fromBase64(transfer.getFromId()));
                     statement.setInt(7, transfer.getFromBalance());
+                    statement.setString(8, transfer.getCausal());
                     statement.executeUpdate();
                 }
                 if (prevAutoCommit) connection.commit();

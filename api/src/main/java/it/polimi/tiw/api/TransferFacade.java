@@ -40,11 +40,12 @@ public class TransferFacade {
      * @param from   the id of the account from which the money will be taken
      * @param to     the id of the account to which the money will be given
      * @param amount the amount of money to take
+     * @param causal the causal message
      * @return an {@link ApiResult} containing the newly created Transfer or an error
-     * @see it.polimi.tiw.api.dbaccess.TransferDAO#newTransfer(String, String, int)
+     * @see it.polimi.tiw.api.dbaccess.TransferDAO#newTransfer(String, String, int, String)
      */
-    public ApiResult<Transfer> newTransfer(String from, String to, int amount) {
-        return transferDAOGenerator.apply(connection).newTransfer(from, to, amount);
+    public ApiResult<Transfer> newTransfer(String from, String to, int amount, String causal) {
+        return transferDAOGenerator.apply(connection).newTransfer(from, to, amount, causal);
     }
 
     /**

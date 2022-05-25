@@ -6,6 +6,11 @@ import java.time.Instant;
  * Bean representing a money transfer between two {@link Account}.
  */
 public class Transfer implements PersistedObject {
+    /**
+     * The maximum length of the causal message
+     */
+    public static final int CAUSAL_LENGTH = 1024;
+
     private String base64Id;
     private Instant date;
     private int amount;
@@ -13,6 +18,7 @@ public class Transfer implements PersistedObject {
     private int toBalance;
     private String fromId;
     private int fromBalance;
+    private String causal;
 
     /**
      * Getter for this Transfer's id. The returned id might be null, e.g. when the transfer has not yet been saved to
@@ -142,6 +148,24 @@ public class Transfer implements PersistedObject {
     }
 
     /**
+     * Getter for the causal message associated with this Transfer
+     *
+     * @return the causal message associated with this Transfer
+     */
+    public String getCausal() {
+        return causal;
+    }
+
+    /**
+     * Sets the causal message associated with this Transfer
+     *
+     * @param causal the new causal message associated with this Transfer
+     */
+    public void setCausal(String causal) {
+        this.causal = causal;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -149,6 +173,7 @@ public class Transfer implements PersistedObject {
         return (includeId && base64Id == null) ||
                 date == null ||
                 toId == null ||
-                fromId == null;
+                fromId == null ||
+                causal == null;
     }
 }
