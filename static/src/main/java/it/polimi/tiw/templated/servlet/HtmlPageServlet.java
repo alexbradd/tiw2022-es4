@@ -20,7 +20,9 @@ import java.io.IOException;
         "/index.html",
         "/details.html",
         "/register.html",
-        "/login.html"
+        "/login.html",
+        "/rejectTransfer.html",
+        "/confirmTransfer.html"
 })
 public class HtmlPageServlet extends HttpServlet {
     private TemplateEngine templateEngine;

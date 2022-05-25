@@ -1,8 +1,10 @@
 package it.polimi.tiw.api;
 
+import it.polimi.tiw.api.beans.NewTransferRequest;
 import it.polimi.tiw.api.beans.Transfer;
 import it.polimi.tiw.api.dbaccess.AccountDAO;
 import it.polimi.tiw.api.dbaccess.TransferDAO;
+import it.polimi.tiw.api.error.Errors;
 import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.functional.Tuple;
 
@@ -17,10 +19,14 @@ import java.util.function.Function;
 public class TransferFacade {
     private final Connection connection;
     private final Function<Connection, TransferDAO> transferDAOGenerator;
+    private final Function<Connection, AccountFacade> accountFacadeGenerator;
 
-    public TransferFacade(Connection connection, Function<Connection, TransferDAO> transferDAOGenerator) {
+    public TransferFacade(Connection connection,
+                          Function<Connection, TransferDAO> transferDAOGenerator,
+                          Function<Connection, AccountFacade> accountFacadeGenerator) {
         this.connection = Objects.requireNonNull(connection);
         this.transferDAOGenerator = Objects.requireNonNull(transferDAOGenerator);
+        this.accountFacadeGenerator = Objects.requireNonNull(accountFacadeGenerator);
     }
 
     /**
@@ -28,24 +34,49 @@ public class TransferFacade {
      *
      * @param id the id of the Transfer to get
      * @return an {@link ApiResult} containing the Transfer searched or an error
-     * @see it.polimi.tiw.api.dbaccess.TransferDAO#byId(String)
+     * @see TransferDAO#byId(String)
      */
     public ApiResult<Transfer> byId(String id) {
         return transferDAOGenerator.apply(connection).byId(id);
     }
 
     /**
-     * Creates a new transfer from the accounts with the given ids.
+     * Checks the validity of the given {@link NewTransferRequest} and executes it.
      *
-     * @param from   the id of the account from which the money will be taken
-     * @param to     the id of the account to which the money will be given
-     * @param amount the amount of money to take
-     * @param causal the causal message
-     * @return an {@link ApiResult} containing the newly created Transfer or an error
-     * @see it.polimi.tiw.api.dbaccess.TransferDAO#newTransfer(String, String, int, String)
+     * @param transferRequest the request to evaluate
+     * @return an {@link ApiResult} containing the newly created {@link Transfer} or an error
+     * @see TransferDAO#newTransfer(String, String, double, String)
      */
-    public ApiResult<Transfer> newTransfer(String from, String to, int amount, String causal) {
-        return transferDAOGenerator.apply(connection).newTransfer(from, to, amount, causal);
+    public ApiResult<Transfer> newTransfer(NewTransferRequest transferRequest) {
+        if (transferRequest == null) return ApiResult.error(Errors.fromNullParameter("transferRequest"));
+        AccountFacade facade = accountFacadeGenerator.apply(connection);
+        return checkAccountOwnership(facade,
+                transferRequest.getFromUserId(),
+                transferRequest.getFromAccountId(),
+                "fromAccountId")
+                .flatMap((f) -> checkAccountOwnership(f,
+                        transferRequest.getToUserId(),
+                        transferRequest.getToAccountId(),
+                        "toAccountId"))
+                .then(() -> transferDAOGenerator.apply(connection).newTransfer(
+                        transferRequest.getFromAccountId(),
+                        transferRequest.getToAccountId(),
+                        transferRequest.getAmount(),
+                        transferRequest.getCausal()));
+    }
+
+    private ApiResult<AccountFacade> checkAccountOwnership(AccountFacade facade,
+                                                           String userId,
+                                                           String accountId,
+                                                           String accountParamName) {
+        if (accountId == null || accountId.isEmpty())
+            return ApiResult.error(Errors.fromMalformedParameter(accountParamName));
+        return facade.ofUser(userId)
+                .flatMap(list -> {
+                    if (list.stream().anyMatch(a -> a.getBase64Id().equals(accountId)))
+                        return ApiResult.ok(facade);
+                    return ApiResult.error(Errors.fromNotFound(accountParamName));
+                });
     }
 
     /**
@@ -66,7 +97,9 @@ public class TransferFacade {
      * @return a new TransferFacade
      */
     public static TransferFacade withDefaultObjects(Connection connection) {
-        return new TransferFacade(connection, (c) -> new TransferDAO(c, new AccountDAO(c)));
+        return new TransferFacade(connection,
+                (c) -> new TransferDAO(c, new AccountDAO(c)),
+                AccountFacade::withDefaultObjects);
     }
 
 }

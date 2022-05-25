@@ -64,6 +64,17 @@ public class AccountFacade {
     }
 
     /**
+     * Returns a list of all the {@link Account} of the {@link User} with the given id
+     *
+     * @param base64Id the id of the owner of the {@link Account} in the list
+     * @return an {@link ApiResult} containing a {@link List} of {@link Account} if everything went ok
+     * @see AccountDAO#ofUser(String)
+     */
+    public ApiResult<List<Account>> ofUser(String base64Id) {
+        return accountDAOGenerator.apply(connection).ofUser(base64Id);
+    }
+
+    /**
      * Returns the {@link Account} with the given id.
      *
      * @param id the base64 encoded id of the account
