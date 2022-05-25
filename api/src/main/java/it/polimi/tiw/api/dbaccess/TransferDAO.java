@@ -63,6 +63,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                     int toBalance = r.getInt("toBalance");
                     long fromId = r.getLong("fromId");
                     int fromBalance = r.getInt("fromBalance");
+                    String causal = r.getString("causal");
                     Transfer t = new Transfer();
                     t.setDate(date);
                     t.setAmount(amount);
@@ -71,6 +72,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                     t.setToBalance(toBalance);
                     t.setFromId(IdUtils.toBase64(fromId));
                     t.setFromBalance(fromBalance);
+                    t.setCausal(causal);
                     return ApiResult.ok(t);
                 } else
                     return ApiResult.error(Errors.fromNotFound("id " + base64Id));
@@ -111,6 +113,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                         t.setToBalance(r.getInt("toBalance"));
                         t.setFromId(IdUtils.toBase64(r.getLong("fromId")));
                         t.setFromBalance(r.getInt("fromBalance"));
+                        t.setCausal(r.getString("causal"));
                         if (t.getToId().equals(accountId)) ins.add(t);
                         else outs.add(t);
                     }
