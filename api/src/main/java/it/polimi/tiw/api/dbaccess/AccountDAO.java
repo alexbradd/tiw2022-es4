@@ -2,6 +2,7 @@ package it.polimi.tiw.api.dbaccess;
 
 import it.polimi.tiw.api.beans.Account;
 import it.polimi.tiw.api.beans.User;
+import it.polimi.tiw.api.error.Errors;
 import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.utils.IdUtils;
 
@@ -41,8 +42,8 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
      */
     @Override
     public ApiResult<Account> byId(String base64Id) {
-        if (isNull(base64Id)) return ApiResult.error(DAOUtils.fromNullParameter("base64Id"));
-        if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(DAOUtils.fromMalformedParameter("base64Id"));
+        if (isNull(base64Id)) return ApiResult.error(Errors.fromNullParameter("base64Id"));
+        if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(Errors.fromMalformedParameter("base64Id"));
         long id = IdUtils.fromBase64(base64Id);
         return byId(id);
     }
@@ -64,10 +65,10 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                     Account a = new Account(IdUtils.toBase64(id), IdUtils.toBase64(ownerId), balance);
                     return ApiResult.ok(a);
                 } else
-                    return ApiResult.error(DAOUtils.fromMissingElement("id " + IdUtils.toBase64(id)));
+                    return ApiResult.error(Errors.fromNotFound("id " + IdUtils.toBase64(id)));
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -78,9 +79,9 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
      * @return an ApiResult containing all the Accounts associated with the given {@link User}
      */
     public ApiResult<List<Account>> ofUser(String ownerId) {
-        if (isNull(ownerId)) return ApiResult.error(DAOUtils.fromNullParameter("owner"));
+        if (isNull(ownerId)) return ApiResult.error(Errors.fromNullParameter("owner"));
         if (!IdUtils.isValidBase64(ownerId))
-            return ApiResult.error(DAOUtils.fromMalformedParameter("owner"));
+            return ApiResult.error(Errors.fromMalformedParameter("owner"));
         long userId = IdUtils.fromBase64(ownerId);
         String sql = "select * from tiw_app.accounts where ownerId = ?";
         ArrayList<Account> accs = new ArrayList<>();
@@ -96,7 +97,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 return ApiResult.ok(accs);
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -125,9 +126,9 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
      */
     @Override
     public ApiResult<Account> update(Account account) {
-        if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
-        if (isNotValidAccount(account, true)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
-        if (!isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (isNull(account)) return ApiResult.error(Errors.fromNullParameter("account"));
+        if (isNotValidAccount(account, true)) return ApiResult.error(Errors.fromMalformedParameter("account"));
+        if (!isPersisted(account)) return ApiResult.error(Errors.fromMalformedParameter("account"));
 
         try {
             String sql = "update tiw_app.accounts set ownerId = ?, balance = ? where id = ?";
@@ -149,7 +150,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -166,9 +167,9 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
      */
     @Override
     public ApiResult<Account> insert(Account account) {
-        if (isNull(account)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
-        if (isNotValidAccount(account, false)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
-        if (isPersisted(account)) return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+        if (isNull(account)) return ApiResult.error(Errors.fromNullParameter("account"));
+        if (isNotValidAccount(account, false)) return ApiResult.error(Errors.fromMalformedParameter("account"));
+        if (isPersisted(account)) return ApiResult.error(Errors.fromMalformedParameter("account"));
 
         try {
             String sql = "insert into tiw_app.accounts(id, ownerId, balance) values(?, ?, ?);";
@@ -192,7 +193,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 

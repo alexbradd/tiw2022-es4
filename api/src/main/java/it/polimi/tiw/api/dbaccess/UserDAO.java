@@ -2,6 +2,7 @@ package it.polimi.tiw.api.dbaccess;
 
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.error.ApiError;
+import it.polimi.tiw.api.error.Errors;
 import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.utils.IdUtils;
 
@@ -52,7 +53,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
             p.setLong(1, id);
             return packageApiResult(p, String.valueOf(id));
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -65,8 +66,8 @@ public class UserDAO implements DatabaseAccessObject<User> {
      */
     @Override
     public ApiResult<User> byId(String base64Id) {
-        if (isNull(base64Id)) return ApiResult.error(DAOUtils.fromNullParameter("base64Id"));
-        if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(DAOUtils.fromMalformedParameter("base64Id"));
+        if (isNull(base64Id)) return ApiResult.error(Errors.fromNullParameter("base64Id"));
+        if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(Errors.fromMalformedParameter("base64Id"));
         return byId(IdUtils.fromBase64(base64Id));
     }
 
@@ -78,13 +79,13 @@ public class UserDAO implements DatabaseAccessObject<User> {
      * @return an {@link ApiResult} containing the constructed User
      */
     public ApiResult<User> byUsername(String username) {
-        if (isNull(username)) return ApiResult.error(DAOUtils.fromNullParameter("username"));
+        if (isNull(username)) return ApiResult.error(Errors.fromNullParameter("username"));
         String sql = "select * from tiw_app.users where username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             injectStringParameters(p, username);
             return packageApiResult(p, username);
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -103,7 +104,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
                         .addSurname(r.getString("surname"))
                         .build();
             } else {
-                return ApiResult.error(DAOUtils.fromMissingElement(specifier));
+                return ApiResult.error(Errors.fromNotFound(specifier));
             }
         }
     }
@@ -133,11 +134,11 @@ public class UserDAO implements DatabaseAccessObject<User> {
      */
     @Override
     public ApiResult<User> update(User user) {
-        if (isNull(user)) return ApiResult.error(DAOUtils.fromNullParameter("user"));
-        if (user.hasNullProperties(true)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (isNull(user)) return ApiResult.error(Errors.fromNullParameter("user"));
+        if (user.hasNullProperties(true)) return ApiResult.error(Errors.fromMalformedParameter("user"));
         if (!IdUtils.isValidBase64(user.getBase64Id()))
-            return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
-        if (!isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+            return ApiResult.error(Errors.fromMalformedParameter("user"));
+        if (!isPersisted(user)) return ApiResult.error(Errors.fromMalformedParameter("user"));
 
         try {
             boolean prevAutoCommit = connection.getAutoCommit();
@@ -158,7 +159,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
                 connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -175,11 +176,11 @@ public class UserDAO implements DatabaseAccessObject<User> {
      */
     @Override
     public ApiResult<User> insert(User user) {
-        if (isNull(user)) return ApiResult.error(DAOUtils.fromNullParameter("user"));
-        if (user.hasNullProperties(false)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
-        if (isPersisted(user)) return ApiResult.error(DAOUtils.fromMalformedParameter("user"));
+        if (isNull(user)) return ApiResult.error(Errors.fromNullParameter("user"));
+        if (user.hasNullProperties(false)) return ApiResult.error(Errors.fromMalformedParameter("user"));
+        if (isPersisted(user)) return ApiResult.error(Errors.fromMalformedParameter("user"));
         if (byUsername(user.getUsername()).match(__ -> true, __ -> false))
-            return ApiResult.error(DAOUtils.fromConflict("user"));
+            return ApiResult.error(Errors.fromConflict("user"));
 
         try {
             boolean prevAutoCommit = connection.getAutoCommit();
@@ -202,7 +203,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
                 connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 }

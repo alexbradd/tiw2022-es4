@@ -4,6 +4,7 @@ import it.polimi.tiw.api.beans.Account;
 import it.polimi.tiw.api.beans.Transfer;
 import it.polimi.tiw.api.error.ApiError;
 import it.polimi.tiw.api.error.ApiSubError;
+import it.polimi.tiw.api.error.Errors;
 import it.polimi.tiw.api.functional.ApiResult;
 import it.polimi.tiw.api.functional.Result;
 import it.polimi.tiw.api.functional.Tuple;
@@ -48,8 +49,8 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      */
     @Override
     public ApiResult<Transfer> byId(String base64Id) {
-        if (isNull(base64Id)) return ApiResult.error(DAOUtils.fromNullParameter("base64Id"));
-        if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(DAOUtils.fromMalformedParameter("base64Id"));
+        if (isNull(base64Id)) return ApiResult.error(Errors.fromNullParameter("base64Id"));
+        if (!IdUtils.isValidBase64(base64Id)) return ApiResult.error(Errors.fromMalformedParameter("base64Id"));
 
         long id = IdUtils.fromBase64(base64Id);
         try (PreparedStatement p = connection.prepareStatement("select * from tiw_app.transfers where id = ?")) {
@@ -72,10 +73,10 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                     t.setFromBalance(fromBalance);
                     return ApiResult.ok(t);
                 } else
-                    return ApiResult.error(DAOUtils.fromMissingElement("id " + base64Id));
+                    return ApiResult.error(Errors.fromNotFound("id " + base64Id));
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -88,9 +89,9 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      * @return an {@link ApiResult} containing the tuple with the transfers or an error if something went wrong.
      */
     public ApiResult<Tuple<List<Transfer>, List<Transfer>>> inAndOutOf(String accountId) {
-        if (isNull(accountId)) return ApiResult.error(DAOUtils.fromNullParameter("account"));
+        if (isNull(accountId)) return ApiResult.error(Errors.fromNullParameter("account"));
         if (!IdUtils.isValidBase64(accountId))
-            return ApiResult.error(DAOUtils.fromMalformedParameter("account"));
+            return ApiResult.error(Errors.fromMalformedParameter("account"));
 
         long id = IdUtils.fromBase64(accountId);
         try {
@@ -117,7 +118,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                 }
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -132,15 +133,15 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      * @return an {@link ApiResult} containing the created {@link Transfer} or an error.
      */
     public ApiResult<Transfer> newTransfer(String fromId, String toId, int amount, String causal) {
-        if (isNull(fromId)) return ApiResult.error(DAOUtils.fromNullParameter("fromId"));
-        if (isNull(toId)) return ApiResult.error(DAOUtils.fromNullParameter("toId"));
-        if (isNull(causal)) return ApiResult.error(DAOUtils.fromNullParameter("causal"));
-        if (!IdUtils.isValidBase64(fromId)) return ApiResult.error(DAOUtils.fromMalformedParameter("fromId"));
-        if (!IdUtils.isValidBase64(toId)) return ApiResult.error(DAOUtils.fromMalformedParameter("toId"));
-        if (fromId.equals(toId)) return ApiResult.error(DAOUtils.fromMalformedParameter("toId"));
-        if (amount <= 0) return ApiResult.error(DAOUtils.fromMalformedParameter("amount"));
+        if (isNull(fromId)) return ApiResult.error(Errors.fromNullParameter("fromId"));
+        if (isNull(toId)) return ApiResult.error(Errors.fromNullParameter("toId"));
+        if (isNull(causal)) return ApiResult.error(Errors.fromNullParameter("causal"));
+        if (!IdUtils.isValidBase64(fromId)) return ApiResult.error(Errors.fromMalformedParameter("fromId"));
+        if (!IdUtils.isValidBase64(toId)) return ApiResult.error(Errors.fromMalformedParameter("toId"));
+        if (fromId.equals(toId)) return ApiResult.error(Errors.fromMalformedParameter("toId"));
+        if (amount <= 0) return ApiResult.error(Errors.fromMalformedParameter("amount"));
         if (causal.length() < 1 || causal.length() > Transfer.CAUSAL_LENGTH)
-            return ApiResult.error(DAOUtils.fromMalformedParameter("causal"));
+            return ApiResult.error(Errors.fromMalformedParameter("causal"));
 
         try {
             boolean prevAutoCommit = connection.getAutoCommit();
@@ -162,7 +163,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                 connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 
@@ -184,7 +185,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      */
     private ApiResult<Tuple<Account, Account>> checkToBalance(Tuple<Account, Account> toAndFrom, int amount) {
         if (toAndFrom.getSecond().getBalance() < amount)
-            return ApiResult.error(DAOUtils.fromConflict("amount"));
+            return ApiResult.error(Errors.fromConflict("amount"));
         return ApiResult.ok(toAndFrom);
     }
 
@@ -244,16 +245,16 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      */
     @Override
     public ApiResult<Transfer> insert(Transfer transfer) {
-        if (transfer == null) return ApiResult.error(DAOUtils.fromNullParameter("transfer"));
-        if (transfer.hasNullProperties(false)) return ApiResult.error(DAOUtils.fromMalformedParameter("transfer"));
+        if (transfer == null) return ApiResult.error(Errors.fromNullParameter("transfer"));
+        if (transfer.hasNullProperties(false)) return ApiResult.error(Errors.fromMalformedParameter("transfer"));
         if (!IdUtils.isValidBase64(transfer.getBase64Id()))
-            return ApiResult.error(DAOUtils.fromMalformedParameter("transfer"));
+            return ApiResult.error(Errors.fromMalformedParameter("transfer"));
         if (!IdUtils.isValidBase64(transfer.getFromId()))
-            return ApiResult.error(DAOUtils.fromMalformedParameter("transfer"));
+            return ApiResult.error(Errors.fromMalformedParameter("transfer"));
         if (!IdUtils.isValidBase64(transfer.getToId()))
-            return ApiResult.error(DAOUtils.fromMalformedParameter("transfer"));
-        if (transfer.getAmount() <= 0) return ApiResult.error(DAOUtils.fromMalformedParameter("transfer"));
-        if (isPersisted(transfer)) return ApiResult.error(DAOUtils.fromConflict("transfer"));
+            return ApiResult.error(Errors.fromMalformedParameter("transfer"));
+        if (transfer.getAmount() <= 0) return ApiResult.error(Errors.fromMalformedParameter("transfer"));
+        if (isPersisted(transfer)) return ApiResult.error(Errors.fromConflict("transfer"));
 
         try {
             String sql = "insert into tiw_app.transfers(id, date, amount, toId, toBalance, fromId, fromBalance, causal) values(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -282,7 +283,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                 connection.setAutoCommit(prevAutoCommit);
             }
         } catch (SQLException e) {
-            return ApiResult.error(DAOUtils.fromSQLException(e));
+            return ApiResult.error(Errors.fromSQLException(e));
         }
     }
 

@@ -4,8 +4,8 @@ import it.polimi.tiw.api.beans.Account;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.AccountDAO;
 import it.polimi.tiw.api.dbaccess.ConnectionRetriever;
-import it.polimi.tiw.api.dbaccess.DAOUtils;
 import it.polimi.tiw.api.dbaccess.UserDAO;
+import it.polimi.tiw.api.error.Errors;
 import it.polimi.tiw.api.functional.ApiResult;
 
 import java.sql.Connection;
@@ -59,7 +59,7 @@ public class AccountFacade {
      * @see AccountDAO#ofUser(String)
      */
     public ApiResult<List<Account>> ofUser(User u) {
-        if (u == null) return ApiResult.error(DAOUtils.fromNullParameter("u"));
+        if (u == null) return ApiResult.error(Errors.fromNullParameter("u"));
         return accountDAOGenerator.apply(connection).ofUser(u.getBase64Id());
     }
 
