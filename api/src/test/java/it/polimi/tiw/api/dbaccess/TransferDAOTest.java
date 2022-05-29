@@ -161,7 +161,6 @@ class TransferDAOTest {
         TransferDAO dao = spy(TransferDAO.withNewObjects(connection));
 
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
-        when(mock.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getFromId()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getToId()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getAmount()).thenReturn(1.0);
@@ -179,7 +178,6 @@ class TransferDAOTest {
 
         when(connection.getAutoCommit()).thenReturn(prevAutoCommit);
         when(mock.hasNullProperties(anyBoolean())).thenReturn(false);
-        when(mock.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getDate()).thenReturn(Instant.now());
         when(mock.getFromId()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getToId()).thenReturn(IdUtils.toBase64(0L));

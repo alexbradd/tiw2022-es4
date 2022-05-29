@@ -250,8 +250,6 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
     public ApiResult<Transfer> insert(Transfer transfer) {
         if (transfer == null) return ApiResult.error(Errors.fromNullParameter("transfer"));
         if (transfer.hasNullProperties(false)) return ApiResult.error(Errors.fromMalformedParameter("transfer"));
-        if (!IdUtils.isValidBase64(transfer.getBase64Id()))
-            return ApiResult.error(Errors.fromMalformedParameter("transfer"));
         if (!IdUtils.isValidBase64(transfer.getFromId()))
             return ApiResult.error(Errors.fromMalformedParameter("transfer"));
         if (!IdUtils.isValidBase64(transfer.getToId()))
