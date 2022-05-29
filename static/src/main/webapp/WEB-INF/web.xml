@@ -19,12 +19,18 @@
         <filter-name>03-accountFilter</filter-name>
         <filter-class>it.polimi.tiw.templated.filters.AccountDetailsFilter</filter-class>
     </filter>
+    <filter>
+        <filter-name>04-transferFilter</filter-name>
+        <filter-class>it.polimi.tiw.templated.filters.TransferFilter</filter-class>
+    </filter>
 
     <filter-mapping>
         <filter-name>00-loginFilter</filter-name>
         <url-pattern>/index.html</url-pattern>
         <url-pattern>/createAccount</url-pattern>
         <url-pattern>/details.html</url-pattern>
+        <url-pattern>/confirmTransfer.html</url-pattern>
+        <url-pattern>/rejectTransfer.html</url-pattern>
         <url-pattern>/newTransfer</url-pattern>
     </filter-mapping>
     <filter-mapping>
@@ -38,5 +44,9 @@
     <filter-mapping>
         <filter-name>03-accountFilter</filter-name>
         <url-pattern>/details.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>04-transferFilter</filter-name>
+        <url-pattern>/confirmTransfer.html</url-pattern>
     </filter-mapping>
 </web-app>

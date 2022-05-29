@@ -1,12 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale}">
 <head>
     <meta charset="UTF-8">
-    <title>Transfer confirmed</title>
+    <link href="/static/img/favicon.ico" rel="icon"/>
+    <link href="/static/common.css" rel="stylesheet" th:href="@{/static/common.css}" type="text/css">
+    <link href="/static/confirmTransfer.css" rel="stylesheet" th:href="@{/static/confirmTransfer.css}" type="text/css">
+    <title th:text="#{confirmTransfer.title}">Transfer rejected</title>
 </head>
 <body>
-<h1>Transfer confirmed</h1>
-<p th:text="${param.id}"></p>
-<p th:text="${param.e}"></p>
+<div class="page-container">
+    <div th:replace="fragments :: app-header"></div>
+    <div class="page-view confirm-view">
+        <h3 th:text="#{confirmTransfer.title}"></h3>
+        <h4 th:text="#{confirmTransfer.details}"></h4>
+        <table class="transfer-details">
+            <tbody>
+            <tr>
+                <td th:text="#{confirmTransfer.id}"></td>
+                <td th:text="${transfer.base64Id}"></td>
+            </tr>
+            <tr>
+                <td th:text="#{confirmTransfer.fromId}"></td>
+                <td th:text="${transfer.fromId}"></td>
+            </tr>
+            <tr>
+                <td th:text="#{confirmTransfer.toId}"></td>
+                <td th:text="${transfer.toId}"></td>
+            </tr>
+            <tr>
+                <td th:text="#{confirmTransfer.amount}"></td>
+                <td th:text="${#numbers.formatDecimal(transfer.amount, 1, 2)}"></td>
+            </tr>
+            <tr>
+                <td th:text="#{confirmTransfer.causal}"></td>
+                <td th:text="${transfer.causal}"></td>
+            </tr>
+            <tr>
+                <td th:text="#{confirmTransfer.fromBalance}"></td>
+                <td th:text="${#numbers.formatDecimal(transfer.fromBalance, 1, 2)} + ' → ' + ${#numbers.formatDecimal(transfer.fromBalance - transfer.amount, 1, 2)}"></td>
+            </tr>
+            <tr>
+                <td th:text="#{confirmTransfer.toBalance}"></td>
+                <td th:text="${#numbers.formatDecimal(transfer.toBalance, 1, 2)} + ' → ' + ${#numbers.formatDecimal(transfer.toBalance + transfer.amount, 1, 2)}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 </body>
 </html>

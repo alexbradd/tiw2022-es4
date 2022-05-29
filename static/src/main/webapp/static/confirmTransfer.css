@@ -1,0 +1,24 @@
+.confirm-view {
+    width: 100%;
+}
+
+.confirm-view h4 {
+    margin-top: 0;
+}
+
+.transfer-details {
+    border-spacing: 30px 1px;
+    border-collapse: separate;
+}
+
+.transfer-details tr td {
+    word-break: break-word;
+}
+
+.transfer-details tr td:first-child {
+    text-align: left;
+}
+
+.transfer-details tr td:not(:first-child) {
+    text-align: center;
+}

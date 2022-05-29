@@ -1,12 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale}">
 <head>
     <meta charset="UTF-8">
-    <title>Transfer rejected</title>
+    <link href="/static/img/favicon.ico" rel="icon"/>
+    <link href="/static/common.css" rel="stylesheet" th:href="@{/static/common.css}" type="text/css">
+    <title th:text="#{rejectTransfer.title}">Transfer rejected</title>
 </head>
 <body>
-<h1>Transfer rejected</h1>
-<p th:text="${param.id}"></p>
-<p th:text="${param.e}"></p>
+<div class="page-container">
+    <div th:replace="fragments :: app-header"></div>
+    <div class="page-view">
+        <h3 th:text='#{rejectTransfer.title}'>Transfer rejected</h3>
+        <p th:switch="${param.e[0]}">
+            <span th:case="user" th:text="#{rejectTransfer.user}"></span>
+            <span th:case="missing" th:text="#{rejectTransfer.missing}"></span>
+            <span th:case="conflict" th:text="#{rejectTransfer.conflict}"></span>
+            <span th:case="*" th:text="#{rejectTransfer.server}"></span>
+        </p>
+    </div>
+</div>
 </body>
 </html>
