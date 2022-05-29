@@ -12,12 +12,22 @@
     <div th:replace="fragments :: app-header"></div>
     <div class="page-view account-view">
         <h3 th:text="#{index.accounts}">Accounts</h3>
-        <div th:if="${accountList} != null" class="account-list">
-            <div th:each="a : ${accountList}" class="account">
-                <p th:text="${a.base64Id}"></p>
-                <p th:text="${a.balance} + '€'"></p>
-                <a th:href="@{/details.html(id = ${a.base64Id})}" th:text="#{index.details}">Details</a>
-            </div>
+        <div th:if="${accountList} != null" class="account-table">
+            <table>
+                <thead>
+                <tr>
+                    <th th:text="#{index.id}">Id</th>
+                    <th th:text="#{index.balance}">Balance</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${accountList}">
+                    <td th:text="${a.base64Id}"></td>
+                    <td th:text="${#numbers.formatDecimal(a.balance, 1, 2)} + '€'"></td>
+                    <td><a th:href="@{/details.html(id = ${a.base64Id})}" th:text="#{index.details}">Details</a></td>
+                </tr>
+                </tbody>
+            </table>
             <form action="/createAccount" method="post" class="new-account">
                 <input type="submit" th:value="#{index.newAccount}" class="big-button ok center"/>
             </form>

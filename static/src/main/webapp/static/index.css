@@ -6,26 +6,13 @@
     width: 100%;
 }
 
-.account-list {
-    display: flex;
-    flex-flow: column nowrap;
+.account-table {
     width: 90%;
 }
 
-.account {
-    display: flex;
-    flex-flow: row nowrap;
+.account-table table {
     width: 100%;
-    min-width: 250px;
-    justify-content: space-between;
-}
-
-.account p {
-    margin: 0;
-}
-
-.account + .account {
-    border-top: 1px solid lightgray;
+    text-align: center;
 }
 
 .new-account {
