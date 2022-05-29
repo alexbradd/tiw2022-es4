@@ -137,7 +137,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
         if (isNull(user)) return ApiResult.error(Errors.fromNullParameter("user"));
         if (user.hasNullProperties(true)) return ApiResult.error(Errors.fromMalformedParameter("user"));
         if (!IdUtils.isValidBase64(user.getBase64Id()))
-            return ApiResult.error(Errors.fromMalformedParameter("user"));
+            return ApiResult.error(Errors.fromMalformedParameter("user.base64Id"));
         if (!isPersisted(user)) return ApiResult.error(Errors.fromMalformedParameter("user"));
 
         try {
@@ -180,7 +180,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
         if (user.hasNullProperties(false)) return ApiResult.error(Errors.fromMalformedParameter("user"));
         if (isPersisted(user)) return ApiResult.error(Errors.fromMalformedParameter("user"));
         if (byUsername(user.getUsername()).match(__ -> true, __ -> false))
-            return ApiResult.error(Errors.fromConflict("user"));
+            return ApiResult.error(Errors.fromConflict("user.username"));
 
         try {
             boolean prevAutoCommit = connection.getAutoCommit();

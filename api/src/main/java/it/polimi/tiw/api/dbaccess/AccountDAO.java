@@ -127,7 +127,8 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     @Override
     public ApiResult<Account> update(Account account) {
         if (isNull(account)) return ApiResult.error(Errors.fromNullParameter("account"));
-        if (isNotValidAccount(account, true)) return ApiResult.error(Errors.fromMalformedParameter("account"));
+        String wrongProp = getWrongProperty(account, true);
+        if (wrongProp != null) return ApiResult.error(Errors.fromMalformedParameter(wrongProp));
         if (!isPersisted(account)) return ApiResult.error(Errors.fromMalformedParameter("account"));
 
         try {
@@ -168,7 +169,8 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     @Override
     public ApiResult<Account> insert(Account account) {
         if (isNull(account)) return ApiResult.error(Errors.fromNullParameter("account"));
-        if (isNotValidAccount(account, false)) return ApiResult.error(Errors.fromMalformedParameter("account"));
+        String wrongProp = getWrongProperty(account, false);
+        if (wrongProp != null) return ApiResult.error(Errors.fromMalformedParameter(wrongProp));
         if (isPersisted(account)) return ApiResult.error(Errors.fromMalformedParameter("account"));
 
         try {
@@ -200,13 +202,13 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
     /**
      * Helper for checks for an Account object
      */
-    private boolean isNotValidAccount(Account account, boolean includeId) {
-        if (account.hasNullProperties(includeId)) return true;
-        if (account.getBalance() < 0) return true;
+    private String getWrongProperty(Account account, boolean includeId) {
+        if (account.hasNullProperties(includeId)) return "account";
+        if (account.getBalance() < 0) return "account.balance";
         if (!IdUtils.isValidBase64(account.getOwnerId()))
-            return true;
+            return "account.ownerId";
         if (includeId && !IdUtils.isValidBase64(account.getBase64Id()))
-            return true;
-        return false;
+            return "account.base64Id";
+        return null;
     }
 }
