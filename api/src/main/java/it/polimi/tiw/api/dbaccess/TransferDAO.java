@@ -205,6 +205,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
         transfer.setToBalance(to.getBalance());
         transfer.setAmount(amount);
         transfer.setCausal(causal);
+        transfer.setDate(Instant.now());
         to.setBalance(to.getBalance() + amount);
         from.setBalance(from.getBalance() - amount);
         return ApiResult.ok(new Tuple<>(transfer, new Tuple<>(to, from)));
