@@ -72,7 +72,7 @@ class AccountDAOTest {
     void byId_inDb() throws SQLException {
         when(results.next()).thenReturn(true);
         when(results.getLong("ownerId")).thenReturn(0L);
-        when(results.getInt("balance")).thenReturn(100);
+        when(results.getDouble("balance")).thenReturn(100.0);
         ApiResult<Account> res = new AccountDAO(mockConnection).byId("AAAAAAAAAAA");
         assertTrue(res.match((Account a) -> true, (ApiError e) -> false));
     }
@@ -100,7 +100,7 @@ class AccountDAOTest {
         when(a.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(results.next()).thenReturn(true);
         when(results.getLong("ownerId")).thenReturn(0L);
-        when(results.getInt("balance")).thenReturn(100);
+        when(results.getDouble("balance")).thenReturn(100.0);
         assertTrue(dao.isPersisted(a));
     }
 

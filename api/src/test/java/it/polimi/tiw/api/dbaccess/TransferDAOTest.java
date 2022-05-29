@@ -80,7 +80,7 @@ class TransferDAOTest {
     void byId_inDb() throws SQLException {
         when(results.next()).thenReturn(true);
         when(results.getLong(anyString())).thenReturn(0L);
-        when(results.getInt(anyString())).thenReturn(100);
+        when(results.getDouble(anyString())).thenReturn(100.0);
         when(results.getTimestamp(anyString())).thenReturn(Timestamp.from(Instant.now()));
         ApiResult<Transfer> res = TransferDAO.withNewObjects(connection).byId("AAAAAAAAAAA");
         assertTrue(res.match((Transfer a) -> true, (ApiError e) -> false));
@@ -108,7 +108,7 @@ class TransferDAOTest {
         when(a.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(results.next()).thenReturn(true);
         when(results.getLong(anyString())).thenReturn(0L);
-        when(results.getInt(anyString())).thenReturn(100);
+        when(results.getDouble(anyString())).thenReturn(100.0);
         when(results.getTimestamp(anyString())).thenReturn(Timestamp.from(Instant.now()));
         assertTrue(dao.isPersisted(a));
     }
@@ -141,16 +141,16 @@ class TransferDAOTest {
 
         when(withInvalidToId.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(withInvalidToId.getFromId()).thenReturn(IdUtils.toBase64(0L));
-        when(withInvalidToId.getAmount()).thenReturn(1);
+        when(withInvalidToId.getAmount()).thenReturn(1.0);
 
         when(withInvalidFromId.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(withInvalidFromId.getToId()).thenReturn(IdUtils.toBase64(0L));
-        when(withInvalidFromId.getAmount()).thenReturn(1);
+        when(withInvalidFromId.getAmount()).thenReturn(1.0);
 
         when(withInvalidAmount.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(withInvalidAmount.getFromId()).thenReturn(IdUtils.toBase64(0L));
         when(withInvalidAmount.getToId()).thenReturn(IdUtils.toBase64(0L));
-        when(withInvalidAmount.getAmount()).thenReturn(-1);
+        when(withInvalidAmount.getAmount()).thenReturn(-1.0);
 
         return Stream.of(withNull, withInvalidId, withInvalidToId, withInvalidFromId, withInvalidAmount);
     }
@@ -164,7 +164,7 @@ class TransferDAOTest {
         when(mock.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getFromId()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getToId()).thenReturn(IdUtils.toBase64(0L));
-        when(mock.getAmount()).thenReturn(1);
+        when(mock.getAmount()).thenReturn(1.0);
 
         doReturn(true).when(dao).isPersisted(mock);
         dao.insert(mock).consume(__ -> fail(), __ -> {
@@ -183,7 +183,7 @@ class TransferDAOTest {
         when(mock.getDate()).thenReturn(Instant.now());
         when(mock.getFromId()).thenReturn(IdUtils.toBase64(0L));
         when(mock.getToId()).thenReturn(IdUtils.toBase64(0L));
-        when(mock.getAmount()).thenReturn(1);
+        when(mock.getAmount()).thenReturn(1.0);
         doReturn(false).when(dao).isPersisted(mock);
         when(statement.executeUpdate()).thenThrow(SQLException.class);
 
@@ -247,16 +247,16 @@ class TransferDAOTest {
                 }
             }
         });
-        when(results.getInt(anyString())).thenReturn(100);
-        when(results.getInt("amount")).thenAnswer(new Answer<Integer>() {
+        when(results.getDouble(anyString())).thenReturn(100.0);
+        when(results.getDouble("amount")).thenAnswer(new Answer<Double>() {
             private int counter = n;
 
             @Override
-            public Integer answer(InvocationOnMock invocationOnMock) {
+            public Double answer(InvocationOnMock invocationOnMock) {
                 try {
                     if (counter % 2 == 0)
-                        return 100;
-                    return 200;
+                        return 100.0;
+                    return 200.0;
                 } finally {
                     counter--;
                 }
@@ -330,7 +330,7 @@ class TransferDAOTest {
 
         when(connection.getAutoCommit()).thenReturn(true);
         when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
-        when(mockAccount.getBalance()).thenReturn(0);
+        when(mockAccount.getBalance()).thenReturn(0.0);
 
         dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
@@ -347,7 +347,7 @@ class TransferDAOTest {
         when(connection.getAutoCommit()).thenReturn(true);
         when(mockDao.update(any(Account.class))).thenReturn(ApiResult.error(new ApiError(500, "")));
         when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
-        when(mockAccount.getBalance()).thenReturn(10);
+        when(mockAccount.getBalance()).thenReturn(10.0);
 
         dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
@@ -364,7 +364,7 @@ class TransferDAOTest {
         when(connection.getAutoCommit()).thenReturn(true);
         when(mockDao.update(any(Account.class))).thenReturn(ApiResult.ok(mockAccount));
         when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
-        when(mockAccount.getBalance()).thenReturn(10);
+        when(mockAccount.getBalance()).thenReturn(10.0);
         doReturn(ApiResult.error(new ApiError(500, ""))).when(dao).insert(any(Transfer.class));
 
         dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
@@ -382,7 +382,7 @@ class TransferDAOTest {
         when(connection.getAutoCommit()).thenReturn(false);
         when(mockDao.update(any(Account.class))).thenReturn(ApiResult.ok(mockAccount));
         when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
-        when(mockAccount.getBalance()).thenReturn(10);
+        when(mockAccount.getBalance()).thenReturn(10.0);
         doReturn(ApiResult.error(new ApiError(500, ""))).when(dao).insert(any(Transfer.class));
 
         dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")

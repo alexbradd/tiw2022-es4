@@ -8,7 +8,7 @@ import java.util.Objects;
 public class Account implements PersistedObject {
     private String base64Id;
     private String ownerId;
-    private int balance;
+    private double balance;
 
     /**
      * Creates a new Account without an id, belonging to the given {@link User} and with the specified balance
@@ -18,7 +18,7 @@ public class Account implements PersistedObject {
      * @throws NullPointerException     if {@code user} is null
      * @throws IllegalArgumentException if {@code balance} is less than zero
      */
-    public Account(String ownerId, int balance) {
+    public Account(String ownerId, double balance) {
         setOwnerId(ownerId);
         setBalance(balance);
     }
@@ -32,7 +32,7 @@ public class Account implements PersistedObject {
      * @throws NullPointerException     if {@code user} is null
      * @throws IllegalArgumentException if {@code balance} is less than zero
      */
-    public Account(String base64Id, String ownerId, int balance) {
+    public Account(String base64Id, String ownerId, double balance) {
         this(ownerId, balance);
         setBase64Id(base64Id);
     }
@@ -80,7 +80,7 @@ public class Account implements PersistedObject {
      *
      * @return the balance of this Account.
      */
-    public int getBalance() {
+    public double getBalance() {
         return balance;
     }
 
@@ -90,7 +90,7 @@ public class Account implements PersistedObject {
      * @param balance the new balance
      * @throws IllegalArgumentException if {@code balance} is less than 0
      */
-    public void setBalance(int balance) {
+    public void setBalance(double balance) {
         if (balance < 0)
             throw new IllegalArgumentException("balance should be positive");
         this.balance = balance;

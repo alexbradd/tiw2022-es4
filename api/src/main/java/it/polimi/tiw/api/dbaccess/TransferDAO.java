@@ -58,11 +58,11 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
             try (ResultSet r = p.executeQuery()) {
                 if (r.next()) {
                     Instant date = r.getTimestamp("date").toInstant();
-                    int amount = r.getInt("amount");
+                    double amount = r.getDouble("amount");
                     long toId = r.getLong("toId");
-                    int toBalance = r.getInt("toBalance");
+                    double toBalance = r.getDouble("toBalance");
                     long fromId = r.getLong("fromId");
-                    int fromBalance = r.getInt("fromBalance");
+                    double fromBalance = r.getDouble("fromBalance");
                     String causal = r.getString("causal");
                     Transfer t = new Transfer();
                     t.setDate(date);
@@ -108,11 +108,11 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                         Transfer t = new Transfer();
                         t.setBase64Id(IdUtils.toBase64(r.getLong("id")));
                         t.setDate(r.getTimestamp("date").toInstant());
-                        t.setAmount(r.getInt("amount"));
+                        t.setAmount(r.getDouble("amount"));
                         t.setToId(IdUtils.toBase64(r.getLong("toId")));
-                        t.setToBalance(r.getInt("toBalance"));
+                        t.setToBalance(r.getDouble("toBalance"));
                         t.setFromId(IdUtils.toBase64(r.getLong("fromId")));
-                        t.setFromBalance(r.getInt("fromBalance"));
+                        t.setFromBalance(r.getDouble("fromBalance"));
                         t.setCausal(r.getString("causal"));
                         if (t.getToId().equals(accountId)) ins.add(t);
                         else outs.add(t);
@@ -135,7 +135,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      * @param causal the causal message
      * @return an {@link ApiResult} containing the created {@link Transfer} or an error.
      */
-    public ApiResult<Transfer> newTransfer(String fromId, String toId, int amount, String causal) {
+    public ApiResult<Transfer> newTransfer(String fromId, String toId, double amount, String causal) {
         if (isNull(fromId)) return ApiResult.error(Errors.fromNullParameter("fromId"));
         if (isNull(toId)) return ApiResult.error(Errors.fromNullParameter("toId"));
         if (isNull(causal)) return ApiResult.error(Errors.fromNullParameter("causal"));
@@ -186,7 +186,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
     /**
      * Checks that the origin account's balance is greater than the amount of money to transfer
      */
-    private ApiResult<Tuple<Account, Account>> checkToBalance(Tuple<Account, Account> toAndFrom, int amount) {
+    private ApiResult<Tuple<Account, Account>> checkToBalance(Tuple<Account, Account> toAndFrom, double amount) {
         if (toAndFrom.getSecond().getBalance() < amount)
             return ApiResult.error(Errors.fromConflict("amount"));
         return ApiResult.ok(toAndFrom);
@@ -195,7 +195,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
     /**
      * Creates the new transfer bean and updates the accounts
      */
-    private ApiResult<Tuple<Transfer, Tuple<Account, Account>>> createTransfer(Tuple<Account, Account> toAndFrom, int amount, String causal) {
+    private ApiResult<Tuple<Transfer, Tuple<Account, Account>>> createTransfer(Tuple<Account, Account> toAndFrom, double amount, String causal) {
         Account to = toAndFrom.getFirst();
         Account from = toAndFrom.getSecond();
         Transfer transfer = new Transfer();
@@ -241,7 +241,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
      * <p>
      * Note: inserting {@link Transfer} objects directly is highly discouraged and could break data consistency since
      * nor the receiving nor the transmitting {@link Account}s will be updated. If you intend to create a new
-     * {@link Transfer}, use {@link #newTransfer(String, String, int, String)}.
+     * {@link Transfer}, use {@link #newTransfer(String, String, double, String)}.
      *
      * @param transfer the {@link Transfer} to insert
      * @return an {@link ApiResult} containing an error or the saved object
@@ -268,11 +268,11 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
                     statement.setLong(1, id);
                     statement.setTimestamp(2, Timestamp.from(transfer.getDate()));
-                    statement.setInt(3, transfer.getAmount());
+                    statement.setDouble(3, transfer.getAmount());
                     statement.setLong(4, IdUtils.fromBase64(transfer.getToId()));
-                    statement.setInt(5, transfer.getToBalance());
+                    statement.setDouble(5, transfer.getToBalance());
                     statement.setLong(6, IdUtils.fromBase64(transfer.getFromId()));
-                    statement.setInt(7, transfer.getFromBalance());
+                    statement.setDouble(7, transfer.getFromBalance());
                     statement.setString(8, transfer.getCausal());
                     statement.executeUpdate();
                 }

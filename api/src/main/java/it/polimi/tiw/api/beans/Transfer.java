@@ -13,11 +13,11 @@ public class Transfer implements PersistedObject {
 
     private String base64Id;
     private Instant date;
-    private int amount;
+    private double amount;
     private String toId;
-    private int toBalance;
+    private double toBalance;
     private String fromId;
-    private int fromBalance;
+    private double fromBalance;
     private String causal;
 
     /**
@@ -62,7 +62,7 @@ public class Transfer implements PersistedObject {
      *
      * @return the amount of money transferred with this Transfer
      */
-    public int getAmount() {
+    public double getAmount() {
         return amount;
     }
 
@@ -71,7 +71,7 @@ public class Transfer implements PersistedObject {
      *
      * @param amount the new amount
      */
-    public void setAmount(int amount) {
+    public void setAmount(double amount) {
         this.amount = amount;
     }
 
@@ -98,7 +98,7 @@ public class Transfer implements PersistedObject {
      *
      * @return the balance that the destination {@link Account} had previous to this transfer.
      */
-    public int getToBalance() {
+    public double getToBalance() {
         return toBalance;
     }
 
@@ -107,7 +107,7 @@ public class Transfer implements PersistedObject {
      *
      * @param toBalance the new balance that the destination {@link Account} had previous to this transfer.
      */
-    public void setToBalance(int toBalance) {
+    public void setToBalance(double toBalance) {
         this.toBalance = toBalance;
     }
 
@@ -134,7 +134,7 @@ public class Transfer implements PersistedObject {
      *
      * @return the balance that the source {@link Account} had previous to this transfer.
      */
-    public int getFromBalance() {
+    public double getFromBalance() {
         return fromBalance;
     }
 
@@ -143,7 +143,7 @@ public class Transfer implements PersistedObject {
      *
      * @param fromBalance the new balance that the source {@link Account} had previous to this transfer.
      */
-    public void setFromBalance(int fromBalance) {
+    public void setFromBalance(double fromBalance) {
         this.fromBalance = fromBalance;
     }
 

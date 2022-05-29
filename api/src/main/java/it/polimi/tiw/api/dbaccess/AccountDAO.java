@@ -61,7 +61,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
             try (ResultSet r = p.executeQuery()) {
                 if (r.next()) {
                     long ownerId = r.getLong("ownerId");
-                    int balance = r.getInt("balance");
+                    double balance = r.getDouble("balance");
                     Account a = new Account(IdUtils.toBase64(id), IdUtils.toBase64(ownerId), balance);
                     return ApiResult.ok(a);
                 } else
@@ -90,7 +90,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
             try (ResultSet r = p.executeQuery()) {
                 while (r.next()) {
                     String id = IdUtils.toBase64(r.getLong("id"));
-                    int balance = r.getInt("balance");
+                    double balance = r.getDouble("balance");
                     Account a = new Account(id, ownerId, balance);
                     accs.add(a);
                 }
@@ -137,7 +137,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
             try {
                 try (PreparedStatement p = connection.prepareStatement(sql)) {
                     p.setLong(1, IdUtils.fromBase64(account.getOwnerId()));
-                    p.setInt(2, account.getBalance());
+                    p.setDouble(2, account.getBalance());
                     p.setLong(3, IdUtils.fromBase64(account.getBase64Id()));
                     p.executeUpdate();
                 }
@@ -180,7 +180,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                 try (PreparedStatement p = connection.prepareStatement(sql)) {
                     p.setLong(1, id);
                     p.setLong(2, IdUtils.fromBase64(account.getOwnerId()));
-                    p.setInt(3, account.getBalance());
+                    p.setDouble(3, account.getBalance());
                     p.executeUpdate();
                 }
                 if (prevAutoCommit) connection.commit();
