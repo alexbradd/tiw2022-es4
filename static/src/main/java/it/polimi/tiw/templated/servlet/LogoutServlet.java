@@ -8,7 +8,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Removes the current User from the session, if there is one
+ * Drops all user-related data from the session, if there is one
  */
 @WebServlet("/logout")
 public class LogoutServlet extends HttpServlet {
@@ -21,6 +21,7 @@ public class LogoutServlet extends HttpServlet {
         if (session == null)
             return;
         session.removeAttribute("user");
+        session.removeAttribute("history");
         resp.sendRedirect("/login.html");
     }
 }
