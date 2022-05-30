@@ -13,7 +13,7 @@
     <div th:replace="~{fragments :: userMgmt-bigLogo}"></div>
     <div class="page-view">
         <h3 th:text="#{login.heading}">Login</h3>
-        <form action="/loginUser" class="form" method="post">
+        <form th:if="not ${session} or not ${session.user}" action="/loginUser" class="form" method="post">
             <div class="form-input required">
                 <label for="username" th:text="#{login.username}">Username:</label>
                 <input id="username" name="username" required type="text"/>
@@ -24,6 +24,12 @@
             </div>
             <input class="big-button" th:value="#{login.submit}" type="submit" value="login"/>
         </form>
+        <div th:if="${session} and ${session.user}">
+            <p th:text="#{login.alreadyLoggedIn}"></p>
+            <form action="/logout" method="post">
+                <input class="big-button error center" type="submit" th:value="#{login.logout}" value="logout"/>
+            </form>
+        </div>
         <small class="form-error" th:if="${param.e}" th:switch="${param.e[0]}">
             <span th:case="'conflict'" th:text="#{login.invalidCredentials}">Username and password are not valid</span>
             <span th:case="'user'"

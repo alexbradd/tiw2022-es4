@@ -199,7 +199,7 @@ small, .text_small {
     align-items: center;
 }
 
-.big-logo img {
+.big-logo img, .big-logo .imaged-link {
     width: 100px;
     height: 100px;
     display: inline-block;
