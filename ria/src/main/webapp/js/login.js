@@ -58,6 +58,87 @@ function ViewManager(loginView, registerView, switcherElem) {
     this.hideLogin = function () {
         this._loginView.classList.add("hidden");
     }
+
+    this.getLoginForm = function () {
+        return this._loginView.children[1];
+    }
+
+    this.getRegisterForm = function () {
+        return this._registerView.children[1];
+    }
+}
+
+function RegisterFormValidator(registerForm, formInputs) {
+    this._registerForm = registerForm;
+    this._formInputs = formInputs;
+
+    this.addListeners = function () {
+        this._formInputs.username.addEventListener("blur", (e) => this.checkUsername(e.target));
+        this._formInputs.repeatPassword.addEventListener(
+            "blur",
+            (e) => this.checkPasswords(e.target)
+        );
+        this._registerForm.addEventListener("submit", (e) => {
+            this.submit(e.target)
+            e.preventDefault();
+        });
+    }
+
+    this.checkUsername = function (target) {
+        let ajax = new Ajax();
+        ajax.get(
+            "/api/user/byUsername?username=" + encodeURIComponent(target.value),
+            (req) => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                switch (req.status) {
+                    case 200:
+                        target.setCustomValidity("A user with this username already exists");
+                        break;
+                    case 400:
+                        target.setCustomValidity("The username is invalid");
+                        console.log(req.responseText);
+                        break;
+                    case 404:
+                        target.setCustomValidity("");
+                        break;
+                    default:
+                        target.setCustomValidity("Could not verify username");
+                        console.log(req.responseText);
+                }
+                target.reportValidity();
+            })
+    }
+
+    this.checkPasswords = function (target) {
+        let clear = this._formInputs.clearPassword.value;
+        let repeat = target.value;
+
+        if (clear !== repeat)
+            target.setCustomValidity("The passwords do not match");
+        else
+            target.setCustomValidity("");
+        target.reportValidity();
+    }
+
+    this.submit = function (target) {
+        console.log("submit");
+    }
+}
+
+function LoginFormValidator(loginForm) {
+    this._loginForm = loginForm;
+
+    this.addListeners = function () {
+        this._loginForm.addEventListener("submit", (e) => {
+            this.submit(e.target)
+            e.preventDefault();
+        });
+    }
+
+    this.submit = function (target) {
+        console.log("submit");
+    }
 }
 
 (function () {
@@ -66,6 +147,20 @@ function ViewManager(loginView, registerView, switcherElem) {
         document.getElementById("register-view"),
         document.getElementById("switcher")
     );
+    let registerValidator = new RegisterFormValidator(
+        manager.getRegisterForm(),
+        {
+            username: document.getElementById("register-username"),
+            email: document.getElementById("register-email"),
+            clearPassword: document.getElementById("register-clearPassword"),
+            repeatPassword: document.getElementById("register-repeatPassword")
+        }
+    );
+    let loginValidator = new LoginFormValidator(manager.getLoginForm());
+
     manager.addListener();
+    registerValidator.addListeners();
+    loginValidator.addListeners();
+
     manager.displayLogin();
 }());
