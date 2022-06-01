@@ -3,4 +3,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
+    <context-param>
+        <param-name>ISSUER</param-name>
+        <param-value>price</param-value>
+    </context-param>
+    <context-param>
+        <param-name>TOKEN_SECRET</param-name>
+        <param-value>secret</param-value>
+    </context-param>
+    <context-param>
+        <param-name>REFRESH_SECRET</param-name>
+        <param-value>refresh</param-value>
+    </context-param>
 </web-app>
