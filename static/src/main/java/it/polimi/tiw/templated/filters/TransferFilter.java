@@ -2,6 +2,7 @@ package it.polimi.tiw.templated.filters;
 
 import it.polimi.tiw.api.AccountFacade;
 import it.polimi.tiw.api.TransferFacade;
+import it.polimi.tiw.api.beans.Transfer;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 import it.polimi.tiw.api.error.ApiError;
@@ -17,7 +18,11 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * TODO
+ * Retrieves a {@link Transfer} with the id specified in the {@code id} parameter and stores it in the {@code transfer}
+ * attribute of the request. If the User is not the owner of the payer account, access to the resource is denied and a
+ * 403 {@link ApiError} is set to the {@code error} attribute.
+ * <p>
+ * It requires being executed after {@link LoginFilter}
  */
 public class TransferFilter extends HttpFilter {
     /**
