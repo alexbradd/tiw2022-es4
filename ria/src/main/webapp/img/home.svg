@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="360px" height="360px" viewBox="0 0 360 360" version="1.2">
+    <g id="surface4021">
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 60 340 L 60 180 L 20 180 L 180 20 L 340 180 L 300 180 L 300 340 L 60 340 "/>
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 140 340 L 140 260 "/>
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 220 260 L 220 340 "/>
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 140 260 C 140 260 140 220 180 220 "/>
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 220 260 C 220 260 220 220 180 220 "/>
+    </g>
+</svg>

@@ -1,0 +1,22 @@
+.big-logo {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+}
+
+.page-container .big-logo {
+    margin-bottom: 30px;
+}
+
+.big-logo .imaged-link {
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+}
+
+.big-logo h1 {
+    margin: 0 0 0 10px;
+    font-style: italic;
+    font-weight: 500;
+}
+

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="360px" height="360px" viewBox="0 0 360 360" version="1.2">
+    <g id="surface1743">
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 280 180 L 20 180 "/>
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 20 180 L 120 80 "/>
+        <path style="fill:none;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(15.686275%,20%,18.82353%);stroke-opacity:1;stroke-miterlimit:10;"
+              d="M 20 180 L 120 280 "/>
+    </g>
+</svg>

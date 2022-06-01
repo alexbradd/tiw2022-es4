@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="/img/favicon.ico" rel="icon"/>
+    <link href="/css/common.css" rel="stylesheet" type="text/css">
+    <link href="/css/login.css" rel="stylesheet" type="text/css">
+    <script src="/js/login.js" defer></script>
+    <title>Login</title>
+</head>
+<body>
+<div class="page-container">
+    <div class="big-logo">
+        <a class="imaged-link" href="/index.html">
+            <img alt="logo" src="/img/logo.svg"/>
+        </a>
+        <h1>Price</h1>
+    </div>
+    <div id="login-view" class="page-view hidden">
+        <h3>Login</h3>
+        <form action="" class="form" method="post">
+            <div class="form-input required">
+                <label for="login-username">Username:</label>
+                <input id="login-username" name="username" required type="text"/>
+            </div>
+            <div class="form-input required">
+                <label for="login-clearPassword">Password:</label>
+                <input id=login-clearPassword name="clearPassword" required type="password"/>
+            </div>
+            <input class="big-button" type="submit" value="Login"/>
+        </form>
+        <!-- FIXME -->
+        <!--        <div th:if="${session} and ${session.user}">-->
+        <!--            <p th:text="#{login.alreadyLoggedIn}"></p>-->
+        <!--            <form action="/logout" method="post">-->
+        <!--                <input class="big-button error center" type="submit" th:value="#{login.logout}" value="logout"/>-->
+        <!--            </form>-->
+        <!--        </div>-->
+        <!--        <small class="form-error" th:if="${param.e}" th:switch="${param.e[0]}">-->
+        <!--            <span th:case="'conflict'" th:text="#{login.invalidCredentials}">Username and password are not valid</span>-->
+        <!--            <span th:case="'user'"-->
+        <!--                  th:text="#{login.userError}">Please check that the fields contain valid information</span>-->
+        <!--            <span th:case="*"-->
+        <!--                  th:text="#{login.error}">We weren't able to process your request, please try again later</span>-->
+        <!--        </small>-->
+    </div>
+    <div id="register-view" class="page-view hidden">
+        <h3>Register a new account</h3>
+        <form action="" class="form" method="post">
+            <div class="form-input required">
+                <label for="register-username">Username:</label>
+                <input id="register-username" name="username" required type="text"/>
+            </div>
+            <div class="form-input required">
+                <label for="register-email">Email:</label>
+                <input id="register-email" name="email" required type="email"/>
+            </div>
+            <div class="form-input required">
+                <label for="register-clearPassword">Password:</label>
+                <input id="register-clearPassword" name="clearPassword" required type="password"/>
+            </div>
+            <div class="form-input required">
+                <label for="register-repeatPassword">Repeat password:</label>
+                <input id="register-repeatPassword" name="repeatPassword" required type="password"/>
+            </div>
+            <div class="form-input required">
+                <label for="register-name">Name:</label>
+                <input id="register-name" name="name" required type="text"/>
+            </div>
+            <div class="form-input required">
+                <label for="register-surname">Surname:</label>
+                <input id="register-surname" name="surname" required type="text"/>
+            </div>
+            <input class="big-button accent" type="submit" value="Register"/>
+        </form>
+        <!-- FIXME -->
+        <!--        <small class="form-error" th:if="${param.e}" th:switch="${param.e[0]}">-->
+        <!--            <span th:case="'conflict'" th:text="#{register.duplicateUser}">A username with the requested username already exists</span>-->
+        <!--            <span th:case="'user'" th:text="#{register.userError}">Please check that the fields contain valid information</span>-->
+        <!--            <span th:case="*" th:text="#{register.error}">We weren't able to process your request, please try again later</span>-->
+        <!--        </small>-->
+    </div>
+    <small id="switcher">
+        <span>Don't have an account?</span>
+        <a href="login.html">Switch</a>
+    </small>
+</div>
+</body>
+</html>

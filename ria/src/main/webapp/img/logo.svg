@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+        width="512"
+        height="512"
+        viewBox="0 0 135.46666 135.46666"
+        version="1.1"
+        id="svg5"
+        inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+        sodipodi:docname="logo.svg"
+        inkscape:export-filename="/home/breadyx/projects/tiw2022-es4/static/src/main/webapp/static/logo.png"
+        inkscape:export-xdpi="96"
+        inkscape:export-ydpi="96"
+        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+        xmlns="http://www.w3.org/2000/svg"
+>
+    <sodipodi:namedview
+            id="namedview7"
+            pagecolor="#ffffff"
+            bordercolor="#666666"
+            borderopacity="1.0"
+            inkscape:pageshadow="2"
+            inkscape:pageopacity="0.0"
+            inkscape:pagecheckerboard="0"
+            inkscape:document-units="px"
+            showgrid="false"
+            units="px"
+            width="512px"
+            inkscape:zoom="0.61236031"
+            inkscape:cx="-51.440303"
+            inkscape:cy="261.28408"
+            inkscape:window-width="1920"
+            inkscape:window-height="1011"
+            inkscape:window-x="0"
+            inkscape:window-y="32"
+            inkscape:window-maximized="1"
+            inkscape:current-layer="layer1"
+            inkscape:lockguides="true">
+        <inkscape:grid
+                type="xygrid"
+                id="grid277"/>
+    </sodipodi:namedview>
+    <defs
+            id="defs2"/>
+    <g
+            inkscape:label="Layer 1"
+            inkscape:groupmode="layer"
+            id="layer1">
+        <circle
+                style="fill:#2d4f6c;fill-rule:evenodd;stroke-width:0.271635;fill-opacity:1"
+                id="path31"
+                cx="67.071877"
+                cy="67.071877"
+                r="62.044788"/>
+        <circle
+                style="fill:#d1d1d1;fill-rule:evenodd;stroke-width:0.174216;fill-opacity:1"
+                id="circle439"
+                cx="67.071877"
+                cy="67.071877"
+                r="39.793118"/>
+    </g>
+</svg>
