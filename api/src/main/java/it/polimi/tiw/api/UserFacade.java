@@ -41,6 +41,16 @@ public class UserFacade {
     }
 
     /**
+     * Returns an {@link ApiResult} containing the {@link User} with the given username. An {@link ApiError} with code
+     * 404 is returned if no such user can be found.
+     *
+     * @param username the username to search
+     */
+    public ApiResult<User> byUsername(String username) {
+        return userDAOGenerator.apply(connection).byUsername(username);
+    }
+
+    /**
      * Handles a user registration request encoded by a {@link RegistrationRequest}. All fields are required to be
      * non-null and have a valid value. In case of success, an {@link ApiResult} containing the {@link User}
      * corresponding to the saved user. Otherwise, the returned value will contain an {@link ApiError} with the relative
