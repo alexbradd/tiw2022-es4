@@ -55,8 +55,7 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        JsonReader jsonReader = new JsonReader(req.getReader());
-        try {
+        try (JsonReader jsonReader = new JsonReader(req.getReader())) {
             LoginRequest loginRequest = new Gson().fromJson(jsonReader, LoginRequest.class);
             Tuple<Integer, JsonObject> res = ProductionConnectionRetriever.getInstance()
                     .with(c -> UserFacade.withDefaultObjects(c).authorize(loginRequest))

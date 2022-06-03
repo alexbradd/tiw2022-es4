@@ -48,8 +48,7 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
 
-        JsonReader jsonReader = new JsonReader(req.getReader());
-        try {
+        try (JsonReader jsonReader = new JsonReader(req.getReader())) {
             RegistrationRequest registrationReq = new Gson().fromJson(jsonReader, RegistrationRequest.class);
             Tuple<Integer, JsonObject> res = ProductionConnectionRetriever.getInstance()
                     .with(c -> UserFacade.withDefaultObjects(c).register(registrationReq))
