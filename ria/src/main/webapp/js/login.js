@@ -226,29 +226,6 @@ function LoginFormValidator(viewManager, loginForm) {
     }
 }
 
-function LogoutButtonManager(viewManager, logoutButton) {
-    this._viewManager = viewManager;
-    this._logoutButton = logoutButton;
-
-    this.addListeners = function () {
-        this._logoutButton.addEventListener("click", () => {
-            new Ajax().post(
-                "/api/auth/logout",
-                null,
-                (req) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    if (req.status === 200) {
-                        logout();
-                        this._viewManager.displayLogin();
-                    } else
-                        console.log(req.responseText);
-                }
-            )
-        })
-    }
-}
-
 (function () {
     let manager = new ViewManager(
         document.getElementById("page-container"),
@@ -275,7 +252,10 @@ function LogoutButtonManager(viewManager, logoutButton) {
         }
     );
     let loginValidator = new LoginFormValidator(manager, manager.getLoginForm());
-    let logoutButtonManager = new LogoutButtonManager(manager, document.getElementById("login-logoutBtn"));
+    let logoutButtonManager = new LogoutButtonManager(
+        document.getElementById("login-logoutBtn"),
+        () => manager.displayLogin()
+    );
 
     manager.init();
     registerValidator.addListeners();
