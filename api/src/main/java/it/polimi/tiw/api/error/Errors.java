@@ -81,4 +81,14 @@ public class Errors {
                 "User cannot access this resource",
                 new ApiSubError("IllegalAccessException", "Cannot view resource " + res));
     }
+
+    /**
+     * Creates a new {@link ApiError} for when a resource is not accessible because the user is not authenticated.
+     * Status code is 401.
+     *
+     * @return a new {@link ApiError}
+     */
+    public static ApiError fromUnauthorized() {
+        return new ApiError(401, "You are not authenticated");
+    }
 }

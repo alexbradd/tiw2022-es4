@@ -31,13 +31,10 @@
             </div>
             <input class="big-button" type="submit" value="Login"/>
         </form>
-        <!-- FIXME -->
-        <!--        <div th:if="${session} and ${session.user}">-->
-        <!--            <p th:text="#{login.alreadyLoggedIn}"></p>-->
-        <!--            <form action="/logout" method="post">-->
-        <!--                <input class="big-button error center" type="submit" th:value="#{login.logout}" value="logout"/>-->
-        <!--            </form>-->
-        <!--        </div>-->
+        <div id="login-alreadyLoggedIn" class="hidden">
+            <p>You must first log out before logging in into a new account</p>
+            <button id="login-logoutBtn" class="big-button error center">Logout</button>
+        </div>
         <small id="login-formError" class="form-error"></small>
     </div>
     <div id="register-view" class="page-view hidden">

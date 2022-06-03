@@ -53,6 +53,15 @@ function ViewManager(loginView, loginViewComponents, registerView, registerViewC
 
     this.displayLogin = function () {
         this._loginView.classList.remove("hidden");
+
+        if (isLoggedIn()) {
+            this._loginViewComponents.alreadyLoggedIn.classList.remove("hidden");
+            this._loginViewComponents.form.classList.add("hidden");
+        } else {
+            this._loginViewComponents.alreadyLoggedIn.classList.add("hidden");
+            this._loginViewComponents.form.classList.remove("hidden");
+        }
+
         this._switcher.flavourText.childNodes[0].textContent = "Don't have an account? "
         this._switcher.href.childNodes[0].textContent = "Register"
     }
@@ -205,11 +214,35 @@ function LoginFormValidator(viewManager, loginForm) {
     }
 }
 
+function LogoutButtonManager(viewManager, logoutButton) {
+    this._viewManager = viewManager;
+    this._logoutButton = logoutButton;
+
+    this.addListeners = function () {
+        this._logoutButton.addEventListener("click", () => {
+            new Ajax().post(
+                "/api/auth/logout",
+                null,
+                (req) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    if (req.status === 200) {
+                        logout();
+                        this._viewManager.displayLogin();
+                    } else
+                        console.log(req.responseText);
+                }
+            )
+        })
+    }
+}
+
 (function () {
     let manager = new ViewManager(
         document.getElementById("login-view"),
         {
             form: document.getElementById("login-form"),
+            alreadyLoggedIn: document.getElementById("login-alreadyLoggedIn"),
             formError: document.getElementById("login-formError")
         },
         document.getElementById("register-view"),
@@ -229,10 +262,12 @@ function LoginFormValidator(viewManager, loginForm) {
         }
     );
     let loginValidator = new LoginFormValidator(manager, manager.getLoginForm());
+    let logoutButtonManager = new LogoutButtonManager(document.getElementById("login-logoutBtn"));
 
     manager.addListeners();
     registerValidator.addListeners();
     loginValidator.addListeners();
+    logoutButtonManager.addListeners();
 
     manager.displayLogin();
 }());
