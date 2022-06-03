@@ -262,7 +262,7 @@ function LogoutButtonManager(viewManager, logoutButton) {
         }
     );
     let loginValidator = new LoginFormValidator(manager, manager.getLoginForm());
-    let logoutButtonManager = new LogoutButtonManager(document.getElementById("login-logoutBtn"));
+    let logoutButtonManager = new LogoutButtonManager(manager, document.getElementById("login-logoutBtn"));
 
     manager.addListeners();
     registerValidator.addListeners();
