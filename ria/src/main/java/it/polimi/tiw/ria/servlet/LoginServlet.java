@@ -28,8 +28,8 @@ import static it.polimi.tiw.ria.servlet.ServletUtils.*;
  *     <li>'clearPassword': the User's clear text password</li>
  * </ol>
  * <p>
- * In case of success, the servlet will create a new access token and return it in the response. Otherwise, it will
- * return a JSON object containing information about what happened
+ * In case of success, the servlet will create a new access token and return it together with the user details in the
+ * response. Otherwise, it will return a JSON object containing information about what happened.
  */
 @WebServlet("/api/auth/login")
 public class LoginServlet extends HttpServlet {
@@ -66,6 +66,7 @@ public class LoginServlet extends HttpServlet {
                         JsonObject obj = new JsonObject();
                         obj.addProperty("type", "OK");
                         obj.addProperty("token", accessToken);
+                        obj.add("user", u.toJson());
 
                         Cookie refreshCookie = new Cookie("refresh", refreshToken);
                         refreshCookie.setHttpOnly(true);

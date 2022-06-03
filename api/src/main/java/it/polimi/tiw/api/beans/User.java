@@ -1,5 +1,7 @@
 package it.polimi.tiw.api.beans;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import it.polimi.tiw.api.error.ApiError;
 import it.polimi.tiw.api.error.ApiSubError;
 import it.polimi.tiw.api.functional.ApiResult;
@@ -155,6 +157,17 @@ public class User implements PersistedObject {
                 isNull(email) ||
                 isNull(name) ||
                 isNull(surname);
+    }
+
+    /**
+     * Returns the JSON representation of this object
+     *
+     * @return a JSON object
+     */
+    public JsonObject toJson() {
+        JsonObject ret = new Gson().toJsonTree(this).getAsJsonObject();
+        ret.remove("saltedPassword");
+        return ret;
     }
 
     public static class Builder {

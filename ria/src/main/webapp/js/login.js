@@ -204,7 +204,7 @@ function LoginFormValidator(viewManager, loginForm) {
                     switch (req.status) {
                         case 200:
                             let res = JSON.parse(req.responseText);
-                            login(res.token);
+                            login(res.token, res.user);
                             window.location = "/index.html";
                             break;
                         case 400:
