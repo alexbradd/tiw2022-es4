@@ -5,33 +5,32 @@
     <link href="/img/favicon.ico" rel="icon"/>
     <link href="/css/common.css" rel="stylesheet" type="text/css">
     <link href="/css/index.css" rel="stylesheet" type="text/css">
+    <script src="/js/loginManagement.js" defer></script>
+    <script src="/js/ajax.js" defer></script>
+    <script src="/js/index.js" defer></script>
     <title>Home</title>
 </head>
 <body>
 <div class="page-container">
     <div class="header">
-        <a class="imaged-link" href="/index.html">
-            <img src="/img/logo.svg" alt="logo"/>
-        </a>
+        <img src="/img/logo.svg" alt="logo"/>
         <div class="user-popup">
-            <p>Username</p>
+            <p id="userDetails-username">Username</p>
             <div class="popup">
-                <h5>user details</h5>
+                <h5>User details</h5>
                 <div class="user-info">
                     <div class="user-info-cell">
                         <small>Name:</small>
-                        <p>Name and surname</p>
+                        <p id="userDetails-nameSurname">Name and surname</p>
                     </div>
                     <div class="user-info-cell">
                         <small>Email:</small>
-                        <p class="text-right">Email</p>
+                        <p id="userDetails-email" class="text-right">Email</p>
                     </div>
-                    <small><span>User id</span>: <span>id</span></small>
+                    <small>User id: <span id="userDetails-userId">id</span></small>
                     <br>
                 </div>
-                <form action="" method="post">
-                    <input type="submit" class="big-button error center" value="Logout"/>
-                </form>
+                <button id="logoutBtn" class="big-button error center">Logout</button>
             </div>
         </div>
     </div>
