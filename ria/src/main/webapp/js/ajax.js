@@ -20,3 +20,18 @@ function Ajax() {
         this._makeReq("POST", url, data, setJson, callback);
     }
 }
+
+function convertFormDataToJSON(formData) {
+    let object = {};
+    formData.forEach((value, key) => {
+        if (!object.hasOwnProperty(key)) {
+            object[key] = value;
+            return;
+        }
+        if (!Array.isArray(object[key])) {
+            object[key] = [object[key]];
+        }
+        object[key].push(value);
+    });
+    return JSON.stringify(object);
+}

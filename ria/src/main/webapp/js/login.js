@@ -66,16 +66,24 @@ function ViewManager(loginView, registerView, switcherElem) {
     this.getRegisterForm = function () {
         return this._registerView.children[1];
     }
+
+    this.showErrorMessage = function (msg) {
+        if (this.currentState === VIEWS.LOGIN)
+            this._loginView.children[2].textContent = msg;
+        else
+            this._registerView.children[2].textContent = msg;
+    }
 }
 
-function RegisterFormValidator(registerForm, formInputs) {
+function RegisterFormValidator(viewManager, registerForm, formInputs) {
+    this._manager = viewManager;
     this._registerForm = registerForm;
     this._formInputs = formInputs;
 
     this.addListeners = function () {
-        this._formInputs.username.addEventListener("blur", (e) => this.checkUsername(e.target));
+        this._formInputs.username.addEventListener("change", (e) => this.checkUsername(e.target));
         this._formInputs.repeatPassword.addEventListener(
-            "blur",
+            "change",
             (e) => this.checkPasswords(e.target)
         );
         this._registerForm.addEventListener("submit", (e) => {
@@ -106,7 +114,6 @@ function RegisterFormValidator(registerForm, formInputs) {
                         target.setCustomValidity("Could not verify username");
                         console.log(req.responseText);
                 }
-                target.reportValidity();
             })
     }
 
@@ -118,15 +125,42 @@ function RegisterFormValidator(registerForm, formInputs) {
             target.setCustomValidity("The passwords do not match");
         else
             target.setCustomValidity("");
-        target.reportValidity();
     }
 
     this.submit = function (target) {
-        console.log("submit");
+        this.checkUsername(this._formInputs.username);
+        this.checkPasswords(this._formInputs.repeatPassword);
+        if (target.reportValidity()) {
+            new Ajax().post(
+                "/api/users",
+                convertFormDataToJSON(new FormData(target)),
+                (req) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    switch (req.status) {
+                        case 200:
+                            this._manager.switchViews();
+                            break;
+                        case 400:
+                            this._manager.showErrorMessage("Please check that the fields contain valid information");
+                            console.log(req.responseText);
+                            break;
+                        case 409:
+                            this._manager.showErrorMessage("A username with the requested username already exists");
+                            console.log(req.responseText);
+                            break;
+                        default:
+                            this._manager.showErrorMessage("We weren't able to process your request, please try again later")
+                            console.log(req.responseText);
+                    }
+                }
+            );
+        }
     }
 }
 
-function LoginFormValidator(loginForm) {
+function LoginFormValidator(viewManager, loginForm) {
+    this._manager = viewManager;
     this._loginForm = loginForm;
 
     this.addListeners = function () {
@@ -148,6 +182,7 @@ function LoginFormValidator(loginForm) {
         document.getElementById("switcher")
     );
     let registerValidator = new RegisterFormValidator(
+        manager,
         manager.getRegisterForm(),
         {
             username: document.getElementById("register-username"),
@@ -156,7 +191,7 @@ function LoginFormValidator(loginForm) {
             repeatPassword: document.getElementById("register-repeatPassword")
         }
     );
-    let loginValidator = new LoginFormValidator(manager.getLoginForm());
+    let loginValidator = new LoginFormValidator(manager, manager.getLoginForm());
 
     manager.addListener();
     registerValidator.addListeners();

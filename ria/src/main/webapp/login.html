@@ -19,7 +19,7 @@
     </div>
     <div id="login-view" class="page-view hidden">
         <h3>Login</h3>
-        <form action="" class="form" method="post">
+        <form class="form">
             <div class="form-input required">
                 <label for="login-username">Username:</label>
                 <input id="login-username" name="username" required type="text"/>
@@ -47,7 +47,7 @@
     </div>
     <div id="register-view" class="page-view hidden">
         <h3>Register a new account</h3>
-        <form action="" class="form" method="post">
+        <form class="form">
             <div class="form-input required">
                 <label for="register-username">Username:</label>
                 <input id="register-username" name="username" required type="text"/>
@@ -74,12 +74,7 @@
             </div>
             <input class="big-button accent" type="submit" value="Register"/>
         </form>
-        <!-- FIXME -->
-        <!--        <small class="form-error" th:if="${param.e}" th:switch="${param.e[0]}">-->
-        <!--            <span th:case="'conflict'" th:text="#{register.duplicateUser}">A username with the requested username already exists</span>-->
-        <!--            <span th:case="'user'" th:text="#{register.userError}">Please check that the fields contain valid information</span>-->
-        <!--            <span th:case="*" th:text="#{register.error}">We weren't able to process your request, please try again later</span>-->
-        <!--        </small>-->
+        <small class="form-error"></small>
     </div>
     <small id="switcher">
         <span>Don't have an account?</span>
