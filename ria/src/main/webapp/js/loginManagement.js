@@ -1,21 +1,16 @@
-function login(token) {
-    storeInSession("token", token);
+function login(token, user) {
+    window.sessionStorage.setItem("token", token);
+    window.sessionStorage.setItem("user", JSON.stringify(user));
 }
 
 function logout() {
-    dropFromSession("token")
+    window.sessionStorage.removeItem("token")
+    window.sessionStorage.removeItem("user");
 }
 
 function isLoggedIn() {
-    return window.sessionStorage.getItem("token") != null;
-}
-
-function storeInSession(name, val) {
-    window.sessionStorage.setItem(name, val);
-}
-
-function dropFromSession(name) {
-    window.sessionStorage.removeItem(name);
+    return window.sessionStorage.getItem("token") != null &&
+        window.sessionStorage.getItem("user") != null;
 }
 
 function LogoutButtonManager(logoutButton, postLogoutCallback) {
