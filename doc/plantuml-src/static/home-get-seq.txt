@@ -1,0 +1,35 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> HistoryFilter : GET /index.html
+HistoryFilter -> HistoryFilter : ...
+HistoryFilter -> LoginFilter : chain::doFilter
+
+LoginFilter -> HttpServletRequest : ::getSession(false)
+return HttpSession
+LoginFilter -> HttpSession : ::getAttribute
+return
+
+alt user != null
+    LoginFilter -> AccountListFilter : chain::doFilter
+
+    AccountListFilter -> AccountFacade : ::ofUser
+    return ApiResult<List<Account>>
+    AccountListFilter -> HttpServletRequest : ::setAttribute("accountList")
+    return
+    AccountListFilter -> HtmlPageServlet : chain::doFilter
+
+    HtmlPageServlet -> TemplateEngine : ::process
+    return
+    return
+    return
+else
+    LoginFilter -> HttpServletResponse : ::sendRedirect("/login.html")
+    return
+end
+return
+return
+return
+@enduml

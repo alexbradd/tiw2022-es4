@@ -1,0 +1,61 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> HistoryFilter : GET /rejectTransfer.html
+HistoryFilter -> HistoryFilter : ...
+HistoryFilter -> HtmlPageServlet : chain::doFilter
+HtmlPageServlet -> TemplateEngine : ::process
+return
+return
+return
+return
+
+User -> HistoryFilter : GET /confirmTransfer.html?id=AAAAAAAAAAE
+HistoryFilter -> HistoryFilter : ...
+HistoryFilter -> LoginFilter : chain::doFilter
+
+LoginFilter -> HttpServletRequest : ::getSession(false)
+return HttpSession
+LoginFilter -> HttpSession : ::getAttribute
+return
+
+alt user != null
+    LoginFilter -> TransferFilter : chain::doFilter
+
+    TransferFilter -> HttpServletRequest : ::getParameter(id)
+    return
+
+    alt id != null
+        TransferFilter -> HttpServletRequest : ::getSession(false)
+        return HttpSession
+        TransferFilter -> HttpSession : ::getAttribute
+        return User
+        TransferFilter -> TransferFacade : ::byId
+        return ApiResult<Transfer>
+        TransferFilter -> TransferFilter : ::checkOwnership
+        return ApiResult<Transfer>
+
+        alt if everything went ok
+            TransferFilter -> HttpServletRequest : ::setAttribute("transfer")
+            return
+        else
+            TransferFilter -> HttpServletRequest : ::setAttribute("error")
+            return
+        end
+    end
+    TransferFilter -> HtmlPageServlet : chain::doFilter
+    HtmlPageServlet -> TemplateEngine : ::process
+    return
+
+    return
+    return
+else
+    LoginFilter -> HttpServletResponse : ::sendRedirect("/login.html")
+    return
+end
+return
+return
+return
+@enduml

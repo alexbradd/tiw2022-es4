@@ -1,0 +1,44 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User ->  HistoryFilter : GET /*.html
+
+HistoryFilter -> HttpServletResponse : ::getSession
+return HttpSession
+
+HistoryFilter -> HttpSession : ::getAttribute
+return History
+
+alt history == null
+    HistoryFilter -> History : ::new
+    return
+end
+
+HistoryFilter -> HttpServletRequest : ::getParameter("ret")
+return String
+
+HistoryFilter -> History : ::push
+return
+
+alt ret == null
+    HistoryFilter -> HttpSession : ::setAttribute
+    return
+
+    HistoryFilter -> HttpServletRequest : ::setAttribute
+    return
+
+    HistoryFilter ->] : chain::doFilter
+    return
+else
+    HistoryFilter -> History : ::pop
+    return String
+
+    HistoryFilter -> HttpServletResponse : ::sendRedirect
+    return
+end
+
+return
+
+@enduml

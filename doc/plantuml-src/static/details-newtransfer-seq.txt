@@ -1,0 +1,43 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> LoginFilter : POST /newTransfer
+
+LoginFilter -> HttpServletRequest : ::getSession(false)
+return HttpSession
+LoginFilter -> HttpSession : ::getAttribute
+return
+
+alt user != null
+    LoginFilter -> NewTransferServlet : chain::doFilter
+
+    NewTransferServlet -> ServletUtils : ::tryExtractFromSession
+    return User
+
+    alt user != null
+        NewTransferServlet -> NewTransferServlet : ::parseRequest
+        return NewTransferRequest
+        NewTransferServlet -> TransferFacade : ::newTransfer
+        return ApiResult<Transfer>
+
+        alt if error
+            NewTransferServlet -> HttpServletResponse : ::sendRedirect("/confirmTransfer.html?id=...")
+            return
+        else
+            NewTransferServlet -> HttpServletResponse : ::sendRedirect("/rejectTransfer?e=...")
+            return
+        end
+    else
+        NewTransferServlet -> HttpServletResponse : ::sendError
+        return
+    end
+
+    return
+else
+    LoginFilter -> HttpServletResponse : ::sendRedirect("/login.html")
+    return
+end
+return
+@enduml

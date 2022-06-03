@@ -1,0 +1,54 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> HistoryFilter : GET /details.html?id=AAAAAAAAAAE
+HistoryFilter -> HistoryFilter : ...
+HistoryFilter -> LoginFilter : chain::doFilter
+
+LoginFilter -> HttpServletRequest : ::getSession(false)
+return HttpSession
+LoginFilter -> HttpSession : ::getAttribute
+return
+
+alt user != null
+    LoginFilter -> AccountDetailsFilter : chain::doFilter
+
+    AccountDetailsFilter -> HttpServletRequest : ::getParameter
+    return
+
+    alt id != null
+        AccountDetailsFilter -> HttpServletRequest : ::getSession
+        return HttpSession
+        AccountDetailsFilter -> HttpSession : ::getAttribute
+        return User
+        AccountDetailsFilter -> AccountFacade : ::byId
+        return ApiResult<Account>
+        AccountDetailsFilter -> TransferFacade : ::of
+        return ApiResult<Tuple<...>>
+
+        alt user is owner of account everything went ok
+            loop account, inbound, outbound
+                AccountDetailsFilter -> HttpServletRequest : ::setAttribute
+                return
+            end
+        else
+           AccountDetailsFilter -> HttpServletRequest : ::setAttribute("error")
+           return
+        end
+    end
+    AccountDetailsFilter -> HtmlPageServlet : chain::doFilter
+
+    HtmlPageServlet -> TemplateEngine : ::process
+    return
+    return
+    return
+else
+    LoginFilter -> HttpServletResponse : ::sendRedirect("/login.html")
+    return
+end
+return
+return
+return
+@enduml

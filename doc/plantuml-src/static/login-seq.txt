@@ -1,0 +1,42 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> HistoryFilter : GET /login.html
+HistoryFilter -> HistoryFilter : ...
+HistoryFilter -> HtmlPageServlet : chain::doFilter
+HtmlPageServlet -> TemplateEngine : ::process
+return
+return
+return
+return
+
+User -> LoginServlet : POST /loginUser
+LoginServlet -> ServletUtils : ::tryExtractFromSession
+return User
+
+alt user == null
+    LoginServlet -> LoginServlet : ::parseRequest
+    return LoginRequest
+    LoginServlet -> UserFacade : ::authorize
+    return ApiResult<User>
+
+    alt if not error
+        LoginServlet -> HttpServletRequest : ::getSession
+        return
+        LoginServlet -> HttpSession : ::setAttribute
+        return
+        LoginServlet -> HttpServletResponse : ::sendRedirect("/index.html")
+        return
+    else
+        LoginServlet -> HttpServletResponse : ::sendRedirect("/login.html?e=...")
+        return
+    end
+else
+    LoginServlet -> HttpServletResponse : ::sendError
+    return
+end
+return
+
+@enduml

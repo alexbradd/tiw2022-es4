@@ -1,0 +1,16 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> LogoutServlet : POST /logout
+LogoutServlet -> HttpServletRequest : ::getSession(false)
+return HttpSession
+alt session != null
+    LogoutServlet -> HttpSession : ::invalidate
+    return
+end
+LogoutServlet -> HttpServletResponse : ::sendRedirect("/login.html")
+return
+return
+@enduml

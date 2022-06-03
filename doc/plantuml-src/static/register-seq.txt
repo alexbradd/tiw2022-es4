@@ -1,0 +1,28 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> HistoryFilter : GET /register.html
+HistoryFilter -> HistoryFilter : ...
+HistoryFilter -> HtmlPageServlet : chain::doFilter
+HtmlPageServlet -> TemplateEngine : ::process
+return
+return
+return
+return
+
+User -> RegisterServlet : POST /registerUser
+RegisterServlet -> RegisterServlet : ::parseRequest
+return RegisterRequest
+RegisterServlet -> UserFacade : ::register
+return ApiResult<User>
+
+alt if not error
+    RegisterServlet -> HttpServletResponse : ::sendRedirect("/login.html")
+    return
+else
+    RegisterServlet -> HttpServletResponse : ::sendRedirect("/register.html?e=...")
+    return
+end
+@enduml

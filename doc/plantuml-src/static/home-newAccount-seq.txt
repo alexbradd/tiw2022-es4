@@ -1,0 +1,40 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> LoginFilter : POST /newAccount
+
+LoginFilter -> HttpServletRequest : ::getSession(false)
+return HttpSession
+LoginFilter -> HttpSession : ::getAttribute
+return
+
+alt user != null
+    LoginFilter -> NewAccountServlet : chain::doFilter
+    NewAccountServlet -> ServletUtils : ::tryExtractFromSession
+    return User
+
+    alt user != null
+        NewAccountServlet -> AccountFacade : ::createFor
+        return ApiResult<Account>
+
+        alt if not error
+            NewAccountServlet -> HttpServletResponse : ::sendRedirect("/index.html")
+            return
+        else
+            NewAccountServlet -> HttpServletResponse : ::sendRedirect("/index.html?e=...")
+            return
+        end
+    else
+        NewAccountServlet -> HttpServletResponse : ::sendError
+        return
+    end
+    return
+else
+    LoginFilter -> HttpServletResponse : ::sendRedirect("/login.html")
+    return
+end
+return
+
+@enduml
