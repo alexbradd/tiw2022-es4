@@ -3,10 +3,12 @@ const VIEWS = {
     REGISTER: "register"
 };
 
-function ViewManager(loginView, registerView, switcherElem) {
+function ViewManager(loginView, loginViewComponents, registerView, registerViewComponents, switcherElem) {
     this.currentState = VIEWS.LOGIN;
     this._loginView = loginView;
+    this._loginViewComponents = loginViewComponents;
     this._registerView = registerView;
+    this._registerViewComponents = registerViewComponents;
     this._switcher = {
         elem: switcherElem,
         flavourText: null,
@@ -15,7 +17,7 @@ function ViewManager(loginView, registerView, switcherElem) {
     this._switcher.flavourText = this._switcher.elem.firstElementChild;
     this._switcher.href = this._switcher.elem.lastElementChild;
 
-    this.addListener = function () {
+    this.addListeners = function () {
         this._switcher.href.addEventListener("click", (e) => {
             this.switchViews();
             e.preventDefault();
@@ -69,9 +71,9 @@ function ViewManager(loginView, registerView, switcherElem) {
 
     this.showErrorMessage = function (msg) {
         if (this.currentState === VIEWS.LOGIN)
-            this._loginView.children[2].textContent = msg;
+            this._loginViewComponents.formError.textContent = msg;
         else
-            this._registerView.children[2].textContent = msg;
+            this._registerViewComponents.formError.textContent = msg;
     }
 }
 
@@ -171,14 +173,49 @@ function LoginFormValidator(viewManager, loginForm) {
     }
 
     this.submit = function (target) {
-        console.log("submit");
+        if (target.reportValidity()) {
+            new Ajax().post(
+                "/api/auth/login",
+                convertFormDataToJSON(new FormData(target)),
+                (req) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    switch (req.status) {
+                        case 200:
+                            let res = JSON.parse(req.responseText);
+                            login(res.token);
+                            window.location = "/index.html";
+                            break;
+                        case 400:
+                            this._manager.showErrorMessage("Please check that the fields contain valid information");
+                            console.log(req.responseText)
+                            break;
+                        case 404:
+                        case 409:
+                            this._manager.showErrorMessage("Username and password are not valid");
+                            console.log(req.responseText)
+                            break;
+                        default:
+                            this._manager.showErrorMessage("We weren't able to process your request, please try again later");
+                            console.log(req.responseText)
+                    }
+                },
+            );
+        }
     }
 }
 
 (function () {
     let manager = new ViewManager(
         document.getElementById("login-view"),
+        {
+            form: document.getElementById("login-form"),
+            formError: document.getElementById("login-formError")
+        },
         document.getElementById("register-view"),
+        {
+            formError: document.getElementById("register-formError")
+        },
         document.getElementById("switcher")
     );
     let registerValidator = new RegisterFormValidator(
@@ -193,7 +230,7 @@ function LoginFormValidator(viewManager, loginForm) {
     );
     let loginValidator = new LoginFormValidator(manager, manager.getLoginForm());
 
-    manager.addListener();
+    manager.addListeners();
     registerValidator.addListeners();
     loginValidator.addListeners();
 

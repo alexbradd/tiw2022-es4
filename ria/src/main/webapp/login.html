@@ -5,8 +5,9 @@
     <link href="/img/favicon.ico" rel="icon"/>
     <link href="/css/common.css" rel="stylesheet" type="text/css">
     <link href="/css/login.css" rel="stylesheet" type="text/css">
-    <script src="/js/login.js" defer></script>
     <script src="/js/ajax.js" defer></script>
+    <script src="/js/loginManagement.js" defer></script>
+    <script src="/js/login.js" defer></script>
     <title>Login</title>
 </head>
 <body>
@@ -19,7 +20,7 @@
     </div>
     <div id="login-view" class="page-view hidden">
         <h3>Login</h3>
-        <form class="form">
+        <form id="login-form" class="form">
             <div class="form-input required">
                 <label for="login-username">Username:</label>
                 <input id="login-username" name="username" required type="text"/>
@@ -37,13 +38,7 @@
         <!--                <input class="big-button error center" type="submit" th:value="#{login.logout}" value="logout"/>-->
         <!--            </form>-->
         <!--        </div>-->
-        <!--        <small class="form-error" th:if="${param.e}" th:switch="${param.e[0]}">-->
-        <!--            <span th:case="'conflict'" th:text="#{login.invalidCredentials}">Username and password are not valid</span>-->
-        <!--            <span th:case="'user'"-->
-        <!--                  th:text="#{login.userError}">Please check that the fields contain valid information</span>-->
-        <!--            <span th:case="*"-->
-        <!--                  th:text="#{login.error}">We weren't able to process your request, please try again later</span>-->
-        <!--        </small>-->
+        <small id="login-formError" class="form-error"></small>
     </div>
     <div id="register-view" class="page-view hidden">
         <h3>Register a new account</h3>
@@ -74,7 +69,7 @@
             </div>
             <input class="big-button accent" type="submit" value="Register"/>
         </form>
-        <small class="form-error"></small>
+        <small id="register-formError" class="form-error"></small>
     </div>
     <small id="switcher">
         <span>Don't have an account?</span>
