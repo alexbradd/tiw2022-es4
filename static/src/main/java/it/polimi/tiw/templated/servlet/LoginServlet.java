@@ -2,6 +2,7 @@ package it.polimi.tiw.templated.servlet;
 
 import it.polimi.tiw.api.UserFacade;
 import it.polimi.tiw.api.beans.LoginRequest;
+import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 
 import javax.servlet.annotation.WebServlet;
@@ -29,11 +30,20 @@ import java.io.IOException;
  * </ol>
  * <p>
  * If the user is correctly authenticated, a session will be created for tracking this user.
+ *
+ * The servlet will refuse the request with a 400 if a user is already logged in. To log out a user, please use
+ * {@link LogoutServlet}.
  */
 @WebServlet("/loginUser")
 public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        User logged = ServletUtils.tryExtractFromSession(req);
+        if (logged != null) {
+            resp.sendError(400);
+            return;
+        }
+
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername(req.getParameter("username"));
         loginRequest.setClearPassword(req.getParameter("clearPassword"));
