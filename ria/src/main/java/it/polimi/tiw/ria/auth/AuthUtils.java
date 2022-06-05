@@ -55,24 +55,23 @@ public class AuthUtils {
     }
 
     /**
-     * Verify the given token, checking that it corresponds to the given user, then return it.
+     * Verify the given token then return it.
      *
      * @param token  the token to verify
-     * @param userId the user id
      * @param iss    the issuer
      * @param secret the secret
      * @return the decoded jwt
      * @throws JWTVerificationException if verification failed
      * @throws NullPointerException     if any argument is null
      */
-    public static DecodedJWT verifyToken(String token, String userId, String iss, String secret) {
+    public static DecodedJWT verifyToken(String token, String iss, String secret) {
         Objects.requireNonNull(token);
         Objects.requireNonNull(iss);
         Objects.requireNonNull(secret);
         Algorithm alg = Algorithm.HMAC256(secret);
         return JWT.require(alg)
                 .withIssuer(iss)
-                .withClaim("userId", userId)
+                .withClaimPresence("userId")
                 .build()
                 .verify(token);
     }
