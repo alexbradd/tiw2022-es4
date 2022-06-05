@@ -96,6 +96,7 @@ small, .text_small {
     flex-flow: column nowrap;
     align-items: center;
 
+    width: 100%;
     max-width: 560px;
     background: var(--view-color);
     border-radius: 20px;

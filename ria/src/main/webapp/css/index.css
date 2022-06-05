@@ -16,7 +16,7 @@
 }
 
 .user-popup {
-    position: relative;
+    z-index: 1;
 }
 
 .header .user-popup {
@@ -63,8 +63,8 @@
     line-height: 0.5;
 }
 
-.account-view {
-    width: 100%;
+.relatively-positioned {
+    position: relative;
 }
 
 .account-table {
@@ -79,4 +79,19 @@
 .new-account {
     margin-top: 20px;
     width: 100%;
+}
+
+.refresh-button {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    font-size: var(--text-s);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.refresh-button img {
+    width: 16px;
+    height: 16px;
 }

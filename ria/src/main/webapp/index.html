@@ -14,7 +14,7 @@
 <div class="page-container">
     <div class="header">
         <img src="/img/logo.svg" alt="logo"/>
-        <div class="user-popup">
+        <div class="user-popup relatively-positioned">
             <p id="userDetails-username">Username</p>
             <div class="popup">
                 <h5>User details</h5>
@@ -34,8 +34,26 @@
             </div>
         </div>
     </div>
-    <div class="page-view account-view">
+    <div id="account-view" class="page-view relatively-positioned">
+        <button id="accounts-refresh" class="refresh-button">
+            <img alt="refresh" src="/img/refresh.png"/>
+        </button>
         <h3>Accounts</h3>
+        <div class="account-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Balance</th>
+                </tr>
+                </thead>
+                <tbody id="accounts-tableBody">
+                </tbody>
+            </table>
+            <button id="accounts-new" class="new-account big-button ok center">
+                New account
+            </button>
+        </div>
     </div>
 </div>
 </body>
