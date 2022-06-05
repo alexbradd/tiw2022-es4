@@ -11,14 +11,14 @@
     <title>Login</title>
 </head>
 <body>
-<div class="page-container">
-    <div class="big-logo">
+<div class="page-container" id="page-container">
+    <div id="logo" class="big-logo">
         <a class="imaged-link" href="/index.html">
             <img alt="logo" src="/img/logo.svg"/>
         </a>
         <h1>Price</h1>
     </div>
-    <div id="login-view" class="page-view hidden">
+    <div id="login-view" class="page-view">
         <h3>Login</h3>
         <form id="login-form" class="form">
             <div class="form-input required">
@@ -31,13 +31,13 @@
             </div>
             <input class="big-button" type="submit" value="Login"/>
         </form>
-        <div id="login-alreadyLoggedIn" class="hidden">
+        <div id="login-alreadyLoggedIn">
             <p>You must first log out before logging in into a new account</p>
             <button id="login-logoutBtn" class="big-button error center">Logout</button>
         </div>
         <small id="login-formError" class="form-error"></small>
     </div>
-    <div id="register-view" class="page-view hidden">
+    <div id="register-view" class="page-view">
         <h3>Register a new account</h3>
         <form class="form">
             <div class="form-input required">

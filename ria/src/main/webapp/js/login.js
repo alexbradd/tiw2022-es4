@@ -3,8 +3,14 @@ const VIEWS = {
     REGISTER: "register"
 };
 
-function ViewManager(loginView, loginViewComponents, registerView, registerViewComponents, switcherElem) {
+function ViewManager(pageContainer,
+                     loginView,
+                     loginViewComponents,
+                     registerView,
+                     registerViewComponents,
+                     switcherElem) {
     this.currentState = VIEWS.LOGIN;
+    this._pageContainer = pageContainer;
     this._loginView = loginView;
     this._loginViewComponents = loginViewComponents;
     this._registerView = registerView;
@@ -16,6 +22,12 @@ function ViewManager(loginView, loginViewComponents, registerView, registerViewC
     };
     this._switcher.flavourText = this._switcher.elem.firstElementChild;
     this._switcher.href = this._switcher.elem.lastElementChild;
+
+    this.init = function () {
+        this.hideLogin();
+        this.hideRegister();
+        this.addListeners();
+    }
 
     this.addListeners = function () {
         this._switcher.href.addEventListener("click", (e) => {
@@ -42,24 +54,24 @@ function ViewManager(loginView, loginViewComponents, registerView, registerViewC
     }
 
     this.displayRegister = function () {
-        this._registerView.classList.remove("hidden");
+        this._pageContainer.insertBefore(this._registerView, this._switcher.elem)
         this._switcher.flavourText.childNodes[0].textContent = "Already have an account? "
         this._switcher.href.childNodes[0].textContent = "Login"
     }
 
     this.hideRegister = function () {
-        this._registerView.classList.add("hidden");
+        this._pageContainer.removeChild(this._registerView);
     }
 
     this.displayLogin = function () {
-        this._loginView.classList.remove("hidden");
+        this._pageContainer.insertBefore(this._loginView, this._switcher.elem);
 
         if (isLoggedIn()) {
-            this._loginViewComponents.alreadyLoggedIn.classList.remove("hidden");
-            this._loginViewComponents.form.classList.add("hidden");
+            this._loginView.insertBefore(this._loginViewComponents.alreadyLoggedIn, null);
+            this._loginView.removeChild(this._loginViewComponents.form);
         } else {
-            this._loginViewComponents.alreadyLoggedIn.classList.add("hidden");
-            this._loginViewComponents.form.classList.remove("hidden");
+            this._loginView.removeChild(this._loginViewComponents.alreadyLoggedIn);
+            this._loginView.insertBefore(this._loginViewComponents.form, null);
         }
 
         this._switcher.flavourText.childNodes[0].textContent = "Don't have an account? "
@@ -67,7 +79,7 @@ function ViewManager(loginView, loginViewComponents, registerView, registerViewC
     }
 
     this.hideLogin = function () {
-        this._loginView.classList.add("hidden");
+        this._pageContainer.removeChild(this._loginView);
     }
 
     this.getLoginForm = function () {
@@ -239,6 +251,7 @@ function LogoutButtonManager(viewManager, logoutButton) {
 
 (function () {
     let manager = new ViewManager(
+        document.getElementById("page-container"),
         document.getElementById("login-view"),
         {
             form: document.getElementById("login-form"),
@@ -264,7 +277,7 @@ function LogoutButtonManager(viewManager, logoutButton) {
     let loginValidator = new LoginFormValidator(manager, manager.getLoginForm());
     let logoutButtonManager = new LogoutButtonManager(manager, document.getElementById("login-logoutBtn"));
 
-    manager.addListeners();
+    manager.init();
     registerValidator.addListeners();
     loginValidator.addListeners();
     logoutButtonManager.addListeners();
