@@ -67,11 +67,11 @@ function ViewManager(pageContainer,
         this._pageContainer.insertBefore(this._loginView, this._switcher.elem);
 
         if (isLoggedIn()) {
-            this._loginView.insertBefore(this._loginViewComponents.alreadyLoggedIn, null);
+            this._loginView.insertBefore(this._loginViewComponents.alreadyLoggedIn, this._loginViewComponents.formError);
             this._loginView.removeChild(this._loginViewComponents.form);
         } else {
             this._loginView.removeChild(this._loginViewComponents.alreadyLoggedIn);
-            this._loginView.insertBefore(this._loginViewComponents.form, null);
+            this._loginView.insertBefore(this._loginViewComponents.form, this._loginViewComponents.formError);
         }
 
         this._switcher.flavourText.childNodes[0].textContent = "Don't have an account? "
