@@ -27,7 +27,7 @@ function ViewOrchestrator(user, pageContainer, modalElements, accountListViewEle
     this._user = user;
     this._pageContainer = pageContainer;
     this._modalManager = new ModalManager(modalElements);
-    this._accountListManager = new AccountListManager(this._user, this._pageContainer, accountListViewElements);
+    this._accountListManager = new AccountListManager(this._user, this._pageContainer, accountListViewElements, this._modalManager);
 
     this.init = function () {
         this._accountListManager.addListeners();
@@ -78,10 +78,11 @@ ModalManager.closeButton = {
     callback: (e, man) => man.hide()
 };
 
-function AccountListManager(user, container, viewElements) {
+function AccountListManager(user, container, viewElements, modalManager) {
     this._user = user;
     this._container = container;
     this._viewElements = viewElements;
+    this._modalManager = modalManager;
     this.accountList = undefined;
 
     this.addListeners = function () {
@@ -99,8 +100,10 @@ function AccountListManager(user, container, viewElements) {
                         window.location = '/login.html';
                     else if (req.status === 200)
                         this.refresh();
-                    else // fixme display error in dialog box
+                    else {
+                        this._modalManager.showError("We could not create a new account, please try again later")
                         console.log(req.responseText);
+                    }
                 }
             )
         })
@@ -135,8 +138,10 @@ function AccountListManager(user, container, viewElements) {
                 else if (req.status === 200) {
                     this.accountList = JSON.parse(req.responseText).accounts;
                     afterFetch();
-                } else // fixme display error in dialog box
+                } else {
+                    this._modalManager.showError("We could not fetch your account list, please try again later")
                     console.log(req.responseText);
+                }
             }
         );
     }
