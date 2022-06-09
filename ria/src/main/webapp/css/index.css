@@ -1,3 +1,7 @@
+.rowed {
+    flex-flow: row wrap;
+}
+
 .header {
     display: grid;
     grid-template: "a b s c" auto / 40px 40px 1fr;
@@ -81,19 +85,27 @@
     width: 100%;
 }
 
-.refresh-button {
+.corner-button {
     position: absolute;
-    right: 15px;
-    top: 15px;
     font-size: var(--text-s);
     background: transparent;
     border: none;
     cursor: pointer;
 }
 
-.refresh-button img {
+.corner-button img {
     width: 16px;
     height: 16px;
+}
+
+.top-left {
+    right: 15px;
+    top: 15px;
+}
+
+.top-right {
+    top: 15px;
+    left: 15px;
 }
 
 .modal {
@@ -135,4 +147,80 @@
 .modal-action-list > * {
     flex: 1;
     margin-right: 5px;
+}
+
+.details-view p {
+    margin: 0;
+}
+
+.details-view {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 10px 10px 0;
+}
+
+.account-details {
+    display: grid;
+    grid-template-rows: [names] min-content 1fr;
+    grid-template-columns: 1fr 1fr;
+    width: 80%;
+    column-gap: 5px;
+    justify-items: center;
+}
+
+.account-details small {
+    line-height: 0.5;
+}
+
+.separator {
+    flex: 1;
+    width: 100%;
+    border-top: 1px var(--text-color-primary);
+}
+
+.transaction-list {
+    flex: 1;
+    text-align: center;
+    width: 100%;
+}
+
+.transaction-list h4 {
+    margin: 0 0 5px;
+}
+
+.transaction-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.transaction-list-table-title td {
+    line-height: 0.5;
+    font-size: var(--text-s)
+}
+
+.transaction + .transaction {
+    border-top: 1px solid lightgray;
+}
+
+.causal {
+    position: relative;
+}
+
+.causal:hover .causal-message {
+    display: block;
+}
+
+.causal-message {
+    display: none;
+    position: absolute;
+    background: var(--view-color);
+    border-radius: var(--border-radius-m);
+    padding: 5px;
+    width: max-content;
+    word-break: break-word;
+    box-shadow: 0 0 10px var(--shadow-color);
+    right: 0;
+    top: 100%;
+    max-width: 400px;
+    z-index: 1;
 }

@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <link href="/img/favicon.ico" rel="icon"/>
-    <link href="/css/index.css" rel="stylesheet" type="text/css">
     <link href="/css/common.css" rel="stylesheet" type="text/css">
+    <link href="/css/index.css" rel="stylesheet" type="text/css">
     <script src="/js/loginManagement.js" defer></script>
     <script src="/js/ajax.js" defer></script>
     <script src="/js/index.js" defer></script>
     <title>Home</title>
 </head>
 <body>
-<div id="modal" class="modal">
+<div id="modal" class="modal js">
     <div class="page-view modal-box">
         <h3 id="modal-title">Title</h3>
         <p id="modal-text" class="modal-text">Text</p>
         <div id="modal-actions" class="modal-action-list">...</div>
     </div>
 </div>
-<div id="page-container" class="page-container">
+<div id="page-container" class="page-container rowed">
     <div class="header">
         <img src="/img/logo.svg" alt="logo"/>
         <div class="user-popup relatively-positioned">
@@ -41,8 +41,8 @@
             </div>
         </div>
     </div>
-    <div id="account-view" class="page-view relatively-positioned">
-        <button id="accounts-refresh" class="refresh-button">
+    <div id="account-view" class="page-view relatively-positioned js">
+        <button id="accounts-refresh" class="corner-button top-left">
             <img alt="refresh" src="/img/refresh.png"/>
         </button>
         <h3>Accounts</h3>
@@ -60,6 +60,74 @@
             <button id="accounts-new" class="new-account big-button ok center">
                 New account
             </button>
+        </div>
+    </div>
+    <div id="details-view" class="page-view details-view relatively-positioned js">
+        <button id="accountDetails-back" class="corner-button top-right">
+            <img alt="refresh" src="/img/back.svg"/>
+        </button>
+        <button id="accountDetails-refresh" class="corner-button top-left">
+            <img alt="refresh" src="/img/refresh.png"/>
+        </button>
+        <h3>Details</h3>
+        <div class="account-details">
+            <small>Id</small>
+            <small>Balance</small>
+            <p id="accountDetails-id">Id</p>
+            <p id="accountDetails-balance">Balance</p>
+        </div>
+        <hr class="separator">
+        <div class="transaction-list">
+            <h4>Incoming transfers</h4>
+            <table>
+                <thead>
+                <tr>
+                    <th>Transaction id</th>
+                    <th>From</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Causal</th>
+                </tr>
+                </thead>
+                <tbody id="accountDetails-incomingBody">
+                <tr class="transaction">
+                    <td>Id</td>
+                    <td>fromId</td>
+                    <td>date</td>
+                    <td>amount</td>
+                    <td class="causal">
+                        <div class="causal-message">Causal</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <hr class="separator">
+        <div class="transaction-list">
+            <h4>Outgoing transfers</h4>
+            <table>
+                <thead>
+                <tr>
+                    <th>Transaction id</th>
+                    <th>To</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Causal</th>
+                </tr>
+                </thead>
+                <tbody id="accountDetails-outgoingBody">
+                <tr class="transaction">
+                    <td>Id</td>
+                    <td>toId</td>
+                    <td>Date</td>
+                    <td>Amount</td>
+                    <td class="causal">
+                        ...
+                        <div class="causal-message">Causal</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
