@@ -111,14 +111,13 @@ function AccountListManager(user, container, viewElements, modalManager) {
 
     this.show = function () {
         this._container.insertBefore(this._viewElements.view, null);
-        this._fetchAccountList(() => this._displayAccountList());
+        if (this.accountList === undefined)
+            this._fetchAccountList(() => this._displayAccountList());
     }
 
     this.hide = function () {
-        if (this._viewElements.view.parentNode !== null) {
-            this._clearAccountList();
+        if (this._viewElements.view.parentNode !== null)
             this._container.removeChild(this._viewElements.view);
-        }
     }
 
     this.refresh = function () {
