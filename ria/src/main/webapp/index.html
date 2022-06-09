@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <link href="/img/favicon.ico" rel="icon"/>
-    <link href="/css/common.css" rel="stylesheet" type="text/css">
     <link href="/css/index.css" rel="stylesheet" type="text/css">
+    <link href="/css/common.css" rel="stylesheet" type="text/css">
     <script src="/js/loginManagement.js" defer></script>
     <script src="/js/ajax.js" defer></script>
     <script src="/js/index.js" defer></script>
     <title>Home</title>
 </head>
 <body>
-<div class="page-container">
+<div id="modal" class="modal">
+    <div class="page-view modal-box">
+        <h3 id="modal-title">Title</h3>
+        <p id="modal-text" class="modal-text">Text</p>
+        <div id="modal-actions" class="modal-action-list">...</div>
+    </div>
+</div>
+<div id="page-container" class="page-container">
     <div class="header">
         <img src="/img/logo.svg" alt="logo"/>
         <div class="user-popup relatively-positioned">

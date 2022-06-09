@@ -23,13 +23,65 @@ function UserDetailsManager(popupElements) {
     }
 }
 
-function ViewOrchestrator(accountListManager) {
+function ViewOrchestrator(user, pageContainer, modalElements, accountListViewElements) {
+    this._user = user;
+    this._pageContainer = pageContainer;
+    this._modalManager = new ModalManager(modalElements);
+    this._accountListManager = new AccountListManager(this._user, this._pageContainer, accountListViewElements);
+
+    this.init = function () {
+        this._accountListManager.addListeners();
+        this._modalManager.hide();
+        this._accountListManager.show();
+    }
 
 }
 
-function AccountListManager(user, viewElements) {
+function ModalManager(viewElements) {
     this._viewElements = viewElements;
+
+    this.show = function (title, text, actionList) {
+        this._viewElements.title.textContent = title;
+        this._viewElements.text.textContent = text;
+        this._clearActionList();
+        actionList.forEach((el) => {
+            let button = document.createElement("button");
+            let buttonText = document.createTextNode(el.text);
+            button.appendChild(buttonText);
+            button.addEventListener("click", (e) => el.callback(e, this));
+            button.classList.add("big-button");
+            if (el.classList !== undefined)
+                button.classList.add(el.classList)
+            this._viewElements.actionList.appendChild(button);
+        })
+        document.body.insertBefore(this._viewElements.view, null);
+    }
+
+    this.hide = function () {
+        if (this._viewElements.view.parentNode !== null)
+            document.body.removeChild(this._viewElements.view);
+    }
+
+    this._clearActionList = function () {
+        let actionList = this._viewElements.actionList;
+        while (actionList.lastChild)
+            actionList.removeChild(actionList.lastChild);
+    }
+
+    this.showError = function (text) {
+        this.show("Error", text, [ModalManager.closeButton]);
+    }
+}
+
+ModalManager.closeButton = {
+    text: "Close",
+    callback: (e, man) => man.hide()
+};
+
+function AccountListManager(user, container, viewElements) {
     this._user = user;
+    this._container = container;
+    this._viewElements = viewElements;
     this.accountList = undefined;
 
     this.addListeners = function () {
@@ -55,15 +107,23 @@ function AccountListManager(user, viewElements) {
     }
 
     this.show = function () {
-        this.fetchAccountList(() => this.displayAccountList());
+        this._container.insertBefore(this._viewElements.view, null);
+        this._fetchAccountList(() => this._displayAccountList());
+    }
+
+    this.hide = function () {
+        if (this._viewElements.view.parentNode !== null) {
+            this._clearAccountList();
+            this._container.removeChild(this._viewElements.view);
+        }
     }
 
     this.refresh = function () {
-        this.clearAccountList();
-        this.show();
+        this._clearAccountList();
+        this._fetchAccountList(() => this._displayAccountList());
     }
 
-    this.fetchAccountList = function (afterFetch) {
+    this._fetchAccountList = function (afterFetch) {
         new Ajax().authenticatedPost(
             "/api/accounts/ofUser",
             {userId: this._user.base64Id, detailed: true},
@@ -81,13 +141,13 @@ function AccountListManager(user, viewElements) {
         );
     }
 
-    this.clearAccountList = function () {
+    this._clearAccountList = function () {
         let tableBody = this._viewElements.tableBody;
         while (tableBody.lastChild)
             tableBody.removeChild(tableBody.lastChild);
     }
 
-    this.displayAccountList = function () {
+    this._displayAccountList = function () {
         let tableBody = this._viewElements.tableBody;
         this.accountList.forEach((account) => {
             let detailsLink = document.createElement("a");
@@ -111,9 +171,17 @@ function AccountListManager(user, viewElements) {
             nameSurname: document.getElementById("userDetails-nameSurname")
         }
     )
-    let accountListManager = new AccountListManager(
+    let viewOrchestrator = new ViewOrchestrator(
         userDetailsManager.user,
+        document.getElementById("page-container"),
         {
+            view: document.getElementById("modal"),
+            title: document.getElementById("modal-title"),
+            text: document.getElementById("modal-text"),
+            actionList: document.getElementById("modal-actions")
+        },
+        {
+            view: document.getElementById("account-view"),
             tableBody: document.getElementById("accounts-tableBody"),
             refreshButton: document.getElementById("accounts-refresh"),
             newAccountButton: document.getElementById("accounts-new")
@@ -126,6 +194,5 @@ function AccountListManager(user, viewElements) {
 
     userDetailsManager.showUserDetails();
     logoutButtonManager.addListeners();
-    accountListManager.addListeners();
-    accountListManager.show();
+    viewOrchestrator.init();
 }());

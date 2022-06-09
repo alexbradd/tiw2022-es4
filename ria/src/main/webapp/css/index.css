@@ -95,3 +95,44 @@
     width: 16px;
     height: 16px;
 }
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10;
+
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(192, 192, 192, 0.8);
+}
+
+.modal-box {
+    width: 400px;
+}
+
+.modal-text {
+    text-align: center;
+}
+
+.modal-text + .modal-action-list:not(:empty) {
+    margin-top: 15px;
+}
+
+.modal-action-list {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.modal-action-list > * {
+    flex: 1;
+    margin-right: 5px;
+}
