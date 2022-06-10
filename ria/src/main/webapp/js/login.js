@@ -72,13 +72,10 @@ function ViewManager(pageContainer,
     this.displayLogin = function () {
         this._pageContainer.insertBefore(this._loginView, this._switcher.elem);
 
-        if (isLoggedIn()) {
-            this._loginView.insertBefore(this._loginViewComponents.alreadyLoggedIn, this._loginViewComponents.formError);
-            this._loginView.removeChild(this._loginViewComponents.form);
-        } else {
-            this._loginView.removeChild(this._loginViewComponents.alreadyLoggedIn);
-            this._loginView.insertBefore(this._loginViewComponents.form, this._loginViewComponents.formError);
-        }
+        if (isLoggedIn() && this._loginViewComponents.form.parentNode !== null)
+            this._loginViewComponents.form.replaceWith(this._loginViewComponents.alreadyLoggedIn);
+        else if (!isLoggedIn() && this._loginViewComponents.alreadyLoggedIn.parentNode !== null)
+            this._loginViewComponents.alreadyLoggedIn.replaceWith(this._loginViewComponents.form);
 
         this._switcher.flavourText.childNodes[0].textContent = "Don't have an account? "
         this._switcher.href.childNodes[0].textContent = "Register"
