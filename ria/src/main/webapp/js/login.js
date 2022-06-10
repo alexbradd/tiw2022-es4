@@ -24,9 +24,10 @@ function ViewManager(pageContainer,
     this._switcher.href = this._switcher.elem.lastElementChild;
 
     this.init = function () {
-        this.hideLogin();
-        this.hideRegister();
         this.addListeners();
+        this.hideRegister();
+        this.hideLogin();
+        this._removeHiddenStyleClass();
     }
 
     this.addListeners = function () {
@@ -34,6 +35,11 @@ function ViewManager(pageContainer,
             this.switchViews();
             e.preventDefault();
         });
+    }
+
+    this._removeHiddenStyleClass = function () {
+        this._loginView.classList.remove("js");
+        this._registerView.classList.remove("js");
     }
 
     this.switchViews = function () {
@@ -257,10 +263,10 @@ function LoginFormValidator(viewManager, loginForm) {
         () => manager.displayLogin()
     );
 
-    manager.init();
     registerValidator.addListeners();
     loginValidator.addListeners();
     logoutButtonManager.addListeners();
+    manager.init();
 
     manager.displayLogin();
 }());

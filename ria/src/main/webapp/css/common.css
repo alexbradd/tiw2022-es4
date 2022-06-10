@@ -216,3 +216,7 @@ small, .text_small {
     height: 100%;
 }
 
+.js {
+    display: none;
+}
+
