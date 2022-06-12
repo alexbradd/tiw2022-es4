@@ -79,9 +79,9 @@ public class AccountListServlet extends HttpServlet {
             return;
         }
 
-        Tuple<Integer, JsonObject> res = ProductionConnectionRetriever.getInstance()
-                .with(c -> AccountFacade.withDefaultObjects(c).ofUser(request.userId))
-                .peek(accounts -> checkPermissions(request.token, request.userId, request.detailed))
+        Tuple<Integer, JsonObject> res = checkPermissions(request.token, request.userId, request.detailed)
+                .flatMap(__ -> ProductionConnectionRetriever.getInstance()
+                        .with(c -> AccountFacade.withDefaultObjects(c).ofUser(request.userId)))
                 .map(accounts -> toJson(gson, accounts, request.detailed))
                 .match(accountObjs -> {
                             JsonObject obj = new JsonObject();
