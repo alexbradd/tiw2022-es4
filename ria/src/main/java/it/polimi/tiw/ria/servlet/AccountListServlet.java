@@ -2,10 +2,9 @@ package it.polimi.tiw.ria.servlet;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import it.polimi.tiw.api.AccountFacade;
-import it.polimi.tiw.api.beans.Account;
 import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
 import it.polimi.tiw.api.error.Errors;
 import it.polimi.tiw.api.functional.ApiResult;
@@ -17,9 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import static it.polimi.tiw.ria.servlet.ServletUtils.*;
 
@@ -67,27 +64,19 @@ public class AccountListServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        if (hasNotJSONContentType(req)) {
-            sendWrongTypeError(resp);
-            return;
-        }
-
         Gson gson = new Gson();
-        Request request = parseRequest(gson, req);
-        if (request == null) {
-            sendInvalidFormatError(resp);
-            return;
-        }
 
-        Tuple<Integer, JsonObject> res = checkPermissions(request.token, request.userId, request.detailed)
-                .flatMap(__ -> ProductionConnectionRetriever.getInstance()
-                        .with(c -> AccountFacade.withDefaultObjects(c).ofUser(request.userId)))
-                .map(accounts -> toJson(gson, accounts, request.detailed))
+        Tuple<Integer, JsonObject> res = checkRequestFormat(gson, req, Request.class, r -> r.userId == null)
+                .peek(request -> checkPermissions(request.token, request.userId, request.detailed))
+                .flatMap(request -> ProductionConnectionRetriever.getInstance()
+                        .with(c -> AccountFacade.withDefaultObjects(c).ofUser(request.userId))
+                        .map(accounts -> listToJsonArray(gson, accounts, j -> {
+                            if (request.detailed) j.remove("balance");
+                        })))
                 .match(accountObjs -> {
                             JsonObject obj = new JsonObject();
                             obj.addProperty("type", "OK");
-                            obj.add("accounts",
-                                    accountObjs.collect(JsonArray::new, JsonArray::add, JsonArray::addAll));
+                            obj.add("accounts", accountObjs);
                             return new Tuple<>(200, obj);
                         },
                         e -> new Tuple<>(e.statusCode(), fromApiErrorToJSON(e)));
@@ -107,26 +96,6 @@ public class AccountListServlet extends HttpServlet {
         } catch (JWTVerificationException | NullPointerException e) {
             return ApiResult.error(Errors.fromUnauthorized());
         }
-    }
-
-    private Request parseRequest(Gson gson, HttpServletRequest req) throws IOException {
-        Request ret;
-        try (JsonReader reader = new JsonReader(req.getReader())) {
-            ret = gson.fromJson(reader, Request.class);
-            return ret == null || ret.userId == null ? null : ret;
-        } catch (JsonParseException | IllegalStateException | ClassCastException e) {
-            return null;
-        }
-    }
-
-    private Stream<JsonObject> toJson(Gson gson, List<Account> accounts, boolean conserve) {
-        return accounts.stream()
-                .map(gson::toJsonTree)
-                .map(JsonElement::getAsJsonObject)
-                .peek(j -> {
-                    if (!conserve)
-                        j.remove("balance");
-                });
     }
 
     private static class Request {
