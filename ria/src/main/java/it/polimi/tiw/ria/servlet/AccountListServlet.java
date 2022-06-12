@@ -49,6 +49,7 @@ import static it.polimi.tiw.ria.servlet.ServletUtils.*;
 @WebServlet("/api/accounts/ofUser")
 public class AccountListServlet extends HttpServlet {
     private String iss, tokenSecret;
+    private Gson gson;
 
     /**
      * {@inheritDoc}
@@ -57,6 +58,7 @@ public class AccountListServlet extends HttpServlet {
     public void init() {
         iss = getServletContext().getInitParameter("ISSUER");
         tokenSecret = getServletContext().getInitParameter("TOKEN_SECRET");
+        gson = new Gson();
     }
 
     /**
@@ -64,8 +66,6 @@ public class AccountListServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        Gson gson = new Gson();
-
         Tuple<Integer, JsonObject> res = checkRequestFormat(gson, req, Request.class, r -> r.userId == null)
                 .peek(request -> checkPermissions(request.token, request.userId, request.detailed))
                 .flatMap(request -> ProductionConnectionRetriever.getInstance()
