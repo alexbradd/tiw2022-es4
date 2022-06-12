@@ -71,7 +71,7 @@ public class AccountListServlet extends HttpServlet {
                 .flatMap(request -> ProductionConnectionRetriever.getInstance()
                         .with(c -> AccountFacade.withDefaultObjects(c).ofUser(request.userId))
                         .map(accounts -> listToJsonArray(gson, accounts, j -> {
-                            if (request.detailed) j.remove("balance");
+                            if (!request.detailed) j.remove("balance");
                         })))
                 .match(accountObjs -> {
                             JsonObject obj = new JsonObject();
