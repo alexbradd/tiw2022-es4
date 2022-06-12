@@ -202,7 +202,8 @@ small, .text_small {
 
 .center {
     display: block;
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .imaged-link {
