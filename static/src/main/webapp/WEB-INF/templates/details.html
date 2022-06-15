@@ -10,7 +10,10 @@
 <body>
 <div class="page-container rowed">
     <div th:replace="fragments :: app-header"></div>
-    <p th:if="${error} != null" class="error">You cannot access this resource.</p>
+    <p th:if="${error} != null" class="error">
+        <span th:if="${error.statusCode() == 500}" th:text="#{details.serverError}"></span>
+        <span th:if="${error.statusCode() != 500}" th:text="${error.errorMessage()}"></span>
+    </p>
     <div th:if="${account} != null" class="page-view details-view">
         <h3><span th:text="#{details.heading}">details</span></h3>
         <div class="account-details">
