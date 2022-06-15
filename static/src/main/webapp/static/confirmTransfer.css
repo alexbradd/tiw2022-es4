@@ -4,21 +4,32 @@
 
 .confirm-view h4 {
     margin-top: 0;
+    text-align: center;
 }
 
 .transfer-details {
-    border-spacing: 30px 1px;
-    border-collapse: separate;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.transfer-details tr {
+    border-bottom: solid 1px lightgray;
 }
 
 .transfer-details tr td {
-    word-break: break-word;
+    padding: 0 10px;
 }
 
 .transfer-details tr td:first-child {
     text-align: left;
+    word-break: normal;
+    white-space: nowrap;
+    font-weight: bold;
+    border-right: solid 1px lightgray;
+    width: 0;
 }
 
 .transfer-details tr td:not(:first-child) {
     text-align: center;
+    word-break: break-word;
 }

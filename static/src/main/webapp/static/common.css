@@ -107,6 +107,7 @@ small, .text_small {
 
 .page-view h3 {
     margin: 0 0 20px;
+    text-align: center;
 }
 
 .page-container .big-logo {
