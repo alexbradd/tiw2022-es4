@@ -91,10 +91,20 @@ function ModalManager(viewElements) {
         this._viewElements.view.classList.remove("js");
     }
 
-    this.show = function (title, text, actionList) {
+    this.show = function (title, content, actionList) {
         this._viewElements.title.textContent = title;
-        this._viewElements.text.textContent = text;
-        this._clearActionList();
+        let toAppend;
+        if (content instanceof String || typeof content == 'string') {
+            let p = document.createElement('p');
+            p.classList.add('modal-text')
+            p.textContent = content;
+            toAppend = p;
+        } else if (content instanceof Node) {
+            toAppend = content;
+        } else {
+            throw new TypeError("Invalid modal content");
+        }
+        this._viewElements.content.appendChild(toAppend);
         actionList.forEach((el) => {
             let button = document.createElement("button");
             let buttonText = document.createTextNode(el.text);
@@ -109,14 +119,10 @@ function ModalManager(viewElements) {
     }
 
     this.hide = function () {
+        clearChildren(this._viewElements.content);
+        clearChildren(this._viewElements.actionList);
         if (this._viewElements.view.parentNode !== null)
             document.body.removeChild(this._viewElements.view);
-    }
-
-    this._clearActionList = function () {
-        let actionList = this._viewElements.actionList;
-        while (actionList.lastChild)
-            actionList.removeChild(actionList.lastChild);
     }
 
     this.showError = function (text) {
@@ -318,7 +324,7 @@ let viewOrchestrator = new ViewOrchestrator(
     {
         view: document.getElementById("modal"),
         title: document.getElementById("modal-title"),
-        text: document.getElementById("modal-text"),
+        content: document.getElementById("modal-content"),
         actionList: document.getElementById("modal-actions")
     },
     {

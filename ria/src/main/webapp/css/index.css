@@ -132,7 +132,7 @@
     text-align: center;
 }
 
-.modal-text + .modal-action-list:not(:empty) {
+.modal-content + .modal-action-list:not(:empty) {
     margin-top: 15px;
 }
 
