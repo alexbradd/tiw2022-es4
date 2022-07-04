@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -84,12 +85,35 @@ public class ServletUtils {
      * @throws IOException if any IO exception happened
      */
     public static <T> ApiResult<T> checkRequestFormat(Gson gson, HttpServletRequest req, Class<T> requestClass, Predicate<T> invalidCheck) throws IOException {
+        return checkRequestFormat(gson, req, requestClass, Function.identity(), invalidCheck);
+    }
+
+    /**
+     * Check that the body of the request is JSON and apply the mapper. Then deserialize the object to the given class
+     * and apply the {@link Predicate} to check whether the parsed object is acceptable or not.
+     *
+     * @param gson         the {@link Gson} instance to use
+     * @param req          the {@link HttpServletRequest} whose body to parse
+     * @param requestClass the class containing the data of the request
+     * @param jsonModifier the mapper that modifies the read JSON before being deserialized to {@code requestClass}
+     * @param invalidCheck the {@link Predicate} that tests whether the parsed object is invalid or not
+     * @param <T>          the type of the request class
+     * @return an {@link ApiResult} containing the parsed object or a suitable {@link ApiError}
+     * @throws IOException if any IO exception happened
+     */
+    public static <T> ApiResult<T> checkRequestFormat(Gson gson,
+                                                      HttpServletRequest req,
+                                                      Class<T> requestClass,
+                                                      Function<JsonElement, JsonElement> jsonModifier,
+                                                      Predicate<T> invalidCheck) throws IOException {
         if (hasNotJSONContentType(req))
             return ApiResult.error(wrongTypeErrorSupplier.get());
 
         T ret;
         try (JsonReader reader = new JsonReader(req.getReader())) {
-            ret = gson.fromJson(reader, requestClass);
+            JsonElement elem = gson.fromJson(reader, JsonElement.class);
+            elem = jsonModifier.apply(elem);
+            ret = gson.fromJson(elem, requestClass);
             return ret == null || invalidCheck.test(ret)
                     ? ApiResult.error(invalidFormatSupplier.get())
                     : ApiResult.ok(ret);
@@ -97,6 +121,7 @@ public class ServletUtils {
             return ApiResult.error(invalidFormatSupplier.get());
         }
     }
+
 
     /**
      * Returns true if the given request has not a JSON Content-Type header.
