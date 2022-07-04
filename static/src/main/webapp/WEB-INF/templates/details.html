@@ -97,7 +97,7 @@
                 <label for="causal" th:text="#{details.causal}"></label>
                 <textarea name="causal" required id="causal" maxlength="1024"></textarea>
             </div>
-            <input class="big-button ok" type="submit" value="Transfer">
+            <input class="big-button ok" type="submit" th:value="#{details.makeTransfer}" value="Transfer">
         </form>
     </div>
 </div>
