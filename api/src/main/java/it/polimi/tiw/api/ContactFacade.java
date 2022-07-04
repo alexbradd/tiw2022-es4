@@ -39,7 +39,7 @@ public class ContactFacade {
     public ApiResult<Contact> saveContact(String ownerId, String contactId) {
         Contact c = new Contact();
         c.setOwnerBase64Id(ownerId);
-        c.setOwnerBase64Id(contactId);
+        c.setContactBase64Id(contactId);
         return contactDAOGenerator.apply(connection).insert(c);
     }
 
