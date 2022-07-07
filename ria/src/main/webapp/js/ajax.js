@@ -71,6 +71,10 @@ function Ajax() {
 }
 
 function convertFormDataToJSON(formData) {
+    return JSON.stringify(convertFormDataToObject(formData));
+}
+
+function convertFormDataToObject(formData) {
     let object = {};
     formData.forEach((value, key) => {
         if (!object.hasOwnProperty(key)) {
@@ -82,5 +86,5 @@ function convertFormDataToJSON(formData) {
         }
         object[key].push(value);
     });
-    return JSON.stringify(object);
+    return object;
 }

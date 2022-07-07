@@ -130,6 +130,32 @@
             </table>
         </div>
     </div>
+    <div id="newTransfer-view" class="page-view js">
+        <h3>New transfer</h3>
+        <form id="newTransfer-form" class="form" novalidate>
+            <div class="form-input required">
+                <label for="newTransfer-toUserId">Payee ID</label>
+                <input id="newTransfer-toUserId" type="text" required name="toUserId" list="userContacts"
+                       autocomplete="off"/>
+            </div>
+            <div class="form-input required">
+                <label for="newTransfer-toAccountId">Payee's account ID</label>
+                <input id="newTransfer-toAccountId" type="text" required name="toAccountId" list="payeeAccounts"
+                       autocomplete="off"/>
+            </div>
+            <div class="form-input required">
+                <label for="newTransfer-amount">Amount</label>
+                <input id="newTransfer-amount" type="number" min="0" step="0.01" required name="amount"/>
+            </div>
+            <div class="form-input required">
+                <label for="newTransfer-causal">Causal</label>
+                <textarea name="causal" required id="newTransfer-causal" maxlength="1024"></textarea>
+            </div>
+            <input class="big-button ok" id="newTransfer-submit" type="submit" value="Transfer">
+            <datalist id="userContacts"></datalist>
+            <datalist id="payeeAccounts"></datalist>
+        </form>
+    </div>
 </div>
 </body>
 </html>

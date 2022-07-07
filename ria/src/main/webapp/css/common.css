@@ -161,6 +161,12 @@ small, .text_small {
     content: ' *';
 }
 
+.form-input-error {
+    color: var(--color-error);
+    font-size: var(--text-s);
+    margin: 0;
+}
+
 .big-button {
     border: none;
     border-radius: var(--border-radius-l);

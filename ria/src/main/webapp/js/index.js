@@ -45,7 +45,8 @@ function ViewOrchestrator(user,
                           pageContainer,
                           modalElements,
                           accountListViewElements,
-                          accountDetailsViewElements) {
+                          accountDetailsViewElements,
+                          newTransferViewElements) {
     this._user = user;
     this._pageContainer = pageContainer;
     this._modalManager = new ModalManager(modalElements);
@@ -57,30 +58,40 @@ function ViewOrchestrator(user,
     this._accountDetailsManager = new AccountDetailsManager(this._pageContainer,
         accountDetailsViewElements,
         this._modalManager);
+    this._newTransferFormManager = new NewTransferFormManager(this._user,
+        this._pageContainer,
+        newTransferViewElements,
+        this._modalManager,
+        () => this._accountDetailsManager.refresh());
 
     this.init = function () {
         this._accountListManager.addListeners();
         this._accountDetailsManager.addListeners((_) => this.showAccountList());
+        this._newTransferFormManager.addListeners();
 
         this._modalManager.hide();
         this._accountListManager.hide();
         this._accountDetailsManager.hide();
+        this._newTransferFormManager.hide();
 
         this._modalManager.removeHiddenClass();
         this._accountListManager.removeHiddenClass();
         this._accountDetailsManager.removeHiddenClass();
+        this._newTransferFormManager.removeHiddenClass();
 
         this.showAccountList();
     }
 
     this.showAccountList = function () {
         this._accountDetailsManager.hide();
+        this._newTransferFormManager.hide();
         this._accountListManager.show((_, a) => this.showDetailsFor(a));
     }
 
     this.showDetailsFor = function (account) {
         this._accountListManager.hide();
         this._accountDetailsManager.show(account)
+        this._newTransferFormManager.show(account);
     }
 }
 
@@ -231,8 +242,7 @@ function AccountDetailsManager(container, viewElements, modalManager) {
 
     this.addListeners = function (goBackCallback) {
         this._viewElements.backButton.addEventListener("click", (e) => goBackCallback(e));
-        this._viewElements.refreshButton.addEventListener("click", () =>
-            this._constructDialog(this._currentlyShowingAccount));
+        this._viewElements.refreshButton.addEventListener("click", () => this.refresh());
     }
 
     this.removeHiddenClass = function () {
@@ -243,6 +253,10 @@ function AccountDetailsManager(container, viewElements, modalManager) {
         this._currentlyShowingAccount = account;
         this._constructDialog(account)
         this._container.insertBefore(this._viewElements.view, null);
+    }
+
+    this.refresh = function () {
+        this._constructDialog(this._currentlyShowingAccount);
     }
 
     this._constructDialog = function (account) {
@@ -306,6 +320,284 @@ function AccountDetailsManager(container, viewElements, modalManager) {
     }
 }
 
+function NewTransferFormManager(user, container, viewElements, modalManager, afterTransferSuccessful = () => {
+}) {
+    this._user = user;
+    this._container = container;
+    this._viewElements = viewElements;
+    this._modalManager = modalManager;
+    this._showingAccount = undefined;
+    this._contacts = [];
+    this._afterCloseCb = afterTransferSuccessful;
+
+    this.addListeners = function () {
+        this._viewElements.formElements.payeeId.addEventListener("focus", () => this._fetchContacts());
+        this._viewElements.formElements.payeeAccount.addEventListener(
+            "focus",
+            () => this._fetchAccountList(this._viewElements.formElements.payeeId.value));
+        Object.keys(this._viewElements.formElements).forEach(k =>
+            this._setupErrorReporting(this._viewElements.formElements[k]));
+
+        this._viewElements.form.addEventListener("submit", e => {
+            this._checkFormValidityAndThen(e.target, () => {
+                if (e.target.checkValidity())
+                    this._sendFormData(e.target);
+            });
+            e.preventDefault();
+        });
+    }
+
+    this._fetchContacts = function () {
+        this._contacts = [];
+        new Ajax().authenticatedPost(
+            "/api/contacts/ofUser",
+            {userId: this._user.base64Id},
+            (req, failedRefresh) => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (failedRefresh) {
+                    window.location = '/login.html';
+                } else if (req.status === 200) {
+                    clearChildren(this._viewElements.contacts);
+                    let contactList = JSON.parse(req.responseText).contacts;
+                    for (let i = 0; i < contactList.length; i++) {
+                        this._contacts.push(contactList[i].contactBase64Id);
+                        this._viewElements.contacts.appendChild(
+                            this._createDatalistOption(contactList[i].contactBase64Id));
+                    }
+                } else {
+                    this._modalManager.showError("We could not fetch your contact list, please try again later")
+                    console.log(req.responseText);
+                }
+            }
+        )
+    }
+
+    this._fetchAccountList = function (userId) {
+        if (userId === undefined || userId === "")
+            return;
+        new Ajax().authenticatedPost(
+            "/api/accounts/ofUser",
+            {userId: userId, detailed: false},
+            (req, failedRefresh) => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (failedRefresh) {
+                    window.location = '/login.html';
+                } else if (req.status === 200) {
+                    clearChildren(this._viewElements.contactAccounts);
+                    let accountList = JSON.parse(req.responseText).accounts;
+                    for (let i = 0; i < accountList.length; i++)
+                        this._viewElements.contactAccounts.appendChild(
+                            this._createDatalistOption(accountList[i].base64Id));
+                } else {
+                    this._viewElements.payeeId.setCustomValidity("Unable to find account");
+                    console.log(req.responseText);
+                }
+            }
+        );
+    }
+
+    this._createDatalistOption = function (value) {
+        let c = document.createElement("option");
+        c.setAttribute("value", value);
+        return c;
+    }
+
+    this._setupErrorReporting = function (el) {
+        const p = document.createElement('p');
+        p.classList.add('form-input-error');
+
+        el.addEventListener("invalid", e => {
+            e.target.insertAdjacentElement("afterend", p);
+            p.textContent = e.target.validationMessage;
+        });
+        el.addEventListener("input", e => {
+            e.target.setCustomValidity("");
+            if (p.parentNode !== null)
+                e.target.parentElement.removeChild(p)
+        });
+    }
+
+    this._checkFormValidityAndThen = function (form, then) {
+        if (this._checkAmount(this._viewElements.formElements.amount)) {
+            this._checkPayeeId(
+                this._viewElements.formElements.payeeId,
+                (userId) => this._checkPayeeAccount(userId, this._viewElements.formElements.payeeAccount, then),
+                then);
+        } else {
+            then();
+        }
+    }
+
+    this._checkAmount = function (target) {
+        if (target.value <= 0 || target.value > this._showingAccount.balance) {
+            target.setCustomValidity("The amount is not within permitted bounds");
+            return false;
+        }
+        target.setCustomValidity("");
+        return true;
+    }
+
+    this._checkPayeeId = function (target, success, then) {
+        new Ajax().get(
+            "/api/user/byId?id=" + target.value,
+            req => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (req.status === 200) {
+                    target.setCustomValidity("");
+                    success(target.value);
+                } else {
+                    target.setCustomValidity("Unable to find user with the specified ID");
+                    then();
+                }
+            }
+        );
+    }
+
+    this._checkPayeeAccount = function (userId, target, then) {
+        new Ajax().authenticatedPost(
+            "/api/accounts/ofUser",
+            {userId: userId, detailed: false},
+            (req, failedRefresh) => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (failedRefresh) {
+                    window.location = '/login.html';
+                } else if (req.status === 200) {
+                    let accountList = JSON.parse(req.responseText).accounts;
+                    for (let i = 0; i < accountList.length; i++) {
+                        if (accountList[i].base64Id === target.value) {
+                            target.setCustomValidity("");
+                            then();
+                            return;
+                        }
+                    }
+                    target.setCustomValidity("Unable to find an account with the specified ID");
+                    then();
+                } else {
+                    target.setCustomValidity("Unable to find an account with the specified ID");
+                    then();
+                }
+            }
+        );
+    }
+
+    this._sendFormData = function (form) {
+        const formData = new FormData(form);
+        const json = {
+            ...convertFormDataToObject(formData),
+            fromUserId: this._user.base64Id,
+            fromAccountId: this._showingAccount.base64Id
+        };
+
+        new Ajax().authenticatedPost(
+            "/api/transfers",
+            json,
+            (req, failedRefresh) => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (failedRefresh)
+                    window.location = '/login.html';
+                switch (req.status) {
+                    case 200:
+                        const transfer = JSON.parse(req.responseText).transfer;
+                        this._showSuccessModal(transfer, json.toUserId);
+                        break;
+                    case 400:
+                        this._modalManager.showError("The transfer form was not filled correctly, please check the data and try again.");
+                        break;
+                    case 409:
+                        this._modalManager.showError("The source account has not got enough funds to make the transfer.");
+                        break;
+                    case 404:
+                        this._modalManager.showError("The user-account combination could not be found, please check the data and try again.");
+                        break;
+                    default:
+                        this._modalManager.showError("The server could not process your request, please try again later.");
+                }
+            }
+        );
+    }
+
+    this._showSuccessModal = function (transfer, toUserId) {
+        const table = this._createTransferReport(transfer);
+        const addContactButton = {
+            text: "Save contact",
+            classList: "accent",
+            callback: (e, man) => {
+                this._addNewContact(toUserId);
+                man.hide();
+            }
+        };
+        const close = {
+            text: "Close",
+            callback: (e, man) => {
+                this._afterCloseCb();
+                man.hide();
+            }
+        }
+        const modalActions = this._isInContactList(toUserId)
+            ? [close]
+            : [addContactButton, close];
+        this._modalManager.show("Transfer successful", table, modalActions);
+    }
+
+    this._createTransferReport = function (transfer) {
+        const table = document.createElement("table");
+        const tableBody = document.createElement("tbody");
+        table.classList.add("transfer-details");
+        table.appendChild(tableBody);
+        tableBody.appendChild(generateNewTableRow("Id", transfer.base64Id));
+        tableBody.appendChild(generateNewTableRow("Payer account id", transfer.fromId));
+        tableBody.appendChild(generateNewTableRow("Payee account id", transfer.toId));
+        tableBody.appendChild(generateNewTableRow("Amount", transfer.amount));
+        tableBody.appendChild(generateNewTableRow("Causal", transfer.causal));
+        tableBody.appendChild(generateNewTableRow("Payer balance", `${transfer.fromBalance} → ${transfer.fromBalance - transfer.amount}`));
+        tableBody.appendChild(generateNewTableRow("Payee balance", `${transfer.toBalance} → ${transfer.toBalance + transfer.amount}`));
+        return table;
+    }
+
+    this._isInContactList = function (id) {
+        return this._contacts.includes(id);
+    }
+
+    this._addNewContact = function (contactId) {
+        new Ajax().authenticatedPost(
+            "/api/contacts",
+            {contactId},
+            (req, failedRefresh) => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (failedRefresh)
+                    window.location = '/login.html';
+                if (req.status !== 200) {
+                    this._modalManager.showError("Could not add new contact");
+                    console.log(req.responseText);
+                }
+            }
+        );
+    }
+
+    this.removeHiddenClass = function () {
+        this._viewElements.view.classList.remove("js");
+    }
+
+    this.show = function (account) {
+        this._showingAccount = account;
+        this._container.insertBefore(this._viewElements.view, null);
+        this._viewElements.formElements.amount.setAttribute("max", account.balance);
+    }
+
+    this.hide = function () {
+        clearChildren(this._viewElements.contacts);
+        clearChildren(this._viewElements.contactAccounts);
+        if (this._viewElements.view.parentNode !== null)
+            this._container.removeChild(this._viewElements.view);
+    }
+}
+
 // (function () {
 if (!isLoggedIn())
     window.location = "/login.html";
@@ -341,6 +633,18 @@ let viewOrchestrator = new ViewOrchestrator(
         accountBalance: document.getElementById("accountDetails-balance"),
         incomingTransfers: document.getElementById("accountDetails-incomingBody"),
         outgoingTransfers: document.getElementById("accountDetails-outgoingBody")
+    },
+    {
+        view: document.getElementById("newTransfer-view"),
+        form: document.getElementById("newTransfer-form"),
+        formElements: {
+            payeeId: document.getElementById("newTransfer-toUserId"),
+            payeeAccount: document.getElementById("newTransfer-toAccountId"),
+            amount: document.getElementById("newTransfer-amount"),
+            submit: document.getElementById("newTransfer-submit"),
+        },
+        contacts: document.getElementById("userContacts"),
+        contactAccounts: document.getElementById("payeeAccounts")
     }
 );
 let logoutButtonManager = new LogoutButtonManager(
