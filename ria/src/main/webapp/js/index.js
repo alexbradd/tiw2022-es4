@@ -320,8 +320,7 @@ function AccountDetailsManager(container, viewElements, modalManager) {
     }
 }
 
-function NewTransferFormManager(user, container, viewElements, modalManager, afterTransferSuccessful = () => {
-}) {
+function NewTransferFormManager(user, container, viewElements, modalManager, afterTransferSuccessful) {
     this._user = user;
     this._container = container;
     this._viewElements = viewElements;
@@ -385,13 +384,13 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
                 if (failedRefresh) {
                     window.location = '/login.html';
                 } else if (req.status === 200) {
-                    clearChildren(this._viewElements.contactAccounts);
+                    clearChildren(this._viewElements.payeeAccounts);
                     let accountList = JSON.parse(req.responseText).accounts;
                     for (let i = 0; i < accountList.length; i++)
-                        this._viewElements.contactAccounts.appendChild(
+                        this._viewElements.payeeAccounts.appendChild(
                             this._createDatalistOption(accountList[i].base64Id));
                 } else {
-                    this._viewElements.payeeId.setCustomValidity("Unable to find account");
+                    this._viewElements.formElements.payeeId.setCustomValidity("Unable to find account");
                     console.log(req.responseText);
                 }
             }
@@ -592,67 +591,68 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
 
     this.hide = function () {
         clearChildren(this._viewElements.contacts);
-        clearChildren(this._viewElements.contactAccounts);
+        clearChildren(this._viewElements.payeeAccounts);
         if (this._viewElements.view.parentNode !== null)
             this._container.removeChild(this._viewElements.view);
     }
 }
 
-// (function () {
-if (!isLoggedIn())
-    window.location = "/login.html";
+(function () {
+    if (!isLoggedIn())
+        window.location = "/login.html";
 
-let userDetailsManager = new UserDetailsManager(
-    {
-        userId: document.getElementById("userDetails-userId"),
-        username: document.getElementById("userDetails-username"),
-        email: document.getElementById("userDetails-email"),
-        nameSurname: document.getElementById("userDetails-nameSurname")
-    }
-)
-let viewOrchestrator = new ViewOrchestrator(
-    userDetailsManager.user,
-    document.getElementById("page-container"),
-    {
-        view: document.getElementById("modal"),
-        title: document.getElementById("modal-title"),
-        content: document.getElementById("modal-content"),
-        actionList: document.getElementById("modal-actions")
-    },
-    {
-        view: document.getElementById("account-view"),
-        tableBody: document.getElementById("accounts-tableBody"),
-        refreshButton: document.getElementById("accounts-refresh"),
-        newAccountButton: document.getElementById("accounts-new")
-    },
-    {
-        view: document.getElementById("details-view"),
-        refreshButton: document.getElementById("accountDetails-refresh"),
-        backButton: document.getElementById("accountDetails-back"),
-        accountId: document.getElementById("accountDetails-id"),
-        accountBalance: document.getElementById("accountDetails-balance"),
-        incomingTransfers: document.getElementById("accountDetails-incomingBody"),
-        outgoingTransfers: document.getElementById("accountDetails-outgoingBody")
-    },
-    {
-        view: document.getElementById("newTransfer-view"),
-        form: document.getElementById("newTransfer-form"),
-        formElements: {
-            payeeId: document.getElementById("newTransfer-toUserId"),
-            payeeAccount: document.getElementById("newTransfer-toAccountId"),
-            amount: document.getElementById("newTransfer-amount"),
-            submit: document.getElementById("newTransfer-submit"),
+    let userDetailsManager = new UserDetailsManager(
+        {
+            userId: document.getElementById("userDetails-userId"),
+            username: document.getElementById("userDetails-username"),
+            email: document.getElementById("userDetails-email"),
+            nameSurname: document.getElementById("userDetails-nameSurname")
+        }
+    )
+    let viewOrchestrator = new ViewOrchestrator(
+        userDetailsManager.user,
+        document.getElementById("page-container"),
+        {
+            view: document.getElementById("modal"),
+            title: document.getElementById("modal-title"),
+            content: document.getElementById("modal-content"),
+            actionList: document.getElementById("modal-actions")
         },
-        contacts: document.getElementById("userContacts"),
-        contactAccounts: document.getElementById("payeeAccounts")
-    }
-);
-let logoutButtonManager = new LogoutButtonManager(
-    document.getElementById("logoutBtn"),
-    () => window.location = "/login.html"
-);
+        {
+            view: document.getElementById("account-view"),
+            tableBody: document.getElementById("accounts-tableBody"),
+            refreshButton: document.getElementById("accounts-refresh"),
+            newAccountButton: document.getElementById("accounts-new")
+        },
+        {
+            view: document.getElementById("details-view"),
+            refreshButton: document.getElementById("accountDetails-refresh"),
+            backButton: document.getElementById("accountDetails-back"),
+            accountId: document.getElementById("accountDetails-id"),
+            accountBalance: document.getElementById("accountDetails-balance"),
+            incomingTransfers: document.getElementById("accountDetails-incomingBody"),
+            outgoingTransfers: document.getElementById("accountDetails-outgoingBody")
+        },
+        {
+            view: document.getElementById("newTransfer-view"),
+            form: document.getElementById("newTransfer-form"),
+            formElements: {
+                payeeId: document.getElementById("newTransfer-toUserId"),
+                payeeAccount: document.getElementById("newTransfer-toAccountId"),
+                amount: document.getElementById("newTransfer-amount"),
+                causal: document.getElementById("newTransfer-causal"),
+                submit: document.getElementById("newTransfer-submit"),
+            },
+            contacts: document.getElementById("userContacts"),
+            payeeAccounts: document.getElementById("payeeAccounts")
+        }
+    );
+    let logoutButtonManager = new LogoutButtonManager(
+        document.getElementById("logoutBtn"),
+        () => window.location = "/login.html"
+    );
 
-userDetailsManager.showUserDetails();
-logoutButtonManager.addListeners();
-viewOrchestrator.init();
-// }());
+    userDetailsManager.showUserDetails();
+    logoutButtonManager.addListeners();
+    viewOrchestrator.init();
+}());
