@@ -1,0 +1,24 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> LogoutButtonManager : onClick
+
+LogoutButtonManager -> LogoutServlet : POST /api/auth/logout
+
+LogoutServlet -> LogoutServlet : ::expireRefreshCookie
+return
+
+return
+
+alt status == 200
+    LogoutButtonManager -> loginManagement.js : ::logout
+    return
+    LogoutButtonManager -> Caller : postLogoutCallback()
+    return
+end
+
+return
+
+@enduml

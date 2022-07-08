@@ -1,0 +1,68 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> index.js : load
+
+alt if !loginManagement.isLoggedIn()
+    index.js -> User : window.location = '/login.html'
+    return
+else
+    index.js -> UserDetailsManager : ::injectUserDetails
+    return
+    index.js -> ViewOrchestrator : ::init
+
+    ViewOrchestrator -> ...Managers : ::addListeners
+    return
+    ViewOrchestrator -> ...Managers : ::hide
+    return
+    ViewOrchestrator -> ...Managers : ::removeHiddenClass
+    return
+
+    ViewOrchestrator -> AccountListManager : ::show
+
+    alt if this.accountList === undefined
+        AccountListManager -> Ajax : ::authenticatedPost
+
+        Ajax -> AccountListServlet : POST /api/account/ofUser
+
+        AccountListServlet -> AccountListServlet : ::checkRequestFormat
+        return
+
+        alt if correct format
+            AccountListServlet -> AccountListServlet : ::checkPermissions
+            return
+
+            alt if has access
+                AccountListServlet -> AccountFacade : ::ofUser
+                return
+                AccountListServlet -> AccountListServlet : ::formatResponse
+                return
+            end
+        end
+
+        return ::sendJson
+
+        return callback()
+
+        alt if failedRefresh
+            AccountListManager -> User : window.location = '/login.html'
+            return
+        else if status === 200
+            AccountListManager -> AccountListManager : ::_displayAccountList
+            return
+        else
+            AccountListManager -> ModalManager : ::showError
+            return
+        end
+    end
+
+    return
+
+    return
+end
+
+return
+
+@enduml

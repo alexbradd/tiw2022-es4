@@ -1,0 +1,34 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> ViewManager : getElementById("switcher").click
+
+ViewManager -> ViewManager : ::displayRegister()
+return
+
+return
+
+User -> RegisterFormValidator : onSubmit
+
+alt form.reportValidity()
+    RegisterFormValidator -> RegisterServlet : POST /api/users
+
+    RegisterServlet -> UserFacade : ::register()
+    return ApiResult
+
+    return ::sendJson()
+
+    alt status == 200
+        RegisterFormValidator -> ViewManager : ::showLogin()
+        return
+    else
+        RegisterFormValidator -> ViewManager : ::showError()
+        return
+    end
+end
+
+return
+
+@enduml

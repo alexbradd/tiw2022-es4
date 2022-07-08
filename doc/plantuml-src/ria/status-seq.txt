@@ -1,0 +1,41 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+alt if successful transfer
+    NewTransferFormManager -> NewTransferFormManager : ::_showSuccessModal
+    NewTransferFormManager -> ModalManager : ::show
+    return
+    return
+else
+    NewTransferFormManager -> ModalManager : ::showError
+    return
+end
+
+User -> ModalManager : click on "Add contact" button
+
+ModalManager -> NewTransferFormManager : ::_addNewContact
+
+NewTransferFormManager -> Ajax : ::authenticatedPost
+
+Ajax -> NewContactServlet : POST /api/contacts
+NewContactServlet -> NewContactServlet : ...same flow as other servlets
+return
+return ::sendJson
+
+return callback()
+
+alt if failedRefresh
+    NewTransferFormManager -> User : window.location = '/login.html'
+    return
+else if status !== 200
+    NewTransferFormManager -> ModalManager : ::showError
+    return
+end
+
+return
+
+return
+
+@enduml
