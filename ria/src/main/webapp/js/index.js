@@ -411,7 +411,7 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
             e.target.insertAdjacentElement("afterend", p);
             p.textContent = e.target.validationMessage;
         });
-        el.addEventListener("input", e => {
+        el.addEventListener("change", e => {
             e.target.setCustomValidity("");
             if (p.parentNode !== null)
                 e.target.parentElement.removeChild(p)

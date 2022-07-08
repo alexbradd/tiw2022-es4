@@ -107,11 +107,8 @@ function RegisterFormValidator(viewManager, registerForm, formInputs) {
     this._formInputs = formInputs;
 
     this.addListeners = function () {
-        this._formInputs.username.addEventListener("change", (e) => this.checkUsername(e.target));
-        this._formInputs.repeatPassword.addEventListener(
-            "change",
-            (e) => this.checkPasswords(e.target)
-        );
+        this._formInputs.username.addEventListener("change", e => e.target.setCustomValidity(""));
+        this._formInputs.repeatPassword.addEventListener("change", e => e.target.setCustomValidity(""));
         this._registerForm.addEventListener("submit", (e) => {
             this.submit(e.target)
             e.preventDefault();
