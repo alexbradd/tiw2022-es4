@@ -119,28 +119,33 @@ function RegisterFormValidator(viewManager, registerForm, formInputs) {
     }
 
     this.checkUsername = function (target) {
-        let ajax = new Ajax();
-        ajax.get(
-            "/api/user/byUsername?username=" + encodeURIComponent(target.value),
-            (req) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                switch (req.status) {
-                    case 200:
-                        target.setCustomValidity("A user with this username already exists");
-                        break;
-                    case 400:
-                        target.setCustomValidity("The username is invalid");
-                        console.log(req.responseText);
-                        break;
-                    case 404:
-                        target.setCustomValidity("");
-                        break;
-                    default:
-                        target.setCustomValidity("Could not verify username");
-                        console.log(req.responseText);
-                }
-            })
+        return new Promise((resolve, reject) => {
+            new Ajax().get(
+                "/api/user/byUsername?username=" + encodeURIComponent(target.value),
+                (req) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    switch (req.status) {
+                        case 200:
+                            target.setCustomValidity("A user with this username already exists");
+                            reject();
+                            break;
+                        case 400:
+                            target.setCustomValidity("The username is invalid");
+                            console.log(req.responseText);
+                            reject();
+                            break;
+                        case 404:
+                            target.setCustomValidity("");
+                            resolve();
+                            break;
+                        default:
+                            target.setCustomValidity("Could not verify username");
+                            reject();
+                            console.log(req.responseText);
+                    }
+                });
+        });
     }
 
     this.checkPasswords = function (target) {
@@ -154,34 +159,39 @@ function RegisterFormValidator(viewManager, registerForm, formInputs) {
     }
 
     this.submit = function (target) {
-        this.checkUsername(this._formInputs.username);
-        this.checkPasswords(this._formInputs.repeatPassword);
-        if (target.reportValidity()) {
-            new Ajax().post(
-                "/api/users",
-                convertFormDataToJSON(new FormData(target)),
-                (req) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    switch (req.status) {
-                        case 200:
-                            this._manager.switchViews();
-                            break;
-                        case 400:
-                            this._manager.showErrorMessage("Please check that the fields contain valid information");
-                            console.log(req.responseText);
-                            break;
-                        case 409:
-                            this._manager.showErrorMessage("A username with the requested username already exists");
-                            console.log(req.responseText);
-                            break;
-                        default:
-                            this._manager.showErrorMessage("We weren't able to process your request, please try again later")
-                            console.log(req.responseText);
+        this.checkUsername(this._formInputs.username)
+            .then(
+                () => {
+                    this.checkPasswords(this._formInputs.repeatPassword);
+                    if (target.reportValidity()) {
+                        new Ajax().post(
+                            "/api/users",
+                            convertFormDataToJSON(new FormData(target)),
+                            (req) => {
+                                if (req.readyState !== XMLHttpRequest.DONE)
+                                    return;
+                                switch (req.status) {
+                                    case 200:
+                                        this._manager.switchViews();
+                                        break;
+                                    case 400:
+                                        this._manager.showErrorMessage("Please check that the fields contain valid information");
+                                        console.log(req.responseText);
+                                        break;
+                                    case 409:
+                                        this._manager.showErrorMessage("A username with the requested username already exists");
+                                        console.log(req.responseText);
+                                        break;
+                                    default:
+                                        this._manager.showErrorMessage("We weren't able to process your request, please try again later")
+                                        console.log(req.responseText);
+                                }
+                            }
+                        );
                     }
-                }
+                },
+                () => target.reportValidity()
             );
-        }
     }
 }
 

@@ -419,68 +419,69 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
     }
 
     this._checkFormValidityAndThen = function (form, then) {
-        if (this._checkAmount(this._viewElements.formElements.amount)) {
-            this._checkPayeeId(
-                this._viewElements.formElements.payeeId,
-                (userId) => this._checkPayeeAccount(userId, this._viewElements.formElements.payeeAccount, then),
-                then);
-        } else {
-            then();
-        }
+        return this._checkAmount(this._viewElements.formElements.amount)
+            .then(() => this._checkPayeeId(this._viewElements.formElements.payeeId))
+            .then(userId => this._checkPayeeAccount(userId, this._viewElements.formElements.payeeAccount))
+            .then(() => then(), () => then());
     }
 
     this._checkAmount = function (target) {
-        if (target.value <= 0 || target.value > this._showingAccount.balance) {
-            target.setCustomValidity("The amount is not within permitted bounds");
-            return false;
-        }
-        target.setCustomValidity("");
-        return true;
-    }
-
-    this._checkPayeeId = function (target, success, then) {
-        new Ajax().get(
-            "/api/user/byId?id=" + target.value,
-            req => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (req.status === 200) {
-                    target.setCustomValidity("");
-                    success(target.value);
-                } else {
-                    target.setCustomValidity("Unable to find user with the specified ID");
-                    then();
-                }
+        return new Promise((resolve, reject) => {
+            if (target.value <= 0 || target.value > this._showingAccount.balance) {
+                target.setCustomValidity("The amount is not within permitted bounds");
+                reject();
             }
-        );
+            target.setCustomValidity("");
+            resolve();
+        });
     }
 
-    this._checkPayeeAccount = function (userId, target, then) {
-        new Ajax().authenticatedPost(
-            "/api/accounts/ofUser",
-            {userId: userId, detailed: false},
-            (req, failedRefresh) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (failedRefresh) {
-                    window.location = '/login.html';
-                } else if (req.status === 200) {
-                    let accountList = JSON.parse(req.responseText).accounts;
-                    for (let i = 0; i < accountList.length; i++) {
-                        if (accountList[i].base64Id === target.value) {
-                            target.setCustomValidity("");
-                            then();
-                            return;
-                        }
+    this._checkPayeeId = function (target) {
+        return new Promise((resolve, reject) => {
+            new Ajax().get(
+                "/api/user/byId?id=" + target.value,
+                req => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    if (req.status === 200) {
+                        target.setCustomValidity("");
+                        resolve(target.value);
+                    } else {
+                        target.setCustomValidity("Unable to find user with the specified ID");
+                        reject();
                     }
-                    target.setCustomValidity("Unable to find an account with the specified ID");
-                    then();
-                } else {
-                    target.setCustomValidity("Unable to find an account with the specified ID");
-                    then();
                 }
-            }
-        );
+            );
+        });
+    }
+
+    this._checkPayeeAccount = function (userId, target) {
+        return new Promise((resolve, reject) => {
+            new Ajax().authenticatedPost(
+                "/api/accounts/ofUser",
+                {userId: userId, detailed: false},
+                (req, failedRefresh) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    if (failedRefresh) {
+                        window.location = '/login.html';
+                    } else if (req.status === 200) {
+                        let accountList = JSON.parse(req.responseText).accounts;
+                        for (let i = 0; i < accountList.length; i++) {
+                            if (accountList[i].base64Id === target.value) {
+                                target.setCustomValidity("");
+                                resolve();
+                                return;
+                            }
+                        }
+                        target.setCustomValidity("Unable to find an account with the specified ID");
+                    } else {
+                        target.setCustomValidity("Unable to find an account with the specified ID");
+                    }
+                    reject();
+                }
+            );
+        });
     }
 
     this._sendFormData = function (form) {
