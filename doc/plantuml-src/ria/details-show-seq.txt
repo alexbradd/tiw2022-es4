@@ -1,0 +1,62 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> AccountListManager : click details link
+
+AccountListManager -> ViewOrchestrator : ::showDetailsFor
+
+ViewOrchestrator -> AccountListManager : ::hide
+return
+
+ViewOrchestrator -> AccountDetailsManager : ::show
+
+AccountDetailsManager -> AccountDetailsManager : ::_fetchAccountDetails
+
+AccountDetailsManager -> Ajax : ::authenticatedPost
+
+Ajax -> AccountDetailsServlet : POST /api/account/transfers
+
+AccountDetailsServlet -> AccountDetailsServlet : ::checkRequestFormat
+return
+
+alt if correct format
+    AccountDetailsServlet -> AccountDetailsServlet : ::checkPermissions
+    return
+
+    alt if has access
+        AccountDetailsServlet -> TransferFacade : ::of
+        return
+        AccountDetailsServlet -> AccountDetailsServlet : ::formatResponse
+        return
+    end
+end
+
+return ::sendJson
+
+return callback()
+
+alt if failedRefresh
+    AccountDetailsManager -> User : window.location = '/login.html'
+    return
+else if status === 200
+    AccountDetailsManager -> AccountDetailsManager : ::formatTransfers
+    return
+else
+    AccountDetailsManager -> ModalManager : ::showError
+    return
+end
+
+return
+
+return
+
+ViewOrchestrator -> NewTransferFormManager : ::show
+return
+
+return
+
+return
+
+@enduml

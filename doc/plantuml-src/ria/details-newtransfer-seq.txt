@@ -1,0 +1,96 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> NewTransferFormManager : focus Payee id field
+
+NewTransferFormManager -> Ajax : ::authenticatedPost
+
+Ajax -> ContactOfUserServlet : POST /api/contacts/ofUser
+
+ContactOfUserServlet -> ContactOfUserServlet : ...same flow as other servlets
+return
+
+return ::sendJson
+
+return callback()
+
+alt if failedRefresh
+    NewTransferFormManager -> User : window.location = '/login.html'
+    return
+else if status === 200
+    loop for each contact
+        NewTransferFormManager -> NewTransferFormManager : ::_addDatalistOption
+        return
+    end
+else
+    NewTransferFormManager -> ModalManager : ::showError
+    return
+end
+
+return
+
+User -> NewTransferFormManager : focus Payee account id field
+
+alt if payee id is present
+    NewTransferFormManager -> Ajax : ::authenticatedPost
+
+    Ajax -> AccountListServlet : POST /api/accounts/ofUser
+
+    AccountListServlet -> AccountListServlet : ...same flow as other servlets
+    return
+
+    return ::sendJson
+
+    return callback()
+
+    alt if failedRefresh
+        NewTransferFormManager -> User : window.location = '/login.html'
+        return
+    else if status === 200
+        loop for each account
+            NewTransferFormManager -> NewTransferFormManager : ::_addDatalistOption
+            return
+        end
+    else
+        NewTransferFormManager -> NewTransferFormManager : ::setCustomValidity
+        return
+    end
+end
+
+return
+
+User -> NewTransferFormManager : on submit
+
+NewTransferFormManager -> NewTransferFormManager : ::_checkAmount
+return
+NewTransferFormManager -> NewTransferFormManager : ::_checkPayeeId
+return
+NewTransferFormManager -> NewTransferFormManager : ::_checkPayeeAccount
+return
+
+alt if form.checkValidity()
+    NewTransferFormManager -> Ajax : ::authenticatedPost
+
+    Ajax -> NewTransferServlet : POST /api/transfers
+
+    NewTransferServlet -> NewTransferServlet : ...same flow as other servlets
+    return
+
+    return ::sendJson
+
+    return callback()
+
+    alt if status === 200
+        NewTransferFormManager -> NewTransferFormManager : ::_showSuccessModal
+        return
+    else
+        NewTransferFormManager -> ModalManager : ::showError
+        return
+    end
+end
+
+return
+
+@enduml

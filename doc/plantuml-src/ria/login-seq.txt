@@ -1,0 +1,51 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> login.js : load
+
+login.js -> ...Managers : ::addListeners
+return
+login.js -> ViewManager : ::init
+return
+login.js -> ViewManager : ::displayLogin
+return
+
+return
+
+User -> LoginFormValidator : onSubmit
+
+alt form.reportValidity()
+    LoginFormValidator -> LoginManager : ::login
+    LoginManager -> LoginServlet : POST /api/auth/login
+    LoginServlet -> UserFacade : ::authorize
+    return ApiResult
+
+    alt if success
+        LoginServlet -> LoginServlet : AuthUtils::newToken
+        return
+        LoginServlet -> LoginServlet : AuthUtils::newRefreshToken
+        return
+        LoginServlet -> LoginServlet : HttpServletResponse.addCookie(refreshCookie)
+        return
+    end
+    return ::sendJson
+    alt if success
+        LoginManager -> loginManagement.js : ::login
+        return
+        LoginManager -> LoginFormValidator : afterLogin()
+        LoginFormValidator -> User : window.location = '/index.html'
+        return
+        return
+    else
+        LoginManager -> LoginFormValidator : onError()
+        return
+    end
+    return
+end
+
+return
+
+
+@enduml

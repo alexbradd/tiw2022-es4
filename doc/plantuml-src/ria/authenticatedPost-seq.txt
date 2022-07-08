@@ -1,0 +1,50 @@
+@startuml
+autoactivate on
+hide footbox
+
+Caller -> Ajax : ::new
+return
+
+Caller -> Ajax : ::authenticatedPost
+
+    alt if !loginManagement.isLoggedIn()
+        Ajax -> Caller : throw new Error()
+        return
+    else
+        Ajax -> Ajax : ::appendAuthTokenToBody
+        return
+        Ajax -> Server : POST
+        return
+        alt if readyState === DONE
+            alt if status === 200
+                Ajax -> Caller : callback(req, false)
+                return
+            else if status === 401
+                Ajax -> Server : GET /api/auth/refresh
+                return
+                alt if status === 200
+                    Ajax -> loginManagement.js : ::updateToken
+                    return
+                    Ajax -> Ajax : ::appendAuthTokenToBody
+                    return
+                    Ajax -> Server : POST
+                    return
+                    Ajax -> Caller : callback(req, false)
+                    return
+                else
+                    Ajax -> Caller : callback(req, true)
+                    return
+                end
+            else
+                Ajax -> Caller : callback(req, false)
+                return
+            end
+        else
+            Ajax -> Caller : callback(req, false)
+            return
+        end
+    end
+
+return
+
+@enduml

@@ -1,0 +1,44 @@
+@startuml
+autoactivate on
+hide footbox
+actor User
+
+User -> AccountListManager : click "New Account"
+
+AccountListManager -> Ajax : ::authenticatedPost
+
+Ajax -> NewAccountServlet : POST /api/account/transfers
+
+NewAccountServlet -> NewAccountServlet : ::checkRequestFormat
+return
+
+alt if correct format
+    NewAccountServlet -> NewAccountServlet : ::checkPermissions
+    return
+
+    alt if has access
+        NewAccountServlet -> AccountFacade : ::createFor
+        return
+        NewAccountServlet -> NewAccountServlet : ::formatResponse
+        return
+    end
+end
+
+return ::sendJson
+
+return callback()
+
+alt if failedRefresh
+    AccountListManager -> User : window.location = '/login.html'
+    return
+else if status === 200
+    AccountListManager -> AccountListManager : ::refresh
+    return
+else
+    AccountListManager -> ModalManager : ::showError
+    return
+end
+
+return
+
+@enduml
