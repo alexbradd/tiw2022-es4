@@ -1,6 +1,10 @@
 function login(token, user) {
-    window.sessionStorage.setItem("token", token);
+    updateToken(token);
     window.sessionStorage.setItem("user", JSON.stringify(user));
+}
+
+function updateToken(token) {
+    window.sessionStorage.setItem("token", token);
 }
 
 function logout() {
@@ -17,6 +21,12 @@ function getUser() {
     if (!isLoggedIn())
         throw new Error("cannot get user if not logged in");
     return JSON.parse(window.sessionStorage.getItem("user"));
+}
+
+function getToken() {
+    if (!isLoggedIn())
+        throw new Error("cannot get token if not logged in");
+    return window.sessionStorage.getItem("token");
 }
 
 function LoginManager(afterLogin, onError) {

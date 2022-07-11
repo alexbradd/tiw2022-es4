@@ -27,7 +27,7 @@ function Ajax() {
             if (req1.status !== 200)
                 callback(req1, true);
             let res = JSON.parse(req1.responseText);
-            window.sessionStorage.setItem("token", res.token);
+            updateToken(res.token);
             this._makeReq(
                 method,
                 url,
@@ -48,7 +48,7 @@ function Ajax() {
             url,
             JSON.stringify({
                 ...objectData,
-                token: window.sessionStorage.getItem("token")
+                token: getToken()
             }),
             true,
             (req) => {
