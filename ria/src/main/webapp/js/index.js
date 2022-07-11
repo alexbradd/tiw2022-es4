@@ -62,7 +62,11 @@ function ViewOrchestrator(user,
         this._pageContainer,
         newTransferViewElements,
         this._modalManager,
-        () => this._accountDetailsManager.refresh());
+        () => {
+            this._accountDetailsManager.refresh();
+            this._newTransferFormManager.clearFields();
+        }
+    );
 
     this.init = function () {
         this._accountListManager.addListeners();
@@ -404,18 +408,28 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
     }
 
     this._setupErrorReporting = function (el) {
-        const p = document.createElement('p');
-        p.classList.add('form-input-error');
+        el.addEventListener("invalid", e => this._showError(e.target));
+        el.addEventListener("change", e => this._removeError(e.target));
+    }
 
-        el.addEventListener("invalid", e => {
-            e.target.insertAdjacentElement("afterend", p);
-            p.textContent = e.target.validationMessage;
-        });
-        el.addEventListener("change", e => {
-            e.target.setCustomValidity("");
-            if (p.parentNode !== null)
-                e.target.parentElement.removeChild(p)
-        });
+    this._showError = function (target) {
+        const errId = target.id + '__form-error';
+        let p = document.getElementById(errId);
+        if (p === null) {
+            p = document.createElement('p');
+            p.id = target.id + '__form-error';
+            p.classList.add('form-input-error');
+        }
+
+        target.insertAdjacentElement("afterend", p);
+        p.textContent = target.validationMessage;
+    }
+
+    this._removeError = function (target) {
+        target.setCustomValidity("");
+        const p = document.getElementById(target.id + '__form-error');
+        if (p !== null && p.parentNode !== null)
+            target.parentElement.removeChild(p)
     }
 
     this._checkFormValidityAndThen = function (form, then) {
@@ -594,8 +608,16 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
     this.hide = function () {
         clearChildren(this._viewElements.contacts);
         clearChildren(this._viewElements.payeeAccounts);
+        this.clearFields();
         if (this._viewElements.view.parentNode !== null)
             this._container.removeChild(this._viewElements.view);
+    }
+
+    this.clearFields = function () {
+        this._viewElements.form.reset();
+        Object.keys(this._viewElements.formElements).forEach(k => {
+            this._removeError(this._viewElements.formElements[k]);
+        });
     }
 }
 
@@ -644,8 +666,8 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
                 payeeAccount: document.getElementById("newTransfer-toAccountId"),
                 amount: document.getElementById("newTransfer-amount"),
                 causal: document.getElementById("newTransfer-causal"),
-                submit: document.getElementById("newTransfer-submit"),
             },
+            submit: document.getElementById("newTransfer-submit"),
             contacts: document.getElementById("userContacts"),
             payeeAccounts: document.getElementById("payeeAccounts")
         }
