@@ -85,7 +85,7 @@ function ViewOrchestrator(user,
     this.showAccountList = function () {
         this._accountDetailsManager.hide();
         this._newTransferFormManager.hide();
-        this._accountListManager.show((_, a) => this.showDetailsFor(a));
+        this._accountListManager.show();
     }
 
     this.showDetailsFor = function (account) {
