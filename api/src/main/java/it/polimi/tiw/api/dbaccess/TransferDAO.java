@@ -14,6 +14,7 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import static java.util.Objects.isNull;
@@ -152,6 +153,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
             try {
                 ApiResult<Tuple<Transfer, Tuple<Account, Account>>> objs = getToAndFrom(toId, fromId)
                         .flatMap(t -> checkToBalance(t, amount))
+                        .flatMap(this::checkNotSame)
                         .flatMap(t -> createTransfer(t, amount, causal));
                 if (objs.match(__ -> true, __ -> false)) {
                     return commitChanges(objs.get(), prevAutoCommit);
@@ -181,6 +183,17 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                                         ApiResult.ok(new Tuple<>(to, from)),
                                 ApiResult::error),
                 ApiResult::error);
+    }
+
+    /**
+     * Checks that the two accounts have different IDs
+     */
+    private ApiResult<Tuple<Account, Account>> checkNotSame(Tuple<Account, Account> accounts) {
+        String first = accounts.getFirst().getBase64Id(),
+                second = accounts.getSecond().getBase64Id();
+        if (Objects.equals(first, second))
+            return ApiResult.error(Errors.fromMalformedParameter("toId"));
+        return ApiResult.ok(accounts);
     }
 
     /**
