@@ -475,30 +475,35 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
 
     this._checkPayeeAccount = function (userId, target) {
         return new Promise((resolve, reject) => {
-            new Ajax().authenticatedPost(
-                "/api/accounts/ofUser",
-                {userId: userId, detailed: false},
-                (req, failedRefresh) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    if (failedRefresh) {
-                        window.location = '/login.html';
-                    } else if (req.status === 200) {
-                        let accountList = JSON.parse(req.responseText).accounts;
-                        for (let i = 0; i < accountList.length; i++) {
-                            if (accountList[i].base64Id === target.value) {
-                                target.setCustomValidity("");
-                                resolve();
-                                return;
+            if (this._showingAccount === target.value) {
+                target.setCustomValidity("You cannot transfer money to the same account");
+                reject();
+            } else {
+                new Ajax().authenticatedPost(
+                    "/api/accounts/ofUser",
+                    {userId: userId, detailed: false},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh) {
+                            window.location = '/login.html';
+                        } else if (req.status === 200) {
+                            let accountList = JSON.parse(req.responseText).accounts;
+                            for (let i = 0; i < accountList.length; i++) {
+                                if (accountList[i].base64Id === target.value) {
+                                    target.setCustomValidity("");
+                                    resolve();
+                                    return;
+                                }
                             }
+                            target.setCustomValidity("Unable to find an account with the specified ID");
+                        } else {
+                            target.setCustomValidity("Unable to find an account with the specified ID");
                         }
-                        target.setCustomValidity("Unable to find an account with the specified ID");
-                    } else {
-                        target.setCustomValidity("Unable to find an account with the specified ID");
+                        reject();
                     }
-                    reject();
-                }
-            );
+                );
+            }
         });
     }
 
@@ -557,7 +562,7 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
                 this._afterCloseCb();
             }
         }
-        const modalActions = this._isInContactList(toUserId)
+        const modalActions = this._isInContactList(toUserId) || toUserId === this._user.base64Id
             ? [close]
             : [addContactButton, close];
         this._modalManager.show("Transfer successful", table, modalActions);
