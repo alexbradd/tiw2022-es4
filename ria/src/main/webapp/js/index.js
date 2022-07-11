@@ -1,3 +1,68 @@
+const volatileStorage = new Map();
+const fetchRequests = {
+    fetchAccountList(userId, detailed = true) {
+        return new Promise((resolve, reject) => {
+            new Ajax().authenticatedPost(
+                "/api/accounts/ofUser",
+                {userId: userId, detailed: detailed},
+                (req, failedRefresh) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    if (failedRefresh)
+                        window.location = '/login.html';
+                    else if (req.status === 200) {
+                        let accountList = JSON.parse(req.responseText).accounts;
+                        resolve(accountList);
+                    } else {
+                        console.log(req.responseText);
+                        reject("We could not fetch your account list, please try again later");
+                    }
+                }
+            );
+        });
+    },
+    fetchAccountDetails(accountId) {
+        return new Promise((resolve, reject) => {
+            new Ajax().authenticatedPost(
+                "/api/accounts/transfers",
+                {accountId: accountId},
+                (req, failedRefresh) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    if (failedRefresh)
+                        window.location = "/login.html";
+                    else if (req.status === 200) {
+                        let obj = JSON.parse(req.responseText);
+                        resolve(obj);
+                    } else
+                        reject("Could not fetch details for this account");
+                }
+            );
+        });
+    },
+    fetchContacts(user) {
+        return new Promise((resolve, reject) => {
+            new Ajax().authenticatedPost(
+                "/api/contacts/ofUser",
+                {userId: user.base64Id},
+                (req, failedRefresh) => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    if (failedRefresh) {
+                        window.location = '/login.html';
+                    } else if (req.status === 200) {
+                        let contactList = JSON.parse(req.responseText).contacts;
+                        resolve(contactList);
+                    } else {
+                        reject("We could not fetch your contact list, please try again later")
+                        console.log(req.responseText);
+                    }
+                }
+            );
+        });
+    }
+}
+
 function generateNewTableRow() {
     let row = document.createElement("tr");
     for (let i = 0; i < arguments.length; i++) {
@@ -29,8 +94,8 @@ function clearChildren(node) {
         node.removeChild(node.lastChild);
 }
 
-function UserDetailsManager(user, popupElements) {
-    this._user = user;
+function UserDetailsManager(popupElements) {
+    this._user = volatileStorage.get('user');
     this._popupElements = popupElements;
 
     this.injectUserDetails = function () {
@@ -41,17 +106,14 @@ function UserDetailsManager(user, popupElements) {
     }
 }
 
-function ViewOrchestrator(user,
-                          pageContainer,
+function ViewOrchestrator(pageContainer,
                           modalElements,
                           accountListViewElements,
                           accountDetailsViewElements,
                           newTransferViewElements) {
-    this._user = user;
     this._pageContainer = pageContainer;
     this._modalManager = new ModalManager(modalElements);
     this._accountListManager = new AccountListManager(
-        this._user,
         this._pageContainer,
         accountListViewElements,
         this._modalManager,
@@ -61,7 +123,6 @@ function ViewOrchestrator(user,
         accountDetailsViewElements,
         this._modalManager);
     this._newTransferFormManager = new NewTransferFormManager(
-        this._user,
         this._pageContainer,
         newTransferViewElements,
         this._modalManager,
@@ -153,13 +214,12 @@ ModalManager.closeButton = {
     callback: (e, man) => man.hide()
 };
 
-function AccountListManager(user, container, viewElements, modalManager, detailsClickCallback) {
-    this._user = user;
+function AccountListManager(container, viewElements, modalManager, detailsClickCallback) {
+    this._user = volatileStorage.get('user');
     this._container = container;
     this._viewElements = viewElements;
     this._modalManager = modalManager;
     this._detailsClickCallback = detailsClickCallback;
-    this.accountList = undefined;
 
     this.addListeners = function () {
         this._viewElements.refreshButton.addEventListener("click", () => {
@@ -190,39 +250,30 @@ function AccountListManager(user, container, viewElements, modalManager, details
     }
 
     this.show = function () {
-        this._container.insertBefore(this._viewElements.view, null);
-        if (this.accountList === undefined)
-            this._fetchAccountList(() => this._displayAccountList(this._detailsClickCallback));
+        if (this._viewElements.view.parent !== null)
+            this._container.insertBefore(this._viewElements.view, null);
+        fetchRequests.fetchAccountList(this._user.base64Id)
+            .then(accountList => {
+                volatileStorage.set('accountList', accountList);
+                this._displayAccountList(this._detailsClickCallback)
+            })
+            .catch(r => this._modalManager.showError(r));
     }
 
     this.hide = function () {
+        clearChildren(this._viewElements.tableBody);
         if (this._viewElements.view.parentNode !== null)
             this._container.removeChild(this._viewElements.view);
     }
 
     this.refresh = function () {
         this._clearAccountList();
-        this._fetchAccountList(() => this._displayAccountList(this._detailsClickCallback));
-    }
-
-    this._fetchAccountList = function (afterFetch) {
-        new Ajax().authenticatedPost(
-            "/api/accounts/ofUser",
-            {userId: this._user.base64Id, detailed: true},
-            (req, failedRefresh) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (failedRefresh)
-                    window.location = '/login.html';
-                else if (req.status === 200) {
-                    this.accountList = JSON.parse(req.responseText).accounts;
-                    afterFetch();
-                } else {
-                    this._modalManager.showError("We could not fetch your account list, please try again later")
-                    console.log(req.responseText);
-                }
-            }
-        );
+        fetchRequests.fetchAccountList(this._user.base64Id)
+            .then(accountList => {
+                volatileStorage.set('accountList', accountList);
+                this._displayAccountList(this._detailsClickCallback)
+            })
+            .catch(r => this._modalManager.showError(r));
     }
 
     this._clearAccountList = function () {
@@ -231,7 +282,7 @@ function AccountListManager(user, container, viewElements, modalManager, details
 
     this._displayAccountList = function (detailsClickCallback) {
         let tableBody = this._viewElements.tableBody;
-        this.accountList.forEach((account) => {
+        volatileStorage.get('accountList').forEach((account) => {
             let detailsLink = document.createElement("a");
             detailsLink.addEventListener("click", (e) => detailsClickCallback(e, account));
             detailsLink.href = "#";
@@ -242,10 +293,11 @@ function AccountListManager(user, container, viewElements, modalManager, details
 }
 
 function AccountDetailsManager(container, viewElements, modalManager) {
+    this._user = volatileStorage.get('user');
     this._container = container;
     this._viewElements = viewElements;
     this._modalManager = modalManager;
-    this._currentlyShowingAccount = undefined;
+    this._currentlyShowingAccountId = undefined;
 
     this.addListeners = function (goBackCallback) {
         this._viewElements.backButton.addEventListener("click", (e) => goBackCallback(e));
@@ -257,44 +309,36 @@ function AccountDetailsManager(container, viewElements, modalManager) {
     }
 
     this.show = function (account) {
-        this._currentlyShowingAccount = account;
-        this._constructDialog(account)
+        this._currentlyShowingAccountId = account.base64Id;
+        this._refetchAndDisplay(this._currentlyShowingAccountId)
         this._container.insertBefore(this._viewElements.view, null);
     }
 
     this.refresh = function () {
-        this._constructDialog(this._currentlyShowingAccount);
+        this._refetchAndDisplay(this._currentlyShowingAccountId, true);
     }
 
-    this._constructDialog = function (account) {
+    this._refetchAndDisplay = function (accountId, refreshList = false) {
         clearChildren(this._viewElements.incomingTransfers);
         clearChildren(this._viewElements.outgoingTransfers);
-        this._viewElements.accountId.textContent = account.base64Id;
-        this._viewElements.accountBalance.textContent = account.balance;
-        this._fetchAccountDetails(account, (i, o) => {
-            i.forEach((t) =>
-                this._viewElements.incomingTransfers.appendChild(this._constructRow(t, "fromId")));
-            o.forEach((t) =>
-                this._viewElements.outgoingTransfers.appendChild(this._constructRow(t, "toId")));
-        });
-    }
 
-    this._fetchAccountDetails = function (account, afterFetchCallback) {
-        new Ajax().authenticatedPost(
-            "/api/accounts/transfers",
-            {accountId: account.base64Id},
-            (req, failedRefresh) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (failedRefresh)
-                    window.location = "/login.html";
-                else if (req.status === 200) {
-                    let obj = JSON.parse(req.responseText);
-                    afterFetchCallback(obj.incoming, obj.outgoing);
-                } else
-                    this._modalManager.showError("Could not fetch details for this account");
-            }
-        );
+        let p1 = refreshList
+            ? fetchRequests.fetchAccountList(this._user.base64Id)
+            : new Promise(resolve => resolve(volatileStorage.get('accountList')));
+        p1.then(l => {
+            const accountData = l.find(a => a.base64Id === accountId);
+            return fetchRequests.fetchAccountDetails(accountId)
+                .then(o => {
+                    o.incoming.forEach((t) =>
+                        this._viewElements.incomingTransfers.appendChild(this._constructRow(t, "fromId")));
+                    o.outgoing.forEach((t) =>
+                        this._viewElements.outgoingTransfers.appendChild(this._constructRow(t, "toId")));
+                    this._viewElements.accountId.textContent = accountData.base64Id;
+                    this._viewElements.accountBalance.textContent = accountData.balance;
+                    this._currentlyShowingAccountId = accountId;
+                });
+        })
+            .catch(r => this._modalManager.showError(r));
     }
 
     this._constructRow = function (t, idToShow) {
@@ -327,8 +371,8 @@ function AccountDetailsManager(container, viewElements, modalManager) {
     }
 }
 
-function NewTransferFormManager(user, container, viewElements, modalManager, afterTransferSuccessful) {
-    this._user = user;
+function NewTransferFormManager(container, viewElements, modalManager, afterTransferSuccessful) {
+    this._user = volatileStorage.get('user');
     this._container = container;
     this._viewElements = viewElements;
     this._modalManager = modalManager;
@@ -337,12 +381,22 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
     this._afterCloseCb = afterTransferSuccessful;
 
     this.addListeners = function () {
-        this._viewElements.formElements.payeeId.addEventListener("focus", () => this._fetchContacts());
-        this._viewElements.formElements.payeeAccount.addEventListener(
-            "focus",
-            () => this._fetchAccountList(this._viewElements.formElements.payeeId.value));
         Object.keys(this._viewElements.formElements).forEach(k =>
             this._setupErrorReporting(this._viewElements.formElements[k]));
+        this._viewElements.formElements.payeeId.addEventListener(
+            "focus",
+            () => {
+                fetchRequests.fetchContacts(this._user)
+                    .then(contactList => this._populateContactDatalist(contactList))
+                    .catch(r => this._modalManager.showError(r));
+            });
+        this._viewElements.formElements.payeeAccount.addEventListener(
+            "focus",
+            () => {
+                this._ifNotEmptyFetchAccounts(this._viewElements.formElements.payeeId.value)
+                    .then(list => this._populateAccountDatalist(list))
+                    .catch(r => this._viewElements.formElements.payeeId.setCustomValidity(r));
+            });
 
         this._viewElements.form.addEventListener("submit", e => {
             this._checkFormValidityAndThen(e.target, () => {
@@ -353,55 +407,31 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
         });
     }
 
-    this._fetchContacts = function () {
+    this._populateContactDatalist = function (contactList) {
         this._contacts = [];
-        new Ajax().authenticatedPost(
-            "/api/contacts/ofUser",
-            {userId: this._user.base64Id},
-            (req, failedRefresh) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (failedRefresh) {
-                    window.location = '/login.html';
-                } else if (req.status === 200) {
-                    clearChildren(this._viewElements.contacts);
-                    let contactList = JSON.parse(req.responseText).contacts;
-                    for (let i = 0; i < contactList.length; i++) {
-                        this._contacts.push(contactList[i].contactBase64Id);
-                        this._viewElements.contacts.appendChild(
-                            this._createDatalistOption(contactList[i].contactBase64Id));
-                    }
-                } else {
-                    this._modalManager.showError("We could not fetch your contact list, please try again later")
-                    console.log(req.responseText);
-                }
-            }
-        )
+        clearChildren(this._viewElements.contacts);
+        for (let i = 0; i < contactList.length; i++) {
+            this._contacts.push(contactList[i].contactBase64Id);
+            this._viewElements.contacts.appendChild(
+                this._createDatalistOption(contactList[i].contactBase64Id));
+        }
     }
 
-    this._fetchAccountList = function (userId) {
-        if (userId === undefined || userId === "")
-            return;
-        new Ajax().authenticatedPost(
-            "/api/accounts/ofUser",
-            {userId: userId, detailed: false},
-            (req, failedRefresh) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (failedRefresh) {
-                    window.location = '/login.html';
-                } else if (req.status === 200) {
-                    clearChildren(this._viewElements.payeeAccounts);
-                    let accountList = JSON.parse(req.responseText).accounts;
-                    for (let i = 0; i < accountList.length; i++)
-                        this._viewElements.payeeAccounts.appendChild(
-                            this._createDatalistOption(accountList[i].base64Id));
-                } else {
-                    this._viewElements.formElements.payeeId.setCustomValidity("Unable to find account");
-                    console.log(req.responseText);
-                }
-            }
-        );
+    this._ifNotEmptyFetchAccounts = function (userId) {
+        return new Promise((resolve, reject) => {
+            if (userId === undefined || userId === "")
+                reject("You must specify a user ID");
+            fetchRequests.fetchAccountList(userId, false)
+                .then(list => resolve(list))
+                .catch(r => reject(r));
+        });
+    }
+
+    this._populateAccountDatalist = function (accountList) {
+        clearChildren(this._viewElements.payeeAccounts);
+        for (let i = 0; i < accountList.length; i++)
+            this._viewElements.payeeAccounts.appendChild(
+                this._createDatalistOption(accountList[i].base64Id));
     }
 
     this._createDatalistOption = function (value) {
@@ -475,34 +505,26 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
 
     this._checkPayeeAccount = function (userId, target) {
         return new Promise((resolve, reject) => {
-            if (this._showingAccount === target.value) {
+            if (this._showingAccount.base64Id === target.value) {
                 target.setCustomValidity("You cannot transfer money to the same account");
                 reject();
             } else {
-                new Ajax().authenticatedPost(
-                    "/api/accounts/ofUser",
-                    {userId: userId, detailed: false},
-                    (req, failedRefresh) => {
-                        if (req.readyState !== XMLHttpRequest.DONE)
-                            return;
-                        if (failedRefresh) {
-                            window.location = '/login.html';
-                        } else if (req.status === 200) {
-                            let accountList = JSON.parse(req.responseText).accounts;
-                            for (let i = 0; i < accountList.length; i++) {
-                                if (accountList[i].base64Id === target.value) {
-                                    target.setCustomValidity("");
-                                    resolve();
-                                    return;
-                                }
+                fetchRequests.fetchAccountList(userId, false)
+                    .then(accountList => {
+                        for (let i = 0; i < accountList.length; i++) {
+                            if (accountList[i].base64Id === target.value) {
+                                target.setCustomValidity("");
+                                resolve();
+                                return;
                             }
                             target.setCustomValidity("Unable to find an account with the specified ID");
-                        } else {
-                            target.setCustomValidity("Unable to find an account with the specified ID");
+                            reject();
                         }
+                    })
+                    .catch(() => {
+                        target.setCustomValidity("Unable to find an account with the specified ID");
                         reject();
-                    }
-                );
+                    });
             }
         });
     }
@@ -610,7 +632,8 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
 
     this.show = function (account) {
         this._showingAccount = account;
-        this._container.insertBefore(this._viewElements.view, null);
+        if (this._container.parent !== null)
+            this._container.insertBefore(this._viewElements.view, null);
         this._viewElements.formElements.amount.setAttribute("max", account.balance);
     }
 
@@ -634,8 +657,8 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
     if (!isLoggedIn())
         window.location = "/login.html";
 
+    volatileStorage.set('user', getUser())
     let userDetailsManager = new UserDetailsManager(
-        getUser(),
         {
             userId: document.getElementById("userDetails-userId"),
             username: document.getElementById("userDetails-username"),
@@ -644,7 +667,6 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
         }
     )
     let viewOrchestrator = new ViewOrchestrator(
-        getUser(),
         document.getElementById("page-container"),
         {
             view: document.getElementById("modal"),
