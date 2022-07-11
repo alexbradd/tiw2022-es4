@@ -204,35 +204,28 @@ function LoginFormValidator(viewManager, loginForm) {
     }
 
     this.submit = function (target) {
-        if (target.reportValidity()) {
-            new Ajax().post(
-                "/api/auth/login",
-                convertFormDataToJSON(new FormData(target)),
-                (req) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    switch (req.status) {
-                        case 200:
-                            let res = JSON.parse(req.responseText);
-                            login(res.token, res.user);
-                            window.location = "/index.html";
-                            break;
-                        case 400:
-                            this._manager.showErrorMessage("Please check that the fields contain valid information");
-                            console.log(req.responseText)
-                            break;
-                        case 404:
-                        case 409:
-                            this._manager.showErrorMessage("Username and password are not valid");
-                            console.log(req.responseText)
-                            break;
-                        default:
-                            this._manager.showErrorMessage("We weren't able to process your request, please try again later");
-                            console.log(req.responseText)
-                    }
-                },
-            );
-        }
+        if (!target.reportValidity())
+            return;
+        let manager = new LoginManager(
+            () => window.location = '/index.html',
+            (status, body) => {
+                switch (status) {
+                    case 400:
+                        this._manager.showErrorMessage("Please check that the fields contain valid information");
+                        console.log(body);
+                        break;
+                    case 404:
+                    case 409:
+                        this._manager.showErrorMessage("Username and password are not valid");
+                        console.log(body);
+                        break;
+                    default:
+                        this._manager.showErrorMessage("We weren't able to process your request, please try again later");
+                        console.log(body);
+                }
+            }
+        );
+        manager.login(new FormData(target));
     }
 }
 

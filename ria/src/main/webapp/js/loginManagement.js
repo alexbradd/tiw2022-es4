@@ -13,6 +13,30 @@ function isLoggedIn() {
         window.sessionStorage.getItem("user") != null;
 }
 
+function LoginManager(afterLogin, onError) {
+    this._okCb = afterLogin;
+    this._failCb = onError;
+
+    this.login = function (loginFormData) {
+        new Ajax().post(
+            "/api/auth/login",
+            convertFormDataToJSON(loginFormData),
+            (req) => {
+                if (req.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (req.status === 200) {
+                    let res = JSON.parse(req.responseText);
+                    login(res.token, res.user);
+                    this._okCb();
+                } else {
+                    this._failCb(req.status, req.responseText);
+                }
+            }
+        );
+    }
+}
+
+
 function LogoutButtonManager(logoutButton, postLogoutCallback) {
     this._callback = postLogoutCallback;
     this._logoutButton = logoutButton;
