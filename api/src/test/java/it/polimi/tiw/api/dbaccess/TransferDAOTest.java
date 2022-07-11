@@ -18,6 +18,7 @@ import org.mockito.stubbing.Answer;
 
 import java.sql.*;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -338,14 +339,24 @@ class TransferDAOTest {
 
     @Test
     void newTransfer_failedUpdate() throws SQLException {
-        Account mockAccount = mock(Account.class);
+        Account mockToAccount = mock(Account.class),
+                mockFromAccount = mock(Account.class);
         AccountDAO mockDao = mock(AccountDAO.class);
         TransferDAO dao = new TransferDAO(connection, mockDao);
 
         when(connection.getAutoCommit()).thenReturn(true);
         when(mockDao.update(any(Account.class))).thenReturn(ApiResult.error(new ApiError(500, "")));
-        when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
-        when(mockAccount.getBalance()).thenReturn(10.0);
+        when(mockDao.byId(anyString())).thenAnswer(invocation -> {
+            String fromId = IdUtils.toBase64(0L);
+            if (Objects.equals(invocation.getArgument(0), fromId))
+                return ApiResult.ok(mockFromAccount);
+            else
+                return ApiResult.ok(mockToAccount);
+        });
+        when(mockFromAccount.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
+        when(mockFromAccount.getBalance()).thenReturn(10.0);
+        when(mockToAccount.getBase64Id()).thenReturn(IdUtils.toBase64(1L));
+        when(mockToAccount.getBalance()).thenReturn(10.0);
 
         dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
                 .consume(__ -> fail(), __ -> {
@@ -355,14 +366,24 @@ class TransferDAOTest {
 
     @Test
     void newTransfer_failedInsert() throws SQLException {
-        Account mockAccount = mock(Account.class);
+        Account mockToAccount = mock(Account.class),
+                mockFromAccount = mock(Account.class);
         AccountDAO mockDao = mock(AccountDAO.class);
         TransferDAO dao = spy(new TransferDAO(connection, mockDao));
 
         when(connection.getAutoCommit()).thenReturn(true);
-        when(mockDao.update(any(Account.class))).thenReturn(ApiResult.ok(mockAccount));
-        when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
-        when(mockAccount.getBalance()).thenReturn(10.0);
+        when(mockDao.update(any(Account.class))).thenAnswer(invocation -> ApiResult.ok(invocation.getArgument(0)));
+        when(mockDao.byId(anyString())).thenAnswer(invocation -> {
+            String fromId = IdUtils.toBase64(0L);
+            if (Objects.equals(invocation.getArgument(0), fromId))
+                return ApiResult.ok(mockFromAccount);
+            else
+                return ApiResult.ok(mockToAccount);
+        });
+        when(mockFromAccount.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
+        when(mockFromAccount.getBalance()).thenReturn(10.0);
+        when(mockToAccount.getBase64Id()).thenReturn(IdUtils.toBase64(1L));
+        when(mockToAccount.getBalance()).thenReturn(10.0);
         doReturn(ApiResult.error(new ApiError(500, ""))).when(dao).insert(any(Transfer.class));
 
         dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")
@@ -373,14 +394,24 @@ class TransferDAOTest {
 
     @Test
     void newTransfer_noRollbackIfNotInManualTransactionHandling() throws SQLException {
-        Account mockAccount = mock(Account.class);
+        Account mockToAccount = mock(Account.class),
+                mockFromAccount = mock(Account.class);
         AccountDAO mockDao = mock(AccountDAO.class);
         TransferDAO dao = spy(new TransferDAO(connection, mockDao));
 
         when(connection.getAutoCommit()).thenReturn(false);
-        when(mockDao.update(any(Account.class))).thenReturn(ApiResult.ok(mockAccount));
-        when(mockDao.byId(anyString())).thenReturn(ApiResult.ok(mockAccount));
-        when(mockAccount.getBalance()).thenReturn(10.0);
+        when(mockDao.update(any(Account.class))).thenAnswer(invocation -> ApiResult.ok(invocation.getArgument(0)));
+        when(mockDao.byId(anyString())).thenAnswer(invocation -> {
+            String fromId = IdUtils.toBase64(0L);
+            if (Objects.equals(invocation.getArgument(0), fromId))
+                return ApiResult.ok(mockFromAccount);
+            else
+                return ApiResult.ok(mockToAccount);
+        });
+        when(mockFromAccount.getBase64Id()).thenReturn(IdUtils.toBase64(0L));
+        when(mockFromAccount.getBalance()).thenReturn(10.0);
+        when(mockToAccount.getBase64Id()).thenReturn(IdUtils.toBase64(1L));
+        when(mockToAccount.getBalance()).thenReturn(10.0);
         doReturn(ApiResult.error(new ApiError(500, ""))).when(dao).insert(any(Transfer.class));
 
         dao.newTransfer(IdUtils.toBase64(0L), IdUtils.toBase64(1L), 1, "a")

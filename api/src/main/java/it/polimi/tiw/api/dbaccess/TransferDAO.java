@@ -151,9 +151,9 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
             boolean prevAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
-                ApiResult<Tuple<Transfer, Tuple<Account, Account>>> objs = getToAndFrom(toId, fromId)
+                ApiResult<Tuple<Transfer, Tuple<Account, Account>>> objs = checkNotSame(new Tuple<>(toId, fromId))
+                        .flatMap(t -> getToAndFrom(t.getFirst(), t.getSecond()))
                         .flatMap(t -> checkToBalance(t, amount))
-                        .flatMap(this::checkNotSame)
                         .flatMap(t -> createTransfer(t, amount, causal));
                 if (objs.match(__ -> true, __ -> false)) {
                     return commitChanges(objs.get(), prevAutoCommit);
@@ -188,10 +188,8 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
     /**
      * Checks that the two accounts have different IDs
      */
-    private ApiResult<Tuple<Account, Account>> checkNotSame(Tuple<Account, Account> accounts) {
-        String first = accounts.getFirst().getBase64Id(),
-                second = accounts.getSecond().getBase64Id();
-        if (Objects.equals(first, second))
+    private ApiResult<Tuple<String, String>> checkNotSame(Tuple<String, String> accounts) {
+        if (Objects.equals(accounts.getFirst(), accounts.getSecond()))
             return ApiResult.error(Errors.fromMalformedParameter("toId"));
         return ApiResult.ok(accounts);
     }
