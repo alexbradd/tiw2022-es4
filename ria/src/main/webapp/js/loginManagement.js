@@ -13,6 +13,12 @@ function isLoggedIn() {
         window.sessionStorage.getItem("user") != null;
 }
 
+function getUser() {
+    if (!isLoggedIn())
+        throw new Error("cannot get user if not logged in");
+    return JSON.parse(window.sessionStorage.getItem("user"));
+}
+
 function LoginManager(afterLogin, onError) {
     this._okCb = afterLogin;
     this._failCb = onError;

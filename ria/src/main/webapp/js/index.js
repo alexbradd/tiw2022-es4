@@ -29,15 +29,15 @@ function clearChildren(node) {
         node.removeChild(node.lastChild);
 }
 
-function UserDetailsManager(popupElements) {
-    this.user = JSON.parse(window.sessionStorage.getItem("user"));
+function UserDetailsManager(user, popupElements) {
+    this._user = user;
     this._popupElements = popupElements;
 
-    this.showUserDetails = function () {
-        this._popupElements.userId.textContent = this.user.base64Id;
-        this._popupElements.username.textContent = this.user.username;
-        this._popupElements.email.textContent = this.user.email;
-        this._popupElements.nameSurname.textContent = `${this.user.name} ${this.user.surname}`;
+    this.injectUserDetails = function () {
+        this._popupElements.userId.textContent = this._user.base64Id;
+        this._popupElements.username.textContent = this._user.username;
+        this._popupElements.email.textContent = this._user.email;
+        this._popupElements.nameSurname.textContent = `${this._user.name} ${this._user.surname}`;
     }
 }
 
@@ -603,6 +603,7 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
         window.location = "/login.html";
 
     let userDetailsManager = new UserDetailsManager(
+        getUser(),
         {
             userId: document.getElementById("userDetails-userId"),
             username: document.getElementById("userDetails-username"),
@@ -611,7 +612,7 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
         }
     )
     let viewOrchestrator = new ViewOrchestrator(
-        userDetailsManager.user,
+        getUser(),
         document.getElementById("page-container"),
         {
             view: document.getElementById("modal"),
@@ -653,7 +654,7 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
         () => window.location = "/login.html"
     );
 
-    userDetailsManager.showUserDetails();
+    userDetailsManager.injectUserDetails();
     logoutButtonManager.addListeners();
     viewOrchestrator.init();
 }());
