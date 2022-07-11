@@ -66,6 +66,7 @@ function ViewManager(pageContainer,
     }
 
     this.hideRegister = function () {
+        this.getRegisterForm().reset();
         this._pageContainer.removeChild(this._registerView);
     }
 
@@ -82,6 +83,7 @@ function ViewManager(pageContainer,
     }
 
     this.hideLogin = function () {
+        this.getLoginForm().reset();
         this._pageContainer.removeChild(this._loginView);
     }
 
