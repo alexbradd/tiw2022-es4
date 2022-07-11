@@ -430,9 +430,10 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
             if (target.value <= 0 || target.value > this._showingAccount.balance) {
                 target.setCustomValidity("The amount is not within permitted bounds");
                 reject();
+            } else {
+                target.setCustomValidity("");
+                resolve();
             }
-            target.setCustomValidity("");
-            resolve();
         });
     }
 
