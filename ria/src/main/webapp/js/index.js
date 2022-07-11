@@ -547,13 +547,14 @@ function NewTransferFormManager(user, container, viewElements, modalManager, aft
             callback: (e, man) => {
                 this._addNewContact(toUserId);
                 man.hide();
+                this._afterCloseCb();
             }
         };
         const close = {
             text: "Close",
             callback: (e, man) => {
-                this._afterCloseCb();
                 man.hide();
+                this._afterCloseCb();
             }
         }
         const modalActions = this._isInContactList(toUserId)
