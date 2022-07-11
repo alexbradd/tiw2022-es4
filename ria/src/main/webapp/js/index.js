@@ -281,7 +281,7 @@ function AccountDetailsManager(container, viewElements, modalManager) {
                     return;
                 if (failedRefresh)
                     window.location = "/login.html";
-                else if (req.status) {
+                else if (req.status === 200) {
                     let obj = JSON.parse(req.responseText);
                     afterFetchCallback(obj.incoming, obj.outgoing);
                 } else
