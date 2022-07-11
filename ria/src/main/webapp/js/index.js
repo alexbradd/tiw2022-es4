@@ -50,15 +50,18 @@ function ViewOrchestrator(user,
     this._user = user;
     this._pageContainer = pageContainer;
     this._modalManager = new ModalManager(modalElements);
-    this._accountListManager = new AccountListManager(this._user,
+    this._accountListManager = new AccountListManager(
+        this._user,
         this._pageContainer,
         accountListViewElements,
         this._modalManager,
         (_, a) => this.showDetailsFor(a));
-    this._accountDetailsManager = new AccountDetailsManager(this._pageContainer,
+    this._accountDetailsManager = new AccountDetailsManager(
+        this._pageContainer,
         accountDetailsViewElements,
         this._modalManager);
-    this._newTransferFormManager = new NewTransferFormManager(this._user,
+    this._newTransferFormManager = new NewTransferFormManager(
+        this._user,
         this._pageContainer,
         newTransferViewElements,
         this._modalManager,
