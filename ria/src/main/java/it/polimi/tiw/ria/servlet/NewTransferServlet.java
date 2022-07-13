@@ -23,6 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static it.polimi.tiw.ria.servlet.ServletUtils.*;
 import static java.util.Objects.isNull;
@@ -65,6 +67,7 @@ import static java.util.Objects.isNull;
 public class NewTransferServlet extends HttpServlet {
     private Gson gson;
     private String iss, tokenSecret;
+    private Predicate<String> isDecimalFloat;
 
     /**
      * {@inheritDoc}
@@ -76,6 +79,7 @@ public class NewTransferServlet extends HttpServlet {
         gson = new GsonBuilder()
                 .registerTypeAdapter(Instant.class, new InstantTypeAdapter())
                 .create();
+        isDecimalFloat = Pattern.compile("^[+-]?\\d+(([.,])\\d+)?$").asMatchPredicate();
     }
 
     /**
@@ -85,7 +89,11 @@ public class NewTransferServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         TokenWrapper wrapper = new TokenWrapper();
         Tuple<Integer, JsonObject> res =
-                checkRequestFormat(gson, req, NewTransferRequest.class, e -> extractToken(e, wrapper), this::isRequestInvalid)
+                checkRequestFormat(gson,
+                        req,
+                        NewTransferRequest.class,
+                        e -> extractToken(removeAmountIfNotDecimal(e), wrapper),
+                        this::isRequestInvalid)
                         .flatMap(request -> ProductionConnectionRetriever.getInstance().with(c -> {
                             TransferFacade facade = TransferFacade.withDefaultObjects(c);
                             return checkPermission(request, wrapper.token).flatMap(facade::newTransfer);
@@ -100,7 +108,17 @@ public class NewTransferServlet extends HttpServlet {
         sendJson(resp, res.getFirst(), res.getSecond());
     }
 
+    private JsonElement removeAmountIfNotDecimal(JsonElement elem) {
+        JsonObject o = elem.getAsJsonObject();
+        JsonElement amountElement = o.get("amount");
+        if (amountElement != null && amountElement.isJsonPrimitive() && !isDecimalFloat.test(amountElement.getAsString()))
+            return null;
+        return o;
+    }
+
     private JsonElement extractToken(JsonElement elem, TokenWrapper wrapper) {
+        if (elem == null)
+            return null;
         wrapper.token = elem.getAsJsonObject().remove("token").getAsString();
         return elem;
     }
