@@ -23,6 +23,14 @@
         <filter-name>04-transferFilter</filter-name>
         <filter-class>it.polimi.tiw.templated.filters.TransferFilter</filter-class>
     </filter>
+    <filter>
+        <filter-name>99-dropCurrentlyShowAccountFilter</filter-name>
+        <filter-class>it.polimi.tiw.templated.filters.DropCurrentlyShowAccountFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>99-updateCurrentlyShowAccountFilter</filter-name>
+        <filter-class>it.polimi.tiw.templated.filters.UpdateCurrentlyShownAccountFilter</filter-class>
+    </filter>
 
     <filter-mapping>
         <filter-name>00-loginFilter</filter-name>
@@ -48,5 +56,15 @@
     <filter-mapping>
         <filter-name>04-transferFilter</filter-name>
         <url-pattern>/confirmTransfer.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>99-updateCurrentlyShowAccountFilter</filter-name>
+        <url-pattern>/details.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>99-dropCurrentlyShowAccountFilter</filter-name>
+        <url-pattern>/index.html</url-pattern>
+        <url-pattern>/confirmTransfer.html</url-pattern>
+        <url-pattern>/rejectTransfer.html</url-pattern>
     </filter-mapping>
 </web-app>

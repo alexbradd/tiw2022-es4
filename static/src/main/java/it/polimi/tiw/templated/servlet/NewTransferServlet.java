@@ -59,12 +59,13 @@ public class NewTransferServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         User user = ServletUtils.tryExtractFromSession(req, "user", User.class);
-        if (user == null) {
+        String accountId = ServletUtils.tryExtractFromSession(req, "currentlyShownAccount", String.class);
+        if (user == null || accountId == null) {
             resp.sendError(403);
             return;
         }
 
-        String redirect = parseRequest(user, req)
+        String redirect = parseRequest(user, accountId, req)
                 .flatMap(request -> ProductionConnectionRetriever.getInstance().with(c ->
                         TransferFacade.withDefaultObjects(c).newTransfer(request)))
                 .match(t -> "/confirmTransfer.html?id=" + t.getBase64Id(),
@@ -77,10 +78,10 @@ public class NewTransferServlet extends HttpServlet {
         resp.sendRedirect(redirect);
     }
 
-    private ApiResult<NewTransferRequest> parseRequest(User user, HttpServletRequest req) {
+    private ApiResult<NewTransferRequest> parseRequest(User user, String currentAccountId, HttpServletRequest req) {
         NewTransferRequest request = new NewTransferRequest();
         request.setFromUserId(user.getBase64Id());
-        request.setFromAccountId(req.getParameter("fromAccountId"));
+        request.setFromAccountId(currentAccountId);
         request.setToUserId(req.getParameter("toUserId"));
         request.setToAccountId(req.getParameter("toAccountId"));
         request.setCausal(req.getParameter("causal"));

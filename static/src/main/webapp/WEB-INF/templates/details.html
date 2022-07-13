@@ -80,7 +80,6 @@
     <div th:if="${error} == null" class="page-view">
         <h3 th:text="#{details.newTransfer}"></h3>
         <form class="form" method="post" action="/newTransfer">
-            <input type="hidden" name="fromAccountId" th:value="${param.id}"/>
             <div class="form-input required">
                 <label for="toUserId" th:text="#{details.toUserId}"></label>
                 <input type="text" required id="toUserId" name="toUserId"/>
