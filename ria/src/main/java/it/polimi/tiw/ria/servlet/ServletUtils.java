@@ -1,6 +1,9 @@
 package it.polimi.tiw.ria.servlet;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import it.polimi.tiw.api.error.ApiError;
 import it.polimi.tiw.api.functional.ApiResult;
@@ -112,10 +115,14 @@ public class ServletUtils {
         try (JsonReader reader = new JsonReader(req.getReader())) {
             JsonElement elem = gson.fromJson(reader, JsonElement.class);
             elem = jsonModifier.apply(elem);
-            ret = gson.fromJson(elem, requestClass);
-            return ret == null || invalidCheck.test(ret)
-                    ? ApiResult.error(invalidFormatSupplier.get())
-                    : ApiResult.ok(ret);
+            if (elem != null) {
+                ret = gson.fromJson(elem, requestClass);
+                return ret == null || invalidCheck.test(ret)
+                        ? ApiResult.error(invalidFormatSupplier.get())
+                        : ApiResult.ok(ret);
+            } else {
+                return ApiResult.error(invalidFormatSupplier.get());
+            }
         } catch (Exception e) {
             return ApiResult.error(invalidFormatSupplier.get());
         }
