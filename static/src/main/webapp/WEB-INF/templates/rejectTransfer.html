@@ -11,11 +11,14 @@
     <div th:replace="fragments :: app-header"></div>
     <div class="page-view">
         <h3 th:text='#{rejectTransfer.title}'>Transfer rejected</h3>
-        <p th:switch="${param.e[0]}">
+        <p th:if="${param.e} != null" th:switch="${param.e[0]}">
             <span th:case="user" th:text="#{rejectTransfer.user}"></span>
             <span th:case="missing" th:text="#{rejectTransfer.missing}"></span>
             <span th:case="conflict" th:text="#{rejectTransfer.conflict}"></span>
             <span th:case="*" th:text="#{rejectTransfer.server}"></span>
+        </p>
+        <p th:if="${param.e} == null">
+            <span th:text="#{rejectTransfer.generic}"></span>
         </p>
     </div>
 </div>
