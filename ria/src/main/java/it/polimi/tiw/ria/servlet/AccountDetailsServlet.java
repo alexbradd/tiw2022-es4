@@ -83,8 +83,10 @@ public class AccountDetailsServlet extends HttpServlet {
                         .with(c -> {
                             AccountFacade accounts = AccountFacade.withDefaultObjects(c);
                             TransferFacade transfers = TransferFacade.withDefaultObjects(c);
-                            return accounts.byId(request.accountId)
-                                    .flatMap(a -> checkPermissions(a, request.token))
+                            return validateToken(request.token)
+                                    .flatMap(userId -> accounts
+                                            .byId(request.accountId)
+                                            .flatMap(a -> checkPermissions(a, userId)))
                                     .flatMap(a -> transfers.of(a.getBase64Id()));
                         }))
                 .match(
@@ -102,18 +104,23 @@ public class AccountDetailsServlet extends HttpServlet {
         sendJson(resp, res.getFirst(), res.getSecond());
     }
 
-    private ApiResult<Account> checkPermissions(Account account, String token) {
+    private ApiResult<String> validateToken(String token) {
         try {
             DecodedJWT jwt = AuthUtils.verifyToken(token, iss, tokenSecret);
             String jwtUserId = jwt.getClaim("userId").asString();
-            if (Objects.equals(jwtUserId, account.getOwnerId()))
-                return ApiResult.ok(account);
+            if (jwtUserId != null)
+                return ApiResult.ok(jwtUserId);
             else
-                return ApiResult.error(Errors.fromPermissionDenied("transfer" +
-                        "s"));
+                return ApiResult.error(Errors.fromPermissionDenied("transfers"));
         } catch (JWTVerificationException | NullPointerException e) {
             return ApiResult.error(Errors.fromUnauthorized());
         }
+    }
+
+    private ApiResult<Account> checkPermissions(Account account, String userId) {
+        if (Objects.equals(account.getBase64Id(), userId))
+            return ApiResult.ok(account);
+        return ApiResult.error(Errors.fromPermissionDenied("account"));
     }
 
     private static class Request {
