@@ -10,7 +10,7 @@
 <body>
 <div class="page-container">
     <div th:replace="fragments :: app-header"></div>
-    <p th:if="${transfer} == null or ${error} != null" class="error">
+    <p th:if="${transfer} == null or ${error} != null">
         <span th:if="${error.statusCode() == 500}" th:text="#{confirmTransfer.serverError}"></span>
         <span th:if="${error.statusCode() != 500}" th:text="${error.errorMessage()}"></span>
     </p>

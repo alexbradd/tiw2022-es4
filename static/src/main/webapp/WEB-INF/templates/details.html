@@ -10,7 +10,7 @@
 <body>
 <div class="page-container rowed">
     <div th:replace="fragments :: app-header"></div>
-    <p th:if="${error} != null" class="error">
+    <p th:if="${error} != null">
         <span th:if="${error.statusCode() == 500}" th:text="#{details.serverError}"></span>
         <span th:if="${error.statusCode() != 500}" th:text="${error.errorMessage()}"></span>
     </p>
