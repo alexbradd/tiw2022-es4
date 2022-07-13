@@ -40,8 +40,11 @@ public class AccountDetailsFilter extends HttpFilter {
     @Override
     protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
         String accountId = req.getParameter("id");
-        if (accountId == null)
+        if (accountId == null) {
+            req.setAttribute("error", Errors.fromNullParameter("id"));
             chain.doFilter(req, res);
+            return;
+        }
 
         HttpSession session = req.getSession(false);
         User user = (User) session.getAttribute("user");

@@ -31,8 +31,11 @@ public class TransferFilter extends HttpFilter {
     @Override
     protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
         String transferId = req.getParameter("id");
-        if (transferId == null)
+        if (transferId == null) {
+            req.setAttribute("error", Errors.fromNullParameter("id"));
             chain.doFilter(req, res);
+            return;
+        }
 
         HttpSession session = req.getSession(false);
         User user = (User) session.getAttribute("user");
