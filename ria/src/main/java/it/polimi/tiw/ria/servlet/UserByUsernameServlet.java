@@ -26,7 +26,7 @@ public class UserByUsernameServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String username = req.getParameter("username");
         if (username == null || username.isEmpty()) {
-            ServletUtils.sendJson(res, 400, Errors.fromMalformedParameter("username").toJson());
+            ServletUtils.sendJson(res, 400, Errors.fromNullParameter("username").toJson());
             return;
         }
 

@@ -29,7 +29,7 @@ public class UserByIdServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String id = req.getParameter("id");
         if (id == null || id.isEmpty()) {
-            sendJson(res, 400, Errors.fromMalformedParameter("id").toJson());
+            sendJson(res, 400, Errors.fromNullParameter("id").toJson());
             return;
         }
 
