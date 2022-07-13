@@ -4,7 +4,8 @@ import it.polimi.tiw.api.TransferFacade;
 import it.polimi.tiw.api.beans.NewTransferRequest;
 import it.polimi.tiw.api.beans.User;
 import it.polimi.tiw.api.dbaccess.ProductionConnectionRetriever;
-import it.polimi.tiw.api.functional.Result;
+import it.polimi.tiw.api.error.Errors;
+import it.polimi.tiw.api.functional.ApiResult;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -63,32 +64,37 @@ public class NewTransferServlet extends HttpServlet {
             return;
         }
 
-        String redirect = Result.of(() -> {
-                    NewTransferRequest request = new NewTransferRequest();
-                    request.setFromUserId(user.getBase64Id());
-                    request.setFromAccountId(req.getParameter("fromAccountId"));
-                    request.setToUserId(req.getParameter("toUserId"));
-                    request.setToAccountId(req.getParameter("toAccountId"));
-                    request.setCausal(req.getParameter("causal"));
-
-                    String amountString = req.getParameter("amount");
-                    if (amountString == null || !isDecimalFloatingPoint.test(amountString))
-                        throw new IllegalArgumentException("missing amount");
-                    request.setAmount(Double.parseDouble(amountString));
-                    return request;
-                }).map(request -> ProductionConnectionRetriever.getInstance().with(c ->
+        String redirect = parseRequest(user, req)
+                .flatMap(request -> ProductionConnectionRetriever.getInstance().with(c ->
                         TransferFacade.withDefaultObjects(c).newTransfer(request)))
-                .match(
-                        e -> "/rejectTransfer.html?e=user",
-                        res -> res.match(
-                                t -> "/confirmTransfer.html?id=" + t.getBase64Id(),
-                                e -> "/rejectTransfer.html?e=" + switch (e.statusCode()) {
-                                    case 400 -> "user";
-                                    case 409 -> "conflict";
-                                    case 404 -> "missing";
-                                    default -> "server";
-                                }
-                        ));
+                .match(t -> "/confirmTransfer.html?id=" + t.getBase64Id(),
+                        e -> "/rejectTransfer.html?e=" + switch (e.statusCode()) {
+                            case 400 -> "user";
+                            case 409 -> "conflict";
+                            case 404 -> "missing";
+                            default -> "server";
+                        });
         resp.sendRedirect(redirect);
+    }
+
+    private ApiResult<NewTransferRequest> parseRequest(User user, HttpServletRequest req) {
+        NewTransferRequest request = new NewTransferRequest();
+        request.setFromUserId(user.getBase64Id());
+        request.setFromAccountId(req.getParameter("fromAccountId"));
+        request.setToUserId(req.getParameter("toUserId"));
+        request.setToAccountId(req.getParameter("toAccountId"));
+        request.setCausal(req.getParameter("causal"));
+
+        try {
+            String amountString = req.getParameter("amount");
+            if (amountString == null)
+                return ApiResult.error(Errors.fromNullParameter("amount"));
+            if (!isDecimalFloatingPoint.test(amountString))
+                return ApiResult.error(Errors.fromMalformedParameter("amount"));
+            request.setAmount(Double.parseDouble(amountString));
+            return ApiResult.ok(request);
+        } catch (NumberFormatException e) {
+            return ApiResult.error(Errors.fromMalformedParameter("amount"));
+        }
     }
 }
