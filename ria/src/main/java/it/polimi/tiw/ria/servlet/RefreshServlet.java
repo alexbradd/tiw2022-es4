@@ -47,7 +47,14 @@ public class RefreshServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        Optional<Cookie> refresh = Arrays.stream(req.getCookies())
+        Cookie[] cookies = req.getCookies();
+        if (cookies == null) {
+            ApiError e = Errors.fromNullParameter("refresh_cookie");
+            sendJson(resp, e.statusCode(), e.toJson());
+            return;
+        }
+
+        Optional<Cookie> refresh = Arrays.stream(cookies)
                 .filter(c -> c.getName().equals("refresh"))
                 .findAny();
 
