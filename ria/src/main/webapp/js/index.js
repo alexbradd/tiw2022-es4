@@ -2,63 +2,75 @@ const volatileStorage = new Map();
 const fetchRequests = {
     fetchAccountList(userId, detailed = true) {
         return new Promise((resolve, reject) => {
-            new Ajax().authenticatedPost(
-                "/api/accounts/ofUser",
-                {userId: userId, detailed: detailed},
-                (req, failedRefresh) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    if (failedRefresh)
-                        window.location = '/login.html';
-                    else if (req.status === 200) {
-                        let accountList = JSON.parse(req.responseText).accounts;
-                        resolve(accountList);
-                    } else {
-                        console.log(req.responseText);
-                        reject("We could not fetch your account list, please try again later");
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/accounts/ofUser",
+                    {userId: userId, detailed: detailed},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh)
+                            window.location = '/login.html';
+                        else if (req.status === 200) {
+                            let accountList = JSON.parse(req.responseText).accounts;
+                            resolve(accountList);
+                        } else {
+                            console.log(req.responseText);
+                            reject("We could not fetch your account list, please try again later");
+                        }
                     }
-                }
-            );
+                );
+            } catch (ignored) {
+                window.location = '/login.html'
+            }
         });
     },
     fetchAccountDetails(accountId) {
         return new Promise((resolve, reject) => {
-            new Ajax().authenticatedPost(
-                "/api/accounts/transfers",
-                {accountId: accountId},
-                (req, failedRefresh) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    if (failedRefresh)
-                        window.location = "/login.html";
-                    else if (req.status === 200) {
-                        let obj = JSON.parse(req.responseText);
-                        resolve(obj);
-                    } else
-                        reject("Could not fetch details for this account");
-                }
-            );
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/accounts/transfers",
+                    {accountId: accountId},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh)
+                            window.location = "/login.html";
+                        else if (req.status === 200) {
+                            let obj = JSON.parse(req.responseText);
+                            resolve(obj);
+                        } else
+                            reject("Could not fetch details for this account");
+                    }
+                );
+            } catch (ignored) {
+                window.location = '/login.html'
+            }
         });
     },
     fetchContacts(user) {
         return new Promise((resolve, reject) => {
-            new Ajax().authenticatedPost(
-                "/api/contacts/ofUser",
-                {userId: user.base64Id},
-                (req, failedRefresh) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    if (failedRefresh) {
-                        window.location = '/login.html';
-                    } else if (req.status === 200) {
-                        let contactList = JSON.parse(req.responseText).contacts;
-                        resolve(contactList);
-                    } else {
-                        reject("We could not fetch your contact list, please try again later")
-                        console.log(req.responseText);
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/contacts/ofUser",
+                    {userId: user.base64Id},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh) {
+                            window.location = '/login.html';
+                        } else if (req.status === 200) {
+                            let contactList = JSON.parse(req.responseText).contacts;
+                            resolve(contactList);
+                        } else {
+                            reject("We could not fetch your contact list, please try again later")
+                            console.log(req.responseText);
+                        }
                     }
-                }
-            );
+                );
+            } catch (ignored) {
+                window.location = '/login.html'
+            }
         });
     }
 }
