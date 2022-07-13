@@ -58,7 +58,7 @@ public class NewTransferServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        User user = ServletUtils.tryExtractFromSession(req);
+        User user = ServletUtils.tryExtractFromSession(req, "user", User.class);
         if (user == null) {
             resp.sendError(403);
             return;

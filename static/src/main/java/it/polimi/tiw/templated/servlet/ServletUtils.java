@@ -6,11 +6,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 class ServletUtils {
-    public static User tryExtractFromSession(HttpServletRequest req) {
+    public static <T> T tryExtractFromSession(HttpServletRequest req, String name, Class<T> clazz) {
         HttpSession session = req.getSession(false);
         if (session == null) {
             return null;
         }
-        return (User) session.getAttribute("user");
+        return clazz.cast(session.getAttribute(name));
     }
 }

@@ -25,7 +25,7 @@ public class NewAccountServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        User u = ServletUtils.tryExtractFromSession(req);
+        User u = ServletUtils.tryExtractFromSession(req, "user", User.class);
         if (u == null) {
             resp.sendError(403);
             return;

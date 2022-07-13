@@ -38,7 +38,7 @@ import java.io.IOException;
 public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        User logged = ServletUtils.tryExtractFromSession(req);
+        User logged = ServletUtils.tryExtractFromSession(req, "user", User.class);
         if (logged != null) {
             resp.sendError(400);
             return;
