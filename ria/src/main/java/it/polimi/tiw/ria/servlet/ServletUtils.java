@@ -82,9 +82,8 @@ public class ServletUtils {
      * @param invalidCheck the {@link Predicate} that tests whether the parsed object is invalid or not
      * @param <T>          the type of the request class
      * @return an {@link ApiResult} containing the parsed object or a suitable {@link ApiError}
-     * @throws IOException if any IO exception happened
      */
-    public static <T> ApiResult<T> checkRequestFormat(Gson gson, HttpServletRequest req, Class<T> requestClass, Predicate<T> invalidCheck) throws IOException {
+    public static <T> ApiResult<T> checkRequestFormat(Gson gson, HttpServletRequest req, Class<T> requestClass, Predicate<T> invalidCheck) {
         return checkRequestFormat(gson, req, requestClass, Function.identity(), invalidCheck);
     }
 
@@ -95,17 +94,17 @@ public class ServletUtils {
      * @param gson         the {@link Gson} instance to use
      * @param req          the {@link HttpServletRequest} whose body to parse
      * @param requestClass the class containing the data of the request
-     * @param jsonModifier the mapper that modifies the read JSON before being deserialized to {@code requestClass}
+     * @param jsonModifier the mapper that modifies the read JSON before being deserialized to {@code requestClass}. If
+     *                     the mapper returns null, then the object is considered invalid
      * @param invalidCheck the {@link Predicate} that tests whether the parsed object is invalid or not
      * @param <T>          the type of the request class
      * @return an {@link ApiResult} containing the parsed object or a suitable {@link ApiError}
-     * @throws IOException if any IO exception happened
      */
     public static <T> ApiResult<T> checkRequestFormat(Gson gson,
                                                       HttpServletRequest req,
                                                       Class<T> requestClass,
                                                       Function<JsonElement, JsonElement> jsonModifier,
-                                                      Predicate<T> invalidCheck) throws IOException {
+                                                      Predicate<T> invalidCheck) {
         if (hasNotJSONContentType(req))
             return ApiResult.error(wrongTypeErrorSupplier.get());
 
@@ -117,7 +116,7 @@ public class ServletUtils {
             return ret == null || invalidCheck.test(ret)
                     ? ApiResult.error(invalidFormatSupplier.get())
                     : ApiResult.ok(ret);
-        } catch (JsonParseException | IllegalStateException | ClassCastException e) {
+        } catch (Exception e) {
             return ApiResult.error(invalidFormatSupplier.get());
         }
     }
