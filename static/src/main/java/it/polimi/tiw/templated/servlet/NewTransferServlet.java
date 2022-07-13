@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Endpoint for money transfer. It accepts post requests with the following parameters (form or query string):
@@ -40,6 +42,16 @@ import java.io.IOException;
  */
 @WebServlet("/newTransfer")
 public class NewTransferServlet extends HttpServlet {
+    private Predicate<String> isDecimalFloatingPoint;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void init() {
+        isDecimalFloatingPoint = Pattern.compile("^[+-]?\\d+(([.,])\\d+)?$").asMatchPredicate();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -58,7 +70,11 @@ public class NewTransferServlet extends HttpServlet {
                     request.setToUserId(req.getParameter("toUserId"));
                     request.setToAccountId(req.getParameter("toAccountId"));
                     request.setCausal(req.getParameter("causal"));
-                    request.setAmount(Double.parseDouble(req.getParameter("amount")));
+
+                    String amountString = req.getParameter("amount");
+                    if (amountString == null || !isDecimalFloatingPoint.test(amountString))
+                        throw new IllegalArgumentException("missing amount");
+                    request.setAmount(Double.parseDouble(amountString));
                     return request;
                 }).map(request -> ProductionConnectionRetriever.getInstance().with(c ->
                         TransferFacade.withDefaultObjects(c).newTransfer(request)))
