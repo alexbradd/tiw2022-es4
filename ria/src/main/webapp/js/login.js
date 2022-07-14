@@ -45,14 +45,14 @@ function ViewManager(pageContainer,
     this.switchViews = function () {
         switch (this.currentState) {
             case VIEWS.LOGIN:
-                this.currentState = VIEWS.REGISTER;
                 this.hideLogin();
                 this.displayRegister();
+                this.currentState = VIEWS.REGISTER;
                 break;
             case VIEWS.REGISTER:
-                this.currentState = VIEWS.LOGIN;
                 this.hideRegister();
                 this.displayLogin();
+                this.currentState = VIEWS.LOGIN;
                 break;
             default:
                 throw new Error("Unknown view " + this.currentState);
@@ -88,11 +88,11 @@ function ViewManager(pageContainer,
     }
 
     this.getLoginForm = function () {
-        return this._loginView.children[1];
+        return this._loginViewComponents.form;
     }
 
     this.getRegisterForm = function () {
-        return this._registerView.children[1];
+        return this._registerViewComponents.form;
     }
 
     this.showErrorMessage = function (msg) {
@@ -242,6 +242,7 @@ function LoginFormValidator(viewManager, loginForm) {
         },
         document.getElementById("register-view"),
         {
+            form: document.getElementById("register-form"),
             formError: document.getElementById("register-formError")
         },
         document.getElementById("switcher")
