@@ -11,12 +11,18 @@ const fetchRequests = {
                             return;
                         if (failedRefresh)
                             window.location = '/login.html';
-                        else if (req.status === 200) {
-                            let accountList = JSON.parse(req.responseText).accounts;
-                            resolve(accountList);
-                        } else {
-                            console.log(req.responseText);
-                            reject("We could not fetch your account list, please try again later");
+
+                        switch (req.status) {
+                            case 200:
+                                let accountList = JSON.parse(req.responseText).accounts;
+                                resolve(accountList);
+                                break;
+                            case 400:
+                                reject("We could not extract an account list");
+                                break;
+                            default:
+                                console.log(req.responseText);
+                                reject("We could not fetch an account list, please try again later");
                         }
                     }
                 );
@@ -393,8 +399,7 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
     this._afterCloseCb = afterTransferSuccessful;
 
     this.addListeners = function () {
-        Object.keys(this._viewElements.formElements).forEach(k =>
-            this._setupErrorReporting(this._viewElements.formElements[k]));
+        Object.keys(this._viewElements.formElements).forEach(k => this._setupErrorReporting(this._viewElements.formElements[k]));
         this._viewElements.formElements.payeeId.addEventListener(
             "focus",
             () => {
@@ -402,13 +407,24 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
                     .then(contactList => this._populateContactDatalist(contactList))
                     .catch(r => this._modalManager.showError(r));
             });
+        this._viewElements.formElements.payeeId.addEventListener(
+            "change",
+            (e) => this._checkPayeeId(e.target).catch(() => e.target.checkValidity())
+        );
         this._viewElements.formElements.payeeAccount.addEventListener(
             "focus",
             () => {
                 this._ifNotEmptyFetchAccounts(this._viewElements.formElements.payeeId.value)
                     .then(list => this._populateAccountDatalist(list))
-                    .catch(r => this._viewElements.formElements.payeeId.setCustomValidity(r));
+                    .catch(r => this._viewElements.formElements.payeeAccount.setCustomValidity(r));
             });
+        this._viewElements.formElements.payeeAccount.addEventListener(
+            "change",
+            (e) => {
+                this._checkPayeeAccount(this._viewElements.formElements.payeeId.value, e.target)
+                    .catch(() => e.target.checkValidity());
+            }
+        );
 
         this._viewElements.form.addEventListener("submit", e => {
             this._checkFormValidityAndThen(e.target, () => {
@@ -478,22 +494,9 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
     }
 
     this._checkFormValidityAndThen = function (form, then) {
-        return this._checkAmount(this._viewElements.formElements.amount)
-            .then(() => this._checkPayeeId(this._viewElements.formElements.payeeId))
+        return this._checkPayeeId(this._viewElements.formElements.payeeId)
             .then(userId => this._checkPayeeAccount(userId, this._viewElements.formElements.payeeAccount))
             .then(() => then(), () => then());
-    }
-
-    this._checkAmount = function (target) {
-        return new Promise((resolve, reject) => {
-            if (target.value <= 0 || target.value > this._showingAccount.balance) {
-                target.setCustomValidity("The amount is not within permitted bounds");
-                reject();
-            } else {
-                target.setCustomValidity("");
-                resolve();
-            }
-        });
     }
 
     this._checkPayeeId = function (target) {
@@ -519,6 +522,9 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
         return new Promise((resolve, reject) => {
             if (this._showingAccount.base64Id === target.value) {
                 target.setCustomValidity("You cannot transfer money to the same account");
+                reject();
+            } else if (userId === "" || userId === undefined || userId === null) {
+                target.setCustomValidity("No user ID was specified");
                 reject();
             } else {
                 fetchRequests.fetchAccountList(userId, false)
