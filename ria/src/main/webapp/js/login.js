@@ -109,8 +109,19 @@ function RegisterFormValidator(viewManager, registerForm, formInputs) {
     this._formInputs = formInputs;
 
     this.addListeners = function () {
-        this._formInputs.username.addEventListener("change", e => e.target.setCustomValidity(""));
-        this._formInputs.repeatPassword.addEventListener("change", e => e.target.setCustomValidity(""));
+        this._formInputs.username.addEventListener("change", e => {
+            e.target.setCustomValidity("");
+            this.checkUsername(e.target).catch(() => e.target.reportValidity());
+        });
+        this._formInputs.clearPassword.addEventListener("change", e => {
+            this.checkPasswords(e.target, this._formInputs.repeatPassword);
+            this._formInputs.repeatPassword.reportValidity();
+        })
+        this._formInputs.repeatPassword.addEventListener("change", e => {
+            e.target.setCustomValidity("");
+            this.checkPasswords(this._formInputs.clearPassword, e.target);
+            e.target.reportValidity();
+        });
         this._registerForm.addEventListener("submit", (e) => {
             this.submit(e.target)
             e.preventDefault();
@@ -147,21 +158,21 @@ function RegisterFormValidator(viewManager, registerForm, formInputs) {
         });
     }
 
-    this.checkPasswords = function (target) {
-        let clear = this._formInputs.clearPassword.value;
-        let repeat = target.value;
+    this.checkPasswords = function (clear, repeat) {
+        let clearValue = clear.value;
+        let repeatValue = repeat.value;
 
-        if (clear !== repeat)
-            target.setCustomValidity("The passwords do not match");
+        if (clearValue !== repeatValue)
+            repeat.setCustomValidity("The passwords do not match");
         else
-            target.setCustomValidity("");
+            repeat.setCustomValidity("");
     }
 
     this.submit = function (target) {
         this.checkUsername(this._formInputs.username)
             .then(
                 () => {
-                    this.checkPasswords(this._formInputs.repeatPassword);
+                    this.checkPasswords(this._formInputs.clearPassword, this._formInputs.repeatPassword);
                     if (target.reportValidity()) {
                         new Ajax().post(
                             "/api/users",
