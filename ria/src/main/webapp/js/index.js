@@ -1,85 +1,4 @@
 const volatileStorage = new Map();
-const fetchRequests = {
-    fetchAccountList(userId, detailed = true) {
-        return new Promise((resolve, reject) => {
-            try {
-                new Ajax().authenticatedPost(
-                    "/api/accounts/ofUser",
-                    {userId: userId, detailed: detailed},
-                    (req, failedRefresh) => {
-                        if (req.readyState !== XMLHttpRequest.DONE)
-                            return;
-                        if (failedRefresh)
-                            window.location = '/login.html';
-
-                        switch (req.status) {
-                            case 200:
-                                let accountList = JSON.parse(req.responseText).accounts;
-                                resolve(accountList);
-                                break;
-                            case 400:
-                                reject("We could not extract an account list");
-                                break;
-                            default:
-                                console.log(req.responseText);
-                                reject("We could not fetch an account list, please try again later");
-                        }
-                    }
-                );
-            } catch (ignored) {
-                window.location = '/login.html'
-            }
-        });
-    },
-    fetchAccountDetails(accountId) {
-        return new Promise((resolve, reject) => {
-            try {
-                new Ajax().authenticatedPost(
-                    "/api/accounts/transfers",
-                    {accountId: accountId},
-                    (req, failedRefresh) => {
-                        if (req.readyState !== XMLHttpRequest.DONE)
-                            return;
-                        if (failedRefresh)
-                            window.location = "/login.html";
-                        else if (req.status === 200) {
-                            let obj = JSON.parse(req.responseText);
-                            resolve(obj);
-                        } else
-                            reject("Could not fetch details for this account");
-                    }
-                );
-            } catch (ignored) {
-                window.location = '/login.html'
-            }
-        });
-    },
-    fetchContacts(user) {
-        return new Promise((resolve, reject) => {
-            try {
-                new Ajax().authenticatedPost(
-                    "/api/contacts/ofUser",
-                    {userId: user.base64Id},
-                    (req, failedRefresh) => {
-                        if (req.readyState !== XMLHttpRequest.DONE)
-                            return;
-                        if (failedRefresh) {
-                            window.location = '/login.html';
-                        } else if (req.status === 200) {
-                            let contactList = JSON.parse(req.responseText).contacts;
-                            resolve(contactList);
-                        } else {
-                            reject("We could not fetch your contact list, please try again later")
-                            console.log(req.responseText);
-                        }
-                    }
-                );
-            } catch (ignored) {
-                window.location = '/login.html'
-            }
-        });
-    }
-}
 
 function generateNewTableRow() {
     let row = document.createElement("tr");
@@ -232,11 +151,207 @@ ModalManager.closeButton = {
     callback: (e, man) => man.hide()
 };
 
+function Dispatcher(modalManager) {
+    this._modal = modalManager;
+    this._modalParameters = [
+        "Session expired",
+        "We were unable to refresh your token",
+        [{
+            text: "Go to login",
+            callback() {
+                window.location = '/login.html';
+            }
+        }]
+    ]
+
+    this.fetchAccountList = function (userId, detailed = true) {
+        return new Promise((resolve, reject) => {
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/accounts/ofUser",
+                    {userId: userId, detailed: detailed},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh) {
+                            this._modal?.show(...this._modalParameters);
+                            return;
+                        }
+
+                        switch (req.status) {
+                            case 200:
+                                let accountList = JSON.parse(req.responseText).accounts;
+                                resolve(accountList);
+                                break;
+                            case 400:
+                                reject("We could not extract an account list");
+                                break;
+                            default:
+                                console.log(req.responseText);
+                                reject("We could not fetch an account list, please try again later");
+                        }
+                    }
+                );
+            } catch (ignored) {
+                this._modal?.show(...this._modalParameters);
+            }
+        });
+    }
+    this.fetchAccountDetails = function (accountId) {
+        return new Promise((resolve, reject) => {
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/accounts/transfers",
+                    {accountId: accountId},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh)
+                            this._modal?.show(...this._modalParameters);
+                        else if (req.status === 200) {
+                            let obj = JSON.parse(req.responseText);
+                            resolve(obj);
+                        } else
+                            reject("Could not fetch details for this account");
+                    }
+                );
+            } catch (ignored) {
+                this._modal?.show(...this._modalParameters);
+            }
+        });
+    }
+    this.fetchContacts = function (user) {
+        return new Promise((resolve, reject) => {
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/contacts/ofUser",
+                    {userId: user.base64Id},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh) {
+                            this._modal?.show(...this._modalParameters);
+                        } else if (req.status === 200) {
+                            let contactList = JSON.parse(req.responseText).contacts;
+                            resolve(contactList);
+                        } else {
+                            reject("We could not fetch your contact list, please try again later")
+                            console.log(req.responseText);
+                        }
+                    }
+                );
+            } catch (ignored) {
+                this._modal?.show(...this._modalParameters);
+            }
+        });
+    }
+    this.newAccount = function () {
+        return new Promise((resolve, reject) => {
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/accounts",
+                    null,
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh)
+                            this._modal?.show(...this._modalParameters);
+                        else if (req.status === 200)
+                            resolve();
+                        else {
+                            console.log(req.responseText);
+                            reject("We could not create a new account, please try again later");
+                        }
+                    }
+                );
+            } catch (ignored) {
+                this._modal?.show(...this._modalParameters);
+            }
+        });
+    }
+    this.userById = function (userId) {
+        return new Promise((resolve, reject) => {
+            new Ajax().get(
+                "/api/user/byId?id=" + userId,
+                req => {
+                    if (req.readyState !== XMLHttpRequest.DONE)
+                        return;
+                    if (req.status === 200)
+                        resolve(userId);
+                    else
+                        reject("Unable to find user with the specified ID");
+                }
+            );
+        });
+    }
+    this.newTransfer = function (data) {
+        return new Promise((resolve, reject) => {
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/transfers",
+                    data,
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh) {
+                            this._modal?.show(...this._modalParameters);
+                            return;
+                        }
+                        switch (req.status) {
+                            case 200:
+                                const transfer = JSON.parse(req.responseText).transfer;
+                                resolve(transfer);
+                                break;
+                            case 400:
+                                reject("The transfer form was not filled correctly, please check the data and try again.");
+                                break;
+                            case 409:
+                                reject("The source account has not got enough funds to make the transfer.");
+                                break;
+                            case 404:
+                                reject("The user-account combination could not be found, please check the data and try again.");
+                                break;
+                            default:
+                                reject("The server could not process your request, please try again later.");
+                        }
+                    }
+                );
+            } catch (ignored) {
+                this._modal?.show(...this._modalParameters);
+            }
+        });
+    }
+    this.newContact = function (contactId) {
+        return new Promise((resolve, reject) => {
+            try {
+                new Ajax().authenticatedPost(
+                    "/api/contacts",
+                    {contactId},
+                    (req, failedRefresh) => {
+                        if (req.readyState !== XMLHttpRequest.DONE)
+                            return;
+                        if (failedRefresh)
+                            this._modal?.show(...this._modalParameters);
+                        else if (req.status !== 200) {
+                            reject("Could not add new contact");
+                            console.log(req.responseText);
+                        } else
+                            resolve();
+                    }
+                );
+            } catch (ignored) {
+                this._modal?.show(...this._modalParameters);
+            }
+        });
+    }
+}
+
 function AccountListManager(container, viewElements, modalManager, detailsClickCallback) {
     this._user = volatileStorage.get('user');
     this._container = container;
     this._viewElements = viewElements;
     this._modalManager = modalManager;
+    this._dispatcher = new Dispatcher(modalManager);
     this._detailsClickCallback = detailsClickCallback;
 
     this.addListeners = function () {
@@ -244,22 +359,9 @@ function AccountListManager(container, viewElements, modalManager, detailsClickC
             this.refresh();
         });
         this._viewElements.newAccountButton.addEventListener("click", () => {
-            new Ajax().authenticatedPost(
-                "/api/accounts",
-                null,
-                (req, failedRefresh) => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    if (failedRefresh)
-                        window.location = '/login.html';
-                    else if (req.status === 200)
-                        this.refresh();
-                    else {
-                        this._modalManager.showError("We could not create a new account, please try again later")
-                        console.log(req.responseText);
-                    }
-                }
-            )
+            this._dispatcher.newAccount()
+                .then(() => this.refresh())
+                .catch(r => this._modalManager.showError(r));
         })
     }
 
@@ -270,7 +372,7 @@ function AccountListManager(container, viewElements, modalManager, detailsClickC
     this.show = function () {
         if (this._viewElements.view.parent !== null)
             this._container.insertBefore(this._viewElements.view, null);
-        fetchRequests.fetchAccountList(this._user.base64Id)
+        this._dispatcher.fetchAccountList(this._user.base64Id)
             .then(accountList => {
                 volatileStorage.set('accountList', accountList);
                 this._displayAccountList(this._detailsClickCallback)
@@ -286,7 +388,7 @@ function AccountListManager(container, viewElements, modalManager, detailsClickC
 
     this.refresh = function () {
         this._clearAccountList();
-        fetchRequests.fetchAccountList(this._user.base64Id)
+        this._dispatcher.fetchAccountList(this._user.base64Id)
             .then(accountList => {
                 volatileStorage.set('accountList', accountList);
                 this._displayAccountList(this._detailsClickCallback)
@@ -315,6 +417,7 @@ function AccountDetailsManager(container, viewElements, modalManager) {
     this._container = container;
     this._viewElements = viewElements;
     this._modalManager = modalManager;
+    this._dispatcher = new Dispatcher(modalManager);
     this._currentlyShowingAccountId = undefined;
 
     this.addListeners = function (goBackCallback) {
@@ -341,11 +444,11 @@ function AccountDetailsManager(container, viewElements, modalManager) {
         clearChildren(this._viewElements.outgoingTransfers);
 
         let p1 = refreshList
-            ? fetchRequests.fetchAccountList(this._user.base64Id)
+            ? this._dispatcher.fetchAccountList(this._user.base64Id)
             : new Promise(resolve => resolve(volatileStorage.get('accountList')));
         p1.then(l => {
             const accountData = l.find(a => a.base64Id === accountId);
-            return fetchRequests.fetchAccountDetails(accountId)
+            return this._dispatcher.fetchAccountDetails(accountId)
                 .then(o => {
                     o.incoming.forEach((t) =>
                         this._viewElements.incomingTransfers.appendChild(this._constructRow(t, "fromId")));
@@ -394,6 +497,7 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
     this._container = container;
     this._viewElements = viewElements;
     this._modalManager = modalManager;
+    this._dispatcher = new Dispatcher(modalManager);
     this._showingAccount = undefined;
     this._contacts = [];
     this._afterCloseCb = afterTransferSuccessful;
@@ -403,7 +507,7 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
         this._viewElements.formElements.payeeId.addEventListener(
             "focus",
             () => {
-                fetchRequests.fetchContacts(this._user)
+                this._dispatcher.fetchContacts(this._user)
                     .then(contactList => this._populateContactDatalist(contactList))
                     .catch(r => this._modalManager.showError(r));
             });
@@ -449,7 +553,7 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
         return new Promise((resolve, reject) => {
             if (userId === undefined || userId === "")
                 reject("You must specify a user ID");
-            fetchRequests.fetchAccountList(userId, false)
+            this._dispatcher.fetchAccountList(userId, false)
                 .then(list => resolve(list))
                 .catch(r => reject(r));
         });
@@ -500,22 +604,16 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
     }
 
     this._checkPayeeId = function (target) {
-        return new Promise((resolve, reject) => {
-            new Ajax().get(
-                "/api/user/byId?id=" + target.value,
-                req => {
-                    if (req.readyState !== XMLHttpRequest.DONE)
-                        return;
-                    if (req.status === 200) {
-                        target.setCustomValidity("");
-                        resolve(target.value);
-                    } else {
-                        target.setCustomValidity("Unable to find user with the specified ID");
-                        reject();
-                    }
-                }
-            );
-        });
+        return this._dispatcher
+            .userById(target.value)
+            .then(id => {
+                target.setCustomValidity("");
+                return id;
+            })
+            .catch(r => {
+                target.setCustomValidity(r)
+                return new Promise((_, reject) => reject(r));
+            });
     }
 
     this._checkPayeeAccount = function (userId, target) {
@@ -527,7 +625,7 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
                 target.setCustomValidity("No user ID was specified");
                 reject();
             } else {
-                fetchRequests.fetchAccountList(userId, false)
+                this._dispatcher.fetchAccountList(userId, false)
                     .then(accountList => {
                         for (let i = 0; i < accountList.length; i++) {
                             if (accountList[i].base64Id === target.value) {
@@ -555,33 +653,10 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
             fromAccountId: this._showingAccount.base64Id
         };
 
-        new Ajax().authenticatedPost(
-            "/api/transfers",
-            json,
-            (req, failedRefresh) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (failedRefresh)
-                    window.location = '/login.html';
-                switch (req.status) {
-                    case 200:
-                        const transfer = JSON.parse(req.responseText).transfer;
-                        this._showSuccessModal(transfer, json.toUserId);
-                        break;
-                    case 400:
-                        this._modalManager.showError("The transfer form was not filled correctly, please check the data and try again.");
-                        break;
-                    case 409:
-                        this._modalManager.showError("The source account has not got enough funds to make the transfer.");
-                        break;
-                    case 404:
-                        this._modalManager.showError("The user-account combination could not be found, please check the data and try again.");
-                        break;
-                    default:
-                        this._modalManager.showError("The server could not process your request, please try again later.");
-                }
-            }
-        );
+        this._dispatcher
+            .newTransfer(json)
+            .then(transfer => this._showSuccessModal(transfer, json.toUserId))
+            .catch(r => this._modalManager.showError(r));
     }
 
     this._showSuccessModal = function (transfer, toUserId) {
@@ -628,20 +703,9 @@ function NewTransferFormManager(container, viewElements, modalManager, afterTran
     }
 
     this._addNewContact = function (contactId) {
-        new Ajax().authenticatedPost(
-            "/api/contacts",
-            {contactId},
-            (req, failedRefresh) => {
-                if (req.readyState !== XMLHttpRequest.DONE)
-                    return;
-                if (failedRefresh)
-                    window.location = '/login.html';
-                if (req.status !== 200) {
-                    this._modalManager.showError("Could not add new contact");
-                    console.log(req.responseText);
-                }
-            }
-        );
+        this._dispatcher
+            .newContact(contactId)
+            .catch(r => this._modalManager.showError(r));
     }
 
     this.removeHiddenClass = function () {
