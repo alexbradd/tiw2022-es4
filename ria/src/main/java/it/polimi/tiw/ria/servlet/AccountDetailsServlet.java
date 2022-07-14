@@ -118,7 +118,7 @@ public class AccountDetailsServlet extends HttpServlet {
     }
 
     private ApiResult<Account> checkPermissions(Account account, String userId) {
-        if (Objects.equals(account.getBase64Id(), userId))
+        if (Objects.equals(account.getOwnerId(), userId))
             return ApiResult.ok(account);
         return ApiResult.error(Errors.fromPermissionDenied("account"));
     }
