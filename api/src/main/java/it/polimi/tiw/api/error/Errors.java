@@ -79,7 +79,7 @@ public class Errors {
     public static ApiError fromPermissionDenied(String res) {
         return new ApiError(403,
                 "User cannot access this resource",
-                new ApiSubError("IllegalAccessException", "Cannot view resource " + res));
+                new ApiSubError("IllegalAccessException", "Cannot access resource " + res));
     }
 
     /**

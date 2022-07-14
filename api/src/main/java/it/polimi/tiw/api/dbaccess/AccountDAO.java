@@ -65,7 +65,7 @@ public class AccountDAO implements DatabaseAccessObject<Account> {
                     Account a = new Account(IdUtils.toBase64(id), IdUtils.toBase64(ownerId), balance);
                     return ApiResult.ok(a);
                 } else
-                    return ApiResult.error(Errors.fromNotFound("id " + IdUtils.toBase64(id)));
+                    return ApiResult.error(Errors.fromNotFound("id"));
             }
         } catch (SQLException e) {
             return ApiResult.error(Errors.fromSQLException(e));

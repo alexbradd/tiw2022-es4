@@ -76,7 +76,7 @@ public class TransferDAO implements DatabaseAccessObject<Transfer> {
                     t.setCausal(causal);
                     return ApiResult.ok(t);
                 } else
-                    return ApiResult.error(Errors.fromNotFound("id " + base64Id));
+                    return ApiResult.error(Errors.fromNotFound("id"));
             }
         } catch (SQLException e) {
             return ApiResult.error(Errors.fromSQLException(e));

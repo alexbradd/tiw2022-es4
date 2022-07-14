@@ -51,7 +51,7 @@ public class UserDAO implements DatabaseAccessObject<User> {
         String sql = "select * from tiw_app.users where id = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setLong(1, id);
-            return packageApiResult(p, String.valueOf(id));
+            return packageApiResult(p, "id");
         } catch (SQLException e) {
             return ApiResult.error(Errors.fromSQLException(e));
         }
