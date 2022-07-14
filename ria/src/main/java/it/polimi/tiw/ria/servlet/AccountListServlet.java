@@ -26,7 +26,10 @@ import static it.polimi.tiw.ria.servlet.ServletUtils.*;
  * <ul>
  *     <li>{@code token}: a valid authentication token</li>
  *     <li>{@code userId}: the id of the user of which the accounts will be retrieved</li>
- *     <li>{@code detailed}: a boolean value specifying if personal information should be included or not</li>
+ *     <li>
+ *         {@code detailed}: a boolean value specifying if personal information should be included or not (optional,
+ *         by default it is considered {@code false})
+ *     </li>
  * </ul>
  * <p>
  * The request must provide a valid authentication token, or the request will be rejected with a 401. Every user has
