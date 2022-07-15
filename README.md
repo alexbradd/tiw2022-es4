@@ -13,6 +13,8 @@ Tools used:
 3. MySQL
 4. Intellij IDEA (IDE)
 
+Grade: 30
+
 ## Full specification
 
 ### Static site
